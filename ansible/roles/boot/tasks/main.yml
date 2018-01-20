@@ -1,0 +1,4 @@
+- name: Boot Tomcat
+  shell: docker restart geoprism
+  become: yes
+  become_method: sudo

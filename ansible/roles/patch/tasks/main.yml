@@ -1,0 +1,5 @@
+# TODO: The ROOT app does not exist...
+- name: Import Schema
+  shell: "docker exec geoprism bash -c 'java $JAVA_OPTS -cp \"$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*\" net.geoprism.context.PatchingContextListener > $CATALINA_HOME/logs/patch.log'"
+  become: yes
+  become_method: sudo

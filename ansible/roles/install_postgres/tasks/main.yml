@@ -1,0 +1,37 @@
+
+# Our job is to SSH into the database server, install docker and a postgres image
+# This script is useful for when we're not using amazon RDS but just a bare bones server
+
+
+- name: Start Postgres Docker
+  docker_container:
+    name: postgres
+    image: "mdillon/postgis:9.4"
+    state: started
+    recreate: true
+    pull: true
+    env:
+      POSTGRES_PASSWORD: "{{rootdb_pass}}"
+    exposed_ports:
+      - 5432
+    ports:
+      - "{{ db_port | default(5432) }}:5432"
+    restart_policy: always
+  become: yes
+  become_method: sudo
+  when: "{{clean_db}}"
+  
+# When we're recreating the docker image for some reason docker leaves the old volume just sitting around unused. This was causing us to run out of space after x number of deploys
+# https://lebkowski.name/docker-volumes/
+- name: Clean dangling docker volumes
+  shell: "docker volume rm $(docker volume ls -qf dangling=true)"
+  become: yes
+  become_method: sudo
+  when: "{{clean_db}}"
+  ignore_errors: yes
+
+
+# - name: Open port 5432 on iptables
+#   iptables: 
+# iptables -A INPUT -p tcp --dport 2195 -j ACCEPT
+# service iptables restart

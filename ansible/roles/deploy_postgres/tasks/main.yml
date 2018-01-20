@@ -1,0 +1,113 @@
+
+# Any tasks in here should work regardless of whether we're using RDS or a docker postgres image.
+# At this point in the config we're assuming postgres is up and running and good to go, we don't care how it happened
+
+
+# If this task here is giving you a timeout then its probably because your computer (the one running the ansible command) does not have access through the AWS firewall to hit the database server on port 5432.
+# This command has to be a local_action because you can't SSH into RDS.
+- name: Ensure postgres is running
+  local_action: wait_for host="{{inventory_hostname}}" port="{{ db_port | default(5432) }}" delay=0 timeout=30 state=started
+
+# vars_prompt:
+#   - name: "prompt_delete_db"
+#     prompt: "Are you sure you want to delete and rebuild the database?"
+#     when: "{{clean_db}}"
+#     
+# - name: Cancel delete db
+#   fail:
+#     msg: "Database rebuild canceled."
+#   when: "{{prompt_delete_db}}"
+
+# TODO : Restore a snapshot
+- name: Drop DB
+  local_action:
+    module: postgresql_db
+    name: "{{item}}"
+    state: absent
+    port: "{{ db_port | default(5432) }}"
+    login_host: "{{inventory_hostname}}"
+    login_user: "{{rootdb_user}}"
+    login_password: "{{rootdb_pass}}"
+  with_items: 
+    - "{{ apps | default([]) }}"
+  when: "{{clean_db}}"
+  
+- name: Make DB
+  local_action:
+    module: postgresql_db
+    name: "{{item}}"
+    state: present
+    port: "{{ db_port | default(5432) }}"
+    login_host: "{{inventory_hostname}}"
+    login_user: "{{rootdb_user}}"
+    login_password: "{{rootdb_pass}}"
+  with_items: 
+    - "{{ apps | default([]) }}"
+  
+- name: Drop User
+  local_action:
+    module: postgresql_user
+    name: "{{item}}"
+    state: absent
+    db: "{{item}}"
+    port: "{{ db_port | default(5432) }}"
+    login_host: "{{inventory_hostname}}"
+    login_user: "{{rootdb_user}}"
+    login_password: "{{rootdb_pass}}"
+  with_items: 
+    - "{{apps}}"
+  when: "{{clean_db}}"
+  
+- name: Make User
+  local_action:
+    module: postgresql_user
+    name: "{{item}}"
+    state: present
+    db: "{{item}}"
+    port: "{{ db_port | default(5432) }}"
+    login_host: "{{inventory_hostname}}"
+    login_user: "{{rootdb_user}}"
+    login_password: "{{rootdb_pass}}"
+    password: "{{db_pass}}"
+    role_attr_flags: LOGIN,NOSUPERUSER
+  with_items: 
+    - "{{apps}}"
+  when: "{{clean_db}}"
+  
+- name: DB Owner to new User
+  local_action:
+    module: postgresql_db
+    name: "{{item}}"
+    state: present
+    port: "{{ db_port | default(5432) }}"
+    login_host: "{{inventory_hostname}}"
+    login_user: "{{rootdb_user}}"
+    login_password: "{{rootdb_pass}}"
+    owner: "{{item}}"
+  with_items: 
+    - "{{ apps | default([]) }}"
+
+- name: Add PostGIS
+  local_action:
+    module: postgresql_ext
+    name: postgis
+    db: "{{item}}"
+    state: present
+    port: "{{ db_port | default(5432) }}"
+    login_host: "{{inventory_hostname}}"
+    login_user: "{{rootdb_user}}"
+    login_password: "{{rootdb_pass}}"
+  with_items: 
+    - "{{apps}}"
+    
+#- name: restart postgresql container
+#  docker_container:
+#    name: postgres
+#    state: started
+#    restart: yes
+
+#- replace:
+#    path: /etc/hosts
+#    regexp: '(\s+)old\.host\.name(\s+.*)?$'
+#    replace: '\1new.host.name\2'
+#    backup: yes

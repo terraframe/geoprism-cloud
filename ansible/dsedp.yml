@@ -1,0 +1,122 @@
+
+# This is the master deployment script for a DSEDP application (a geoprism extension project)
+
+# Heads up!!
+# Before running you must:
+# 1.
+# Export these environment variables:
+# export ANSIBLE_HOST_KEY_CHECKING=false
+# 2.
+# pip install boto
+# 3.
+# cd ~/git/geoprism-platform/ansible
+# sudo chmod 400 ../security/permissions/geoprism-dev.pem
+# 4.
+# The inventory file says what server you want to make into a demo server. This example here deploys to dev.
+# ansible-playbook dsedp.yml -i inventory/dsedp/dev.ini
+
+- name: Set Up Database
+  hosts: databases
+  vars:
+    # We will create a database and a user for each of these.
+    apps: '["dsedp"]'
+    
+  roles:
+    - yum-docker
+    - install_postgres
+    - deploy_postgres
+    
+
+- name: Deploy Webserver
+  hosts: webservers
+  vars:
+    catalina_home: /usr/local/tomcat
+    
+    # Solr pathing information    
+    document_core: /opt/solr/server/solr/demo
+    geo_core: /opt/solr/server/solr/geo
+    solr_server: /opt/solr/server
+  
+  roles:
+    - yum-docker
+    - backup-vault
+  
+  tasks:
+  
+    - name: Ensure the webserver can connect to the database
+      wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
+  
+    # Webserver Docker Container
+    - name: Log into ECR
+      shell: "export AWS_ACCESS_KEY_ID={{aws_access_key}} && export AWS_SECRET_ACCESS_KEY={{aws_secret_key}} && eval $(aws ecr get-login --region us-west-2 --no-include-email)"
+      become: yes
+      become_method: sudo
+    - name: Start Webserver
+      docker_container:
+        name: geoprism
+        image: "{{docker_image}}"
+        state: started
+        recreate: yes
+        pull: yes
+        restart_policy: always
+        env:
+          JAVA_OPTS: >
+            -Xms512M
+            -Xmx{{tomcat_memory}}
+            -Djava.rmi.server.hostname={{ inventory_hostname }}
+            -Ddatabase.hostURL={{webserver_database}}
+            -server
+            -Dtomcat.home={{catalina_home}}
+            -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
+            -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
+            -Dbirt-server=true
+            -DFile.encoding=UTF-8                    
+        network_mode: host
+      become: yes
+      become_method: sudo
+      
+    - name: Forward port
+      shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
+      become: yes
+      become_method: sudo
+      
+    - name: apt get update (Geoprism container)
+      shell: docker exec geoprism bash -c 'apt-get -y update'
+      become: yes
+      become_method: sudo
+    
+    # Deploy DSEDP
+    - name: Make Wars directory
+      shell: "docker exec geoprism bash -c 'mkdir {{catalina_home}}/wars'"
+      become: yes
+      become_method: sudo
+    - name: Deploy DSEDP
+      shell: "{{item}}"
+      with_items:
+        - docker exec geoprism bash -c 'wget --user={{nexus_username}} --password={{nexus_password}} -nv -O $CATALINA_HOME/wars/dsedp.war "http://nexus.terraframe.com/service/local/artifact/maven/redirect?r=private&g=org.denversouthedp&a=dsedp-web&p=war&v={{dsedp_version}}"'
+        - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/ROOT && cd $CATALINA_HOME/wars/ROOT && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/dsedp.war && mv $CATALINA_HOME/wars/ROOT $CATALINA_HOME/webapps/ROOT'
+      become: yes
+      become_method: sudo
+      
+    # Deploy Geoserver
+    - name: Download and deploy Geoserver
+      shell: "{{item}}"
+      with_items:
+        - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/releases/content/org/geoserver/geoserver/2.9.1/geoserver-2.9.1.war"'
+        - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/geoserver && cd $CATALINA_HOME/wars/geoserver && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoserver.war && mv $CATALINA_HOME/wars/geoserver $CATALINA_HOME/webapps/geoserver'
+      become: yes
+      become_method: sudo
+      
+    - name: Patch
+      shell: >
+        docker exec geoprism bash -c '
+          java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*" org.denversouthedp.DsedpPatcher > $CATALINA_HOME/logs/patch.log
+          '
+      become: yes
+      become_method: sudo
+  
+- name: Deploy Webserver
+  hosts: webservers
+  roles:
+    - restore-vault
+    - boot

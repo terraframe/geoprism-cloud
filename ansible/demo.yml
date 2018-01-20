@@ -1,0 +1,38 @@
+# This playbook will perform a geoprism multi-app database and webserver deploy for the specified geoprism app(s).
+
+# Heads up!!
+# Before running you must:
+# 1.
+# Export these environment variables:
+# export ANSIBLE_HOST_KEY_CHECKING=false
+# 2.
+# pip install boto
+# 3.
+# cd ~/git/geoprism-platform/ansible
+# sudo chmod 400 ../security/permissions/geoprism-dev.pem
+# 4.
+# The inventory file says what server you want to make into a demo server. This example here deploys to dev.
+# ansible-playbook demo.yml -i inventory/dev.geoprism.net
+
+- name: Deploy Database
+  hosts: databases
+  vars:
+    # We will create a database and a user for each of these.
+    apps: '["demo1","demo2","dsedp","srl"]'
+    
+  roles:
+    - yum-docker
+    - install_postgres
+    - deploy_postgres
+
+- name: Deploy Webserver
+  hosts: webservers
+  vars:
+    # appcfg : deploy context
+    apps: { "demo1": "demo1", "demo2": "demo2", "dsedp": "dsedp", "srl": "srl" }
+  roles:
+    - yum-docker
+    - backup-vault
+    - webserver
+    - restore-vault
+    - boot

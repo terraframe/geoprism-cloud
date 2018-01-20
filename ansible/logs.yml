@@ -1,0 +1,49 @@
+# This playbook scrapes the logs from the specified server and throws them into platform/logs
+
+- hosts: localhost
+  tasks:
+    - name: Create log directory
+      file:
+        path: ../target/logs
+        state: directory
+
+- name: Download Logs
+  hosts: webservers
+  vars: 
+    CATALINA_HOME: /usr/local/tomcat
+    LOCAL_LOGS: ../target/logs
+    LOG_DIR: "{{LOCAL_LOGS}}/{{inventory_hostname}}-{{ ansible_date_time.date }}-{{ansible_date_time.hour}}-{{ansible_date_time.minute}}-{{ansible_date_time.second}}"
+  tasks:
+    - name: Delete log staging
+      file: 
+        state: absent
+        path: /tmp/staging/logs
+      become: yes
+      become_method: sudo
+    - name: Make staging
+      file: 
+        state: directory
+        path: /tmp/staging
+      become: yes
+      become_method: sudo
+    - name: Stage logs
+      command: docker cp "geoprism:{{CATALINA_HOME}}/logs" /tmp/staging/logs
+      become: yes
+      become_method: sudo
+      ignore_errors: yes
+    - name: Log staging permissions
+      file: 
+        state: directory
+        path: /tmp/staging
+        owner: "{{ansible_user}}"
+        mode: 0700
+        recurse: yes
+      become: yes
+      become_method: sudo
+    - debug: msg="Downloading logs to {{LOG_DIR}}"
+    - name: Download logs
+      synchronize:
+        src: "/tmp/staging/logs"
+        dest: "{{LOG_DIR}}"
+        recursive: yes
+        mode: pull

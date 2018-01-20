@@ -1,0 +1,104 @@
+
+- name: Ensure the webserver can connect to the database
+  wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
+
+# Docker stuff
+- name: Log into ECR
+  shell: "export AWS_ACCESS_KEY_ID={{aws_access_key}} && export AWS_SECRET_ACCESS_KEY={{aws_secret_key}} && eval $(aws ecr get-login --region us-west-2 --no-include-email)"
+  become: yes
+  become_method: sudo
+# TODO: Errors out when Postgres & Geoprism are on the same machine
+# - name: Stop all docker containers
+#   shell: docker stop $(docker ps -a -q)
+#   become: yes
+#   become_method: sudo
+#   ignore_errors: yes
+#   when: "{{stop_all_docker_containers | default(false)}}"
+- name: Start Docker
+  docker_container:
+    name: geoprism
+    image: "{{docker_image}}"
+    state: started
+    recreate: yes
+    pull: yes
+    restart_policy: always
+    env: >
+        JAVA_OPTS="
+        -Xms512M
+        -Xmx{{tomcat_memory}}
+        -Djava.rmi.server.hostname={{ inventory_hostname }}
+        -Ddatabase.hostURL={{webserver_database}}
+        -server
+        -Dgeoprism.config.dir={{catalina_home}}/appcfg
+        -Dtomcat.home={{catalina_home}}
+        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
+        -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
+        -Dbirt-server=true
+        -DFile.encoding=UTF-8        
+        "
+    network_mode: host
+  become: yes
+  become_method: sudo
+  
+- name: Forward port
+  shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
+  become: yes
+  become_method: sudo
+  
+- name: Stage AppConfig
+  copy: src="{{appcfg_dir}}/appcfg/{{item.key}}/"
+        dest="/tmp/staging/appcfg/{{item.value}}/"
+  become: yes
+  become_method: sudo
+  when: apps is defined
+  with_dict: "{{apps | default({})}}"
+- name: Deploy AppConfig to Docker
+  shell: "{{item}}"
+  with_items:
+    - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/appcfg'
+    - docker cp /tmp/staging/appcfg/ geoprism:"{{catalina_home}}/appcfg"
+  become: yes
+  become_method: sudo
+  when: apps is defined
+  
+  
+- name: Make Wars directory
+  shell: "docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars'"
+  become: yes
+  become_method: sudo
+
+- name: Download Geoprism
+  shell: docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoprism.war "http://nexus.terraframe.com/service/local/artifact/maven/redirect?r=allrepos&g=net.geoprism&a=geoprism-web&p=war&v={{geoprism_version}}"'
+  become: yes
+  become_method: sudo
+  when: apps is defined
+  
+- name: Extract Geoprism
+  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/{{item.value}} && cd $CATALINA_HOME/wars/{{item.value}} && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoprism.war && sed -i -e "s/log4j.rootLogger=ERROR/log4j.rootLogger={{log_level | default("ERROR")}}/g" $CATALINA_HOME/wars/{{item.value}}/WEB-INF/classes/log4j.properties'
+  become: yes
+  become_method: sudo
+  when: apps is defined
+  with_dict: "{{apps | default({})}}"
+
+- name: Download & deploy geoserver
+  shell: "{{item}}"
+  with_items:
+    - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/releases/content/org/geoserver/geoserver/2.9.1/geoserver-2.9.1.war"'
+    - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoserver.war'
+  become: yes
+  become_method: sudo
+
+- name: Deploy Geoprism apps
+  shell: docker exec geoprism bash -c 'mv $CATALINA_HOME/wars/{{item.value}} $CATALINA_HOME/webapps/{{item.value}}'
+  become: yes
+  become_method: sudo
+  when: apps is defined
+  with_dict: "{{apps | default({})}}"
+  
+# If we try to do this before the Geoprism app is deployed obviously the classpath won't exist
+- name: Patch
+  shell: "docker exec geoprism bash -c 'java $JAVA_OPTS -cp \"$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/lib/*\" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes/metadata $CATALINA_HOME/appcfg/{{item.value}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item.value}}.log'"
+  with_dict: "{{apps | default({})}}"
+  become: yes
+  become_method: sudo
+  when: apps is defined
