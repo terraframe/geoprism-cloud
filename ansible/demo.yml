@@ -18,10 +18,11 @@
   hosts: databases
   vars:
     # We will create a database and a user for each of these.
-    apps: '["demo1","demo2","dsedp","srl"]'
+    #apps: '["demo1","demo2","dsedp","srl"]'
+    apps: '["demo1"]'
     
   roles:
-    - yum-docker
+    - yum
     - install_postgres
     - deploy_postgres
 
@@ -29,10 +30,12 @@
   hosts: webservers
   vars:
     # appcfg : deploy context
-    apps: { "demo1": "demo1", "demo2": "demo2", "dsedp": "dsedp", "srl": "srl" }
+    #apps: { "demo1": "demo1", "demo2": "demo2", "dsedp": "dsedp", "srl": "srl" }
+    apps: { "demo1": "demo1" }
   roles:
-    - yum-docker
+    - yum
     - backup-vault
     - webserver
+    - solr
     - restore-vault
-    - boot
+    - patch

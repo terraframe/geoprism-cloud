@@ -1,5 +1,6 @@
-# TODO: The ROOT app does not exist...
-- name: Import Schema
-  shell: "docker exec geoprism bash -c 'java $JAVA_OPTS -cp \"$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*\" net.geoprism.context.PatchingContextListener > $CATALINA_HOME/logs/patch.log'"
+- name: Patch
+  shell: "docker exec geoprism bash -c 'java $JAVA_OPTS -cp \"$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/lib/*\" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes/metadata $CATALINA_HOME/appcfg/{{item.value}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item.value}}.log'"
+  with_dict: "{{apps | default({})}}"
   become: yes
   become_method: sudo
+  when: apps is defined

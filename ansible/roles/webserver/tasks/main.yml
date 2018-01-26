@@ -46,7 +46,7 @@
   become_method: sudo
   
 - name: Stage AppConfig
-  copy: src="{{appcfg_dir}}/appcfg/{{item.key}}/"
+  copy: src="{{appcfg_dir}}/{{item.key}}/"
         dest="/tmp/staging/appcfg/{{item.value}}/"
   become: yes
   become_method: sudo
@@ -94,11 +94,3 @@
   become_method: sudo
   when: apps is defined
   with_dict: "{{apps | default({})}}"
-  
-# If we try to do this before the Geoprism app is deployed obviously the classpath won't exist
-- name: Patch
-  shell: "docker exec geoprism bash -c 'java $JAVA_OPTS -cp \"$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/lib/*\" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes/metadata $CATALINA_HOME/appcfg/{{item.value}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item.value}}.log'"
-  with_dict: "{{apps | default({})}}"
-  become: yes
-  become_method: sudo
-  when: apps is defined

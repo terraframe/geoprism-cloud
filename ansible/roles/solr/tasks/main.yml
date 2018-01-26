@@ -1,0 +1,95 @@
+
+# Solr Docker container
+- name: Kill Solr
+  shell: docker kill solr
+  become: yes
+  become_method: sudo
+  when: "{{clean_solr}}"
+  ignore_errors: yes
+- name: Start Solr
+  docker_container:
+    name: solr
+    image: solr:6
+    state: started
+    recreate: "{{clean_solr}}"
+    pull: yes
+    restart_policy: always
+    network_mode: host
+  become: yes
+  become_method: sudo
+
+# Third party libs
+- name: Install third-party libs (Geoprism container)
+  shell: docker exec geoprism bash -c 'apt-get update && apt-get -y install tesseract-ocr libgdal-java'
+  become: yes
+  become_method: sudo
+- name: Delete Solr Config staging
+  file:
+    state: directory
+    path: "/tmp/staging/teigha"
+- name: Delete existing Teigha
+  file: path=/tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz state=absent
+- name: Download Teigha
+  s3:
+    bucket: aip.geoprism.net
+    object: deployment-resources/Teigha.Java_lnxX64_4.4dll.tar.gz
+    dest: /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz
+    mode: get
+    aws_access_key: "{{aws_access_key}}"
+    aws_secret_key: "{{aws_secret_key}}"
+    region: us-west-2
+- name: Copy Teigha into Geoprism docker container
+  shell: '{{item}}'
+  with_items:
+    - docker exec geoprism bash -c 'mkdir -p /tmp/staging/teigha'
+    - docker cp /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz geoprism:/tmp/staging/teigha
+  become: yes
+  become_method: sudo
+- name: Install Teigha
+  shell: docker exec geoprism bash -c '{{item}}'
+  with_items:
+    - tar -xvzf /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz -C /tmp/staging/teigha
+    - mv /tmp/staging/teigha/bin/lnxX64_4.4dll/* /usr/lib/jni/
+    - rm -r /tmp/staging/teigha
+  become: yes
+  become_method: sudo
+
+# Deploy Solr Core
+- name: Delete Solr Config staging
+  file:
+    state: absent
+    path: "/tmp/staging/solr/"
+- name: Stage Solr Config
+  copy: src="{{solr_core_path}}/"
+        dest="/tmp/staging/solr/"
+- name: Create Solr Core
+  shell: '{{item}}'
+  with_items:
+    - docker exec solr bash -c '/opt/solr/bin/solr create_core -c allpaths'
+  become: yes
+  become_method: sudo
+  when: "{{clean_solr}}"
+- name: Deploy Solr Core Config
+  shell: '{{item}}'
+  with_items:
+  # Install JTS into solr/server
+    - docker cp /tmp/staging/solr/server 'solr:{{solr_server}}/../staging'
+    - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/../staging/* {{solr_server}}'
+    - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/../staging'        
+    - docker cp /tmp/staging/solr/allpaths 'solr:{{allpaths_core}}/../staging'
+    - docker exec -u root solr bash -c 'cp -rf {{allpaths_core}}/../staging/* {{allpaths_core}}'
+    - docker exec -u root solr bash -c 'rm -rf {{allpaths_core}}/../staging'
+    - docker exec -u root solr bash -c 'chown -R solr:solr {{allpaths_core}}'
+  become: yes
+  become_method: sudo
+- name: Restart Solr
+  shell: "{{item}}"
+  with_items:
+    - docker stop solr
+    - docker start solr
+  become: yes
+  become_method: sudo
+  
+- name: Wait for Solr to be up
+  wait_for: host="127.0.0.1" port=8983 delay=5 timeout=60 state=started
+  
