@@ -4,3 +4,8 @@
   become: yes
   become_method: sudo
   when: apps is defined
+  
+- name: Boot
+  shell: docker restart geoprism
+  become: yes
+  become_method: sudo
