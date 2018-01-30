@@ -18,7 +18,7 @@
   hosts: databases
   vars:
     # We will create a database and a user for each of these.
-    apps: '[demo2","srl"]'
+    apps: '["demo2","srl"]'
     
   roles:
     - yum
