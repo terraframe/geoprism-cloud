@@ -31,8 +31,8 @@
   file: path=/tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz state=absent
 - name: Download Teigha
   s3:
-    bucket: aip.geoprism.net
-    object: deployment-resources/Teigha.Java_lnxX64_4.4dll.tar.gz
+    bucket: geoprism.net
+    object: resources/Teigha.Java_lnxX64_4.4dll.tar.gz
     dest: /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz
     mode: get
     aws_access_key: "{{aws_access_key}}"
@@ -65,21 +65,27 @@
 - name: Create Solr Core
   shell: '{{item}}'
   with_items:
-    - docker exec solr bash -c '/opt/solr/bin/solr create_core -c allpaths'
+    - docker exec solr bash -c '/opt/solr/bin/solr create_core -c {{solr_core_name}}'
   become: yes
   become_method: sudo
   when: "{{clean_solr}}"
-- name: Deploy Solr Core Config
+- name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
   # Install JTS into solr/server
     - docker cp /tmp/staging/solr/server 'solr:{{solr_server}}/../staging'
     - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/../staging/* {{solr_server}}'
-    - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/../staging'        
-    - docker cp /tmp/staging/solr/allpaths 'solr:{{allpaths_core}}/../staging'
-    - docker exec -u root solr bash -c 'cp -rf {{allpaths_core}}/../staging/* {{allpaths_core}}'
-    - docker exec -u root solr bash -c 'rm -rf {{allpaths_core}}/../staging'
-    - docker exec -u root solr bash -c 'chown -R solr:solr {{allpaths_core}}'
+    - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/../staging'
+  when: "{{solr_jts}}"
+  become: yes
+  become_method: sudo
+- name: Deploy Solr Core Config
+  shell: '{{item}}'
+  with_items:
+    - docker cp '/tmp/staging/solr/{{solr_core_name}}' 'solr:{{solr_server}}/solr/{{solr_core_name}}/../staging'
+    - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/solr/{{solr_core_name}}/../staging/* {{solr_server}}/solr/{{solr_core_name}}'
+    - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/solr/{{solr_core_name}}/../staging'
+    - docker exec -u root solr bash -c 'chown -R solr:solr {{solr_server}}/solr/{{solr_core_name}}'
   become: yes
   become_method: sudo
 - name: Restart Solr

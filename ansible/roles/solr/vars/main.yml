@@ -3,5 +3,4 @@
 catalina_home: /usr/local/tomcat
     
 # Solr pathing information    
-allpaths_core: /opt/solr/server/solr/allpaths
 solr_server: /opt/solr/server
