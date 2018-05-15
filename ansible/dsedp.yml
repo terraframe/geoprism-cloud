@@ -22,7 +22,7 @@
     apps: '["dsedp"]'
     
   roles:
-    - yum-docker
+    - yum
     - install_postgres
     - deploy_postgres
     
@@ -38,7 +38,7 @@
     solr_server: /opt/solr/server
   
   roles:
-    - yum-docker
+    - yum
     - backup-vault
   
   tasks:
