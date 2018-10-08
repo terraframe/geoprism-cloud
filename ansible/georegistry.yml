@@ -70,7 +70,10 @@
             -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
             -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
             -Dbirt-server=true
-            -DFile.encoding=UTF-8                    
+            -DFile.encoding=UTF-8
+            -Ddatabase.user=georegistry
+            -Ddatabase.password={{db_pass}}
+            -Ddatabase.port=5432
         network_mode: host
       become: yes
       become_method: sudo
