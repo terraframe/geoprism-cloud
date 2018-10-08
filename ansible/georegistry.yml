@@ -95,10 +95,9 @@
       become: yes
       become_method: sudo
     - name: Extract GeoRegistry
-      shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/georegistry && cd $CATALINA_HOME/wars/georegistry && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/georegistry.war && sed -i -e "s/log4j.rootLogger=ERROR/log4j.rootLogger={{log_level | default("ERROR")}}/g" $CATALINA_HOME/wars/georegistry/WEB-INF/classes/log4j.properties'
+      shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/georegistry && cd $CATALINA_HOME/wars/georegistry && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/georegistry.war && sed -i -e "s/log4j.rootLogger=ERROR/log4j.rootLogger={{log_level | default("ERROR")}}/g" $CATALINA_HOME/wars/georegistry/WEB-INF/classes/log4j.properties && mv $CATALINA_HOME/wars/georegistry $CATALINA_HOME/webapps/georegistry'
       become: yes
       become_method: sudo
-      with_dict: "{{apps | default({})}}"
       
     # Deploy Geoserver
     - name: Download and deploy Geoserver
