@@ -6,7 +6,7 @@
 - name: Start Postgres Docker
   docker_container:
     name: postgres
-    image: "mdillon/postgis:9.4"
+    image: "mdillon/postgis:9.5"
     state: started
     recreate: true
     pull: true
