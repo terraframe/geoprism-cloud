@@ -18,7 +18,6 @@
 #     msg: "Database rebuild canceled."
 #   when: "{{prompt_delete_db}}"
 
-# TODO : Restore a snapshot
 - name: Drop DB
   local_action:
     module: postgresql_db
@@ -91,6 +90,19 @@
   local_action:
     module: postgresql_ext
     name: postgis
+    db: "{{item}}"
+    state: present
+    port: "{{ db_port | default(5432) }}"
+    login_host: "{{inventory_hostname}}"
+    login_user: "{{rootdb_user}}"
+    login_password: "{{rootdb_pass}}"
+  with_items: 
+    - "{{apps}}"
+    
+- name: Add uuid-ossp
+  local_action:
+    module: postgresql_ext
+    name: uuid-ossp
     db: "{{item}}"
     state: present
     port: "{{ db_port | default(5432) }}"
