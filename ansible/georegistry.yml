@@ -24,7 +24,7 @@
   roles:
     - yum
     - install_postgres
-    - deploy_postgres
+    #- deploy_postgres
     
 
 - name: Deploy Webserver
@@ -122,7 +122,7 @@
     - name: Patch
       shell: >
         docker exec geoprism bash -c '
-          java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*" net.geoprism.georegistry.GeoregistryPatcher > $CATALINA_HOME/logs/patch.log
+          java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/ROOT/WEB-INF/classes/metadata --modules=geoprism --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --clean={{clean_db}} > $CATALINA_HOME/logs/patch.log
           '
       become: yes
       become_method: sudo
