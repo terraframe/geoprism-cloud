@@ -35,8 +35,6 @@
     object: resources/Teigha.Java_lnxX64_4.4dll.tar.gz
     dest: /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz
     mode: get
-    aws_access_key: "{{aws_access_key}}"
-    aws_secret_key: "{{aws_secret_key}}"
     region: us-west-2
 - name: Copy Teigha into Geoprism docker container
   shell: '{{item}}'
