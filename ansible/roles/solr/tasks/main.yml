@@ -29,13 +29,19 @@
     path: "/tmp/staging/teigha"
 - name: Delete existing Teigha
   file: path=/tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz state=absent
+#- name: Download Teigha
+#  s3:
+#    bucket: geoprism.net
+#    object: resources/Teigha.Java_lnxX64_4.4dll.tar.gz
+#    dest: /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz
+#    mode: get
+#     aws_access_key: "{{aws_access_key}}"
+#     aws_secret_key: "{{aws_secret_key}}"
+#    region: us-west-2
 - name: Download Teigha
-  s3:
-    bucket: geoprism.net
-    object: resources/Teigha.Java_lnxX64_4.4dll.tar.gz
-    dest: /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz
-    mode: get
-    region: us-west-2
+  shell: 'wget -O /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz https://s3-us-west-2.amazonaws.com/geoprism.net/resources/Teigha.Java_lnxX64_4.4dll.tar.gz'
+  become: yes
+  become_method: sudo
 - name: Copy Teigha into Geoprism docker container
   shell: '{{item}}'
   with_items:
