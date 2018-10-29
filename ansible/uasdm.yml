@@ -1,0 +1,40 @@
+
+# This is the master deployment script for a DSEDP application (a geoprism extension project)
+
+# Heads up!!
+# Before running you must:
+# 1.
+# Export these environment variables:
+# export ANSIBLE_HOST_KEY_CHECKING=false
+# 2.
+# pip install boto
+# 3.
+# cd ~/git/geoprism-platform/ansible
+# sudo chmod 400 ../security/permissions/geoprism-dev.pem
+# 4.
+# The inventory file says what server you want to make into a demo server. This example here deploys to dev.
+# ansible-playbook dsedp.yml -i inventory/dsedp/dev.ini
+
+- name: Set Up Database
+  hosts: databases
+  vars:
+    apps: '["uasdm"]'
+    
+  roles:
+    - yum
+    - install_postgres
+    
+
+- name: Deploy Webserver
+  hosts: webservers
+  vars:
+    catalina_home: /usr/local/tomcat
+    apps: '["ROOT"]'
+    
+  roles:
+    - yum
+    - backup-vault
+    - webserver
+    - webserver-extension
+    - restore-vault
+    - patch

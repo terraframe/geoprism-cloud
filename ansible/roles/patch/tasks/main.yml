@@ -1,6 +1,10 @@
 - name: Patch
-  shell: "docker exec geoprism bash -c 'java $JAVA_OPTS -cp \"$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item.value}}/WEB-INF/lib/*\" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item.value}}/WEB-INF/classes/metadata $CATALINA_HOME/appcfg/{{item.value}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item.value}}.log'"
-  with_dict: "{{apps | default({})}}"
+  shell: >
+    docker exec geoprism bash -c '
+      java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/{{item}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item}}/WEB-INF/lib/*" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item}}/WEB-INF/classes/metadata --modules=geoprism --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --clean={{clean_db}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item}}.log
+      '
+  with_items: 
+    - "{{ apps | default([]) }}"
   become: yes
   become_method: sudo
   when: apps is defined

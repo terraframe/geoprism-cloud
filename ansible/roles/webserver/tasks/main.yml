@@ -34,7 +34,10 @@
         -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
         -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
         -Dbirt-server=true
-        -DFile.encoding=UTF-8        
+        -DFile.encoding=UTF-8      
+        -Ddatabase.user={{db_user}}
+        -Ddatabase.password={{db_pass}}
+        -Ddatabase.port=5432
         "
     network_mode: host
   become: yes
@@ -45,52 +48,3 @@
   become: yes
   become_method: sudo
   
-- name: Stage AppConfig
-  copy: src="{{appcfg_dir}}/{{item.key}}/"
-        dest="/tmp/staging/appcfg/{{item.value}}/"
-  become: yes
-  become_method: sudo
-  when: apps is defined
-  with_dict: "{{apps | default({})}}"
-- name: Deploy AppConfig to Docker
-  shell: "{{item}}"
-  with_items:
-    - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/appcfg'
-    - docker cp /tmp/staging/appcfg/ geoprism:"{{catalina_home}}/appcfg"
-  become: yes
-  become_method: sudo
-  when: apps is defined
-  
-  
-- name: Make Wars directory
-  shell: "docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars'"
-  become: yes
-  become_method: sudo
-
-- name: Download Geoprism
-  shell: docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoprism.war "http://nexus.terraframe.com/service/local/artifact/maven/redirect?r=allrepos&g=net.geoprism&a=geoprism-web&p=war&v={{geoprism_version}}"'
-  become: yes
-  become_method: sudo
-  when: apps is defined
-  
-- name: Extract Geoprism
-  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/{{item.value}} && cd $CATALINA_HOME/wars/{{item.value}} && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoprism.war && sed -i -e "s/log4j.rootLogger=ERROR/log4j.rootLogger={{log_level | default("ERROR")}}/g" $CATALINA_HOME/wars/{{item.value}}/WEB-INF/classes/log4j.properties'
-  become: yes
-  become_method: sudo
-  when: apps is defined
-  with_dict: "{{apps | default({})}}"
-
-- name: Download & deploy geoserver
-  shell: "{{item}}"
-  with_items:
-    - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/releases/content/org/geoserver/geoserver/2.9.1/geoserver-2.9.1.war"'
-    - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoserver.war'
-  become: yes
-  become_method: sudo
-
-- name: Deploy Geoprism apps
-  shell: docker exec geoprism bash -c 'mv $CATALINA_HOME/wars/{{item.value}} $CATALINA_HOME/webapps/{{item.value}}'
-  become: yes
-  become_method: sudo
-  when: apps is defined
-  with_dict: "{{apps | default({})}}"

@@ -1,0 +1,37 @@
+
+# This is used to deploy an extension project of Geoprism
+  
+- name: Make Wars directory
+  shell: "docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars'"
+  become: yes
+  become_method: sudo
+
+- name: Download Artifact (public)
+  shell: docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoprism.war "http://nexus.terraframe.com/service/local/artifact/maven/redirect?r=allrepos&g={{artifact_groupId}}&a={{artifact_id}}&p=war&v={{artifact_version}}"'
+  become: yes
+  become_method: sudo
+  when: nexus_password is not defined
+
+- name: Download Artifact (private)
+  shell: docker exec geoprism bash -c 'wget --user={{nexus_user}} --password={{nexus_password}} -nv -O $CATALINA_HOME/wars/geoprism.war "http://nexus.terraframe.com/service/local/artifact/maven/redirect?r=private&g={{artifact_groupId}}&a={{artifact_id}}&p=war&v={{artifact_version}}"'
+  become: yes
+  become_method: sudo
+  when: nexus_password is defined
+  
+- name: Extract Artifact
+  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/geoprism && cd $CATALINA_HOME/wars/geoprism && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoprism.war && sed -i -e "s/log4j.rootLogger=ERROR/log4j.rootLogger={{log_level | default("ERROR")}}/g" $CATALINA_HOME/wars/geoprism/WEB-INF/classes/log4j.properties'
+  become: yes
+  become_method: sudo
+
+- name: Download & deploy geoserver
+  shell: "{{item}}"
+  with_items:
+    - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/releases/content/org/geoserver/geoserver/2.9.1/geoserver-2.9.1.war"'
+    - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoserver.war'
+  become: yes
+  become_method: sudo
+
+- name: Deploy Artifact
+  shell: docker exec geoprism bash -c 'mv $CATALINA_HOME/wars/geoprism $CATALINA_HOME/webapps/ROOT'
+  become: yes
+  become_method: sudo
