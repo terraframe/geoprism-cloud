@@ -1,7 +1,7 @@
 - name: Patch
   shell: >
     docker exec geoprism bash -c '
-      java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/{{item}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item}}/WEB-INF/lib/*" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item}}/WEB-INF/classes/metadata --modules=geoprism --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --clean={{clean_db}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item}}.log
+      java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/{{item}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item}}/WEB-INF/lib/*" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item}}/WEB-INF/classes/metadata --modules=geoprism --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --modules={{modules}} --clean={{clean_db}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item}}.log
       '
   with_items: 
     - "{{ apps | default([]) }}"
