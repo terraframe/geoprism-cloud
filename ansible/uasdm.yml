@@ -21,7 +21,7 @@
     apps: '["uasdm"]'
     
   roles:
-    - yum
+    - yum-rhel
     - install_postgres
     
 
@@ -32,7 +32,6 @@
     apps: '["ROOT"]'
     
   roles:
-    - yum
     - backup-vault
     - webserver
     - webserver-extension

@@ -1,0 +1,88 @@
+
+# Stop Docker Service
+# You would think 'yum update' would be smart enough to stop before updating but... https://github.com/moby/moby/issues/33688
+#- name: Stop Docker service
+#  service: name=docker state=stopped enabled=yes
+#  become: yes
+#  become_method: sudo
+#  ignore_errors: yes
+
+# Install software. I tried to make this into a list (for readability) but because ordering is important I don't think we can do that.
+#- name: Yum update
+#  yum: name="*" state=latest
+#  become: yes
+#  become_method: sudo
+#- name: Yum install ntp
+#  yum: name="ntp" state=latest
+#  become: yes
+#  become_method: sudo
+#- name: Yum install rsync
+#  yum: name="rsync" state=latest
+#  become: yes
+#  become_method: sudo
+#- name: Yum install python-pip
+#  yum: name="python-pip" state=latest
+#  become: true
+#  become_method: sudo
+#- name: Install Docker prereqs
+#  shell: yum install -y ntp python-pip
+#  become: yes
+#  become_method: sudo
+  
+#- debug:
+#    msg: "ansible_become = {{ ansible_become }}"
+#- debug:
+#    msg: "ansible_become_method = {{ ansible_become_method }}"
+#- debug:
+#    msg: "ansible_become_user = {{ ansible_become_user }}"
+#- debug:
+#    msg: "ansible_become_pass = {{ ansible_become_pass }}"
+#- debug:
+#    msg: "become = {{ become }}"
+#- debug:
+#    msg: "become_method = {{ become_method }}"
+#- debug:
+#    msg: "become_user = {{ become_user }}"
+#- debug:
+#    msg: "become_pass = {{ become_pass }}"
+  
+# Install Docker
+- name: Install Docker prereqs
+  shell: yum install -y yum-utils device-mapper-persistent-data lvm2
+  become: true
+  become_method: sudo
+- name: Install Docker
+  shell: yum install -y --setopt=obsoletes=0 docker-ce-17.03.2.ce-1.el7.centos.x86_64 docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch
+  become: yes
+  become_method: sudo
+
+
+# AWS CLI tools (for pulling docker images from ecs)
+- name: Install AWS CLI tools
+  shell: pip install awscli
+  become: yes
+  become_method: sudo
+- name: Install Boto (for pulling data from s3)
+  shell: pip install boto
+  become: yes
+  become_method: sudo
+
+# Docker-py
+- name: Install docker-py
+  command: pip install 'docker-py==1.9.0' # We're using pip verison 1.9 because there's an ansible bug that thinks version 1.10 is less than 1.7
+  become: yes
+  become_method: sudo
+
+# Ensure valid server time (ecs pull fails if time is wrong)
+- name: Update server time
+  shell: ntpdate -u ntp.ubuntu.com
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
+# Start Docker Service
+# You would think this logic is covered from 'yum install docker' but you would be wrong.
+- name: Start Docker service
+  service: name=docker state=started enabled=yes
+  become: yes
+  become_method: sudo
