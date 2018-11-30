@@ -38,8 +38,8 @@
         -Ddatabase.user={{db_user}}
         -Ddatabase.password={{db_pass}}
         -Ddatabase.port=5432
-        -Demail.username={{email_user}}
-        -Demail.password={{email_pass}}
+        -Demail.username={{ email_user | default('x') }}
+        -Demail.password={{ email_pass | default('x') }}
         "
     network_mode: host
   become: yes
