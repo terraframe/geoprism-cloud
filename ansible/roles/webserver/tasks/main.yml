@@ -40,6 +40,7 @@
         -Ddatabase.port=5432
         -Demail.username={{ email_user | default('x') }}
         -Demail.password={{ email_pass | default('x') }}
+        -Dbucket.name={{bucket_name | default('x')}}
         "
     network_mode: host
   become: yes
