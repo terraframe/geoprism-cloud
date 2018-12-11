@@ -33,7 +33,8 @@
   copy: src="{{solr_core_path}}/"
         dest="/tmp/staging/solr/"
 - name: Does the solr core exist?
-  stat: path="{{solr_server}}/solr/{{solr_core_name}}"
+  stat:
+    path: "{{solr_server}}/solr/{{solr_core_name}}"
   register: solr_core_exists
   become: yes
   become_method: sudo
