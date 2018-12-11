@@ -30,10 +30,13 @@
   vars:
     catalina_home: /usr/local/tomcat
     apps: '["ROOT"]'
+    solr_server: /opt/solr/server
     
   roles:
     - backup-vault
     - webserver
     - webserver-extension
     - restore-vault
+    - solr
     - patch
+    - boot

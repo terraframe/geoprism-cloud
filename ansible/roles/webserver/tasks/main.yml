@@ -41,6 +41,7 @@
         -Demail.username={{ email_user | default('x') }}
         -Demail.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
+        -Dsolr.enabled={{solr_enabled | default('x')}}
         "
     network_mode: host
   become: yes
