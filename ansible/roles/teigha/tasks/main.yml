@@ -1,0 +1,38 @@
+- name: Install Teigha
+  shell: docker exec geoprism bash -c 'apt-get update && apt-get -y install tesseract-ocr libgdal-java'
+  become: yes
+  become_method: sudo
+- name: Delete Solr Config staging
+  file:
+    state: directory
+    path: "/tmp/staging/teigha"
+- name: Delete existing Teigha
+  file: path=/tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz state=absent
+- name: Download Teigha
+  s3:
+   bucket: geoprism.net
+   object: resources/Teigha.Java_lnxX64_4.4dll.tar.gz
+   dest: /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz
+   mode: get
+   aws_access_key: "{{aws_access_key}}"
+   aws_secret_key: "{{aws_secret_key}}"
+   region: us-west-2
+- name: Download Teigha
+  shell: 'wget -O /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz https://s3-us-west-2.amazonaws.com/geoprism.net/resources/Teigha.Java_lnxX64_4.4dll.tar.gz'
+  become: yes
+  become_method: sudo
+- name: Copy Teigha into Geoprism docker container
+  shell: '{{item}}'
+  with_items:
+    - docker exec geoprism bash -c 'mkdir -p /tmp/staging/teigha'
+    - docker cp /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz geoprism:/tmp/staging/teigha
+  become: yes
+  become_method: sudo
+- name: Install Teigha
+  shell: docker exec geoprism bash -c '{{item}}'
+  with_items:
+    - tar -xvzf /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz -C /tmp/staging/teigha
+    - mv /tmp/staging/teigha/bin/lnxX64_4.4dll/* /usr/lib/jni/
+    - rm -r /tmp/staging/teigha
+  become: yes
+  become_method: sudo

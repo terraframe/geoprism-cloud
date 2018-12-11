@@ -9,7 +9,7 @@
 - name: Start Solr
   docker_container:
     name: solr
-    image: solr:6
+    image: solr:6.6.5-alpine
     state: started
     recreate: "{{clean_solr}}"
     pull: yes
@@ -23,44 +23,6 @@
   shell: docker exec geoprism bash -c 'apt-get update && apt-get -y install libgdal-java'
   become: yes
   become_method: sudo
-# - name: Install Teigha
-#   shell: docker exec geoprism bash -c 'apt-get update && apt-get -y install tesseract-ocr libgdal-java'
-#   become: yes
-#   become_method: sudo
-# - name: Delete Solr Config staging
-#   file:
-#     state: directory
-#     path: "/tmp/staging/teigha"
-# - name: Delete existing Teigha
-#   file: path=/tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz state=absent
-# #- name: Download Teigha
-# #  s3:
-# #    bucket: geoprism.net
-# #    object: resources/Teigha.Java_lnxX64_4.4dll.tar.gz
-# #    dest: /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz
-# #    mode: get
-# #     aws_access_key: "{{aws_access_key}}"
-# #     aws_secret_key: "{{aws_secret_key}}"
-# #    region: us-west-2
-# - name: Download Teigha
-#   shell: 'wget -O /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz https://s3-us-west-2.amazonaws.com/geoprism.net/resources/Teigha.Java_lnxX64_4.4dll.tar.gz'
-#   become: yes
-#   become_method: sudo
-# - name: Copy Teigha into Geoprism docker container
-#   shell: '{{item}}'
-#   with_items:
-#     - docker exec geoprism bash -c 'mkdir -p /tmp/staging/teigha'
-#     - docker cp /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz geoprism:/tmp/staging/teigha
-#   become: yes
-#   become_method: sudo
-# - name: Install Teigha
-#   shell: docker exec geoprism bash -c '{{item}}'
-#   with_items:
-#     - tar -xvzf /tmp/staging/teigha/Teigha.Java_lnxX64_4.4dll.tar.gz -C /tmp/staging/teigha
-#     - mv /tmp/staging/teigha/bin/lnxX64_4.4dll/* /usr/lib/jni/
-#     - rm -r /tmp/staging/teigha
-#   become: yes
-#   become_method: sudo
 
 # Deploy Solr Core
 - name: Delete Solr Config staging
@@ -70,6 +32,11 @@
 - name: Stage Solr Config
   copy: src="{{solr_core_path}}/"
         dest="/tmp/staging/solr/"
+- name: Does the solr core exist?
+  stat: 'path=/{{solr_server}}/solr/{{solr_core_name}}'
+  register: solr_core_exists
+  become: yes
+  become_method: sudo
 - name: Create Solr Core
   shell: '{{item}}'
   with_items:
@@ -77,6 +44,7 @@
   become: yes
   become_method: sudo
   when: "{{clean_solr}}"
+  when: "not solr_core_exists.stat.exists or {{clean_solr}}"
 - name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
