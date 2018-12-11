@@ -44,7 +44,7 @@
   become: yes
   become_method: sudo
   when: "{{clean_solr}}"
-  when: "not solr_core_exists.stat.exists or {{clean_solr}}"
+#  when: "not solr_core_exists.stat.exists or {{clean_solr}}"
 - name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
