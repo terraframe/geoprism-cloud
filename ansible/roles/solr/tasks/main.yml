@@ -59,9 +59,9 @@
 - name: Deploy Solr Core Config
   shell: '{{item}}'
   with_items:
-    - docker cp '/tmp/staging/solr/{{solr_core_name}}' 'solr:{{solr_server}}/solr/{{solr_core_name}}/../staging'
-    - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/solr/{{solr_core_name}}/../staging/* {{solr_server}}/solr/{{solr_core_name}}'
-    - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/solr/{{solr_core_name}}/../staging'
+    - docker cp '/tmp/staging/solr/{{solr_core_name}}' 'solr:{{solr_server}}/solr/staging'
+    - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/solr/staging/* {{solr_server}}/solr/{{solr_core_name}}'
+    - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/solr/staging'
     - docker exec -u root solr bash -c 'chown -R solr:solr {{solr_server}}/solr/{{solr_core_name}}'
   become: yes
   become_method: sudo
