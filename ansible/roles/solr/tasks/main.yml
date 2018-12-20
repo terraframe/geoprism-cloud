@@ -6,6 +6,7 @@
   become_method: sudo
   ignore_errors: yes
   when: "{{clean_solr}}"
+# Be careful with this command. On ansible 2.3.0 I was setting recreate to false and it was still deleting solr volume data (but only sometimes)
 - name: Start Solr
   docker_container:
     name: solr
