@@ -1,6 +1,21 @@
 
 # This is used to deploy an extension project of Geoprism
   
+- name: Stage appcfg
+  copy: src="{{appcfg}}/"
+        dest="/tmp/staging/appcfg/"
+  become: yes
+  become_method: sudo
+  when: appcfg is defined
+- name: Deploy appcfg to Docker
+  shell: "{{item}}"
+  with_items:
+    - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/appcfg'
+    - docker cp /tmp/staging/appcfg/ geoprism:"{{catalina_home}}/appcfg"
+  become: yes
+  become_method: sudo
+  when: appcfg is defined
+  
 - name: Make Wars directory
   shell: "docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars'"
   become: yes

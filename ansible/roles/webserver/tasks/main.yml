@@ -29,7 +29,7 @@
         -Djava.rmi.server.hostname={{ inventory_hostname }}
         -Ddatabase.hostURL={{webserver_database}}
         -server
-        -Dgeoprism.config.dir={{catalina_home}}/appcfg
+        -Dappcfg={{catalina_home}}/appcfg
         -Dtomcat.home={{catalina_home}}
         -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
         -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
