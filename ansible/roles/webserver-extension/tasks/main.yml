@@ -41,7 +41,7 @@
 
 ## Configure log4j.properties ##
 - name: Make webapp-replace directory
-  shell: "mkdir -p /envcfg/webapp-replace"
+  shell: "mkdir -p /tmp/staging/webapp-replace"
   become: yes
   become_method: sudo
 - name: Stage log4j.properties
