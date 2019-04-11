@@ -1,4 +1,5 @@
 # This playbook scrapes the logs from the specified server and throws them into platform/logs
+# TODO : stack dump : /usr/lib/jvm/java-8-oracle/bin/jcmd 1 Thread.print > stack2.out
 
 - hosts: localhost
   tasks:

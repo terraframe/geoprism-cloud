@@ -1,0 +1,10 @@
+- name: Send Email
+  shell: >
+    docker exec geoprism bash -c '
+      java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/{{item}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item}}/WEB-INF/lib/*" net.geoprism.EmailSetting {{emailToAddr}}
+      '
+  with_items: 
+    - "{{ apps | default([]) }}"
+  become: yes
+  become_method: sudo
+  when: apps is defined
