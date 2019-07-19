@@ -1,6 +1,7 @@
 
 - name: Ensure the webserver can connect to the database
   wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
+  when: "aws_access_key is defined"
 
 # Docker stuff
 - name: Log into ECR
