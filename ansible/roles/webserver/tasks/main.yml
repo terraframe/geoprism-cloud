@@ -44,8 +44,10 @@
         -Demail.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
         -Dsolr.enabled={{solr_enabled | default('x')}}
+        -Dgeoprism.volume=/opt/geoprism
         "
     network_mode: host
+    volumes: /opt/geoprism:/opt/geoprism
   become: yes
   become_method: sudo
   
