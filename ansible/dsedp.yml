@@ -24,6 +24,7 @@
   roles:
     - yum
     - install_postgres
+    - install_orientdb
     - deploy_postgres
     
 
