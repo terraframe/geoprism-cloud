@@ -45,6 +45,7 @@
         -Dbucket.name={{bucket_name | default('x')}}
         -Dsolr.enabled={{solr_enabled | default('x')}}
         -Dgeoprism.volume=/opt/geoprism/misc
+        -Dorientdb.root.password={{orientdb_root_pass}}
         "
     network_mode: host
     volumes: /opt/geoprism:/opt/geoprism

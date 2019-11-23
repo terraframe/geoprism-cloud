@@ -7,18 +7,20 @@
     recreate: true
     pull: true
     env:
-      ORIENTDB_ROOT_PASSWORD: "{{orientdb_pass}}"
+      ORIENTDB_ROOT_PASSWORD: "{{orientdb_root_pass}}"
     exposed_ports:
       - 2424
+      - 2480
     ports:
       - "{{ orientdb_port | default(2424') }}:2424"
+      - "{{ orientdb_admin_port | default(2480') }}:2480"
     volumes:
       - /docker/volumes/orientdb/databases:/orientdb/databases
       - /docker/volumes/orientdb/backup:/orientdb/backup
     restart_policy: always
   become: yes
   become_method: sudo
-  when: "{{clean_db}}"
+  when: "{{clean_orientdb}}"
   
 # When we're recreating the docker image for some reason docker leaves the old volume just sitting around unused. This was causing us to run out of space after x number of deploys
 # https://lebkowski.name/docker-volumes/
@@ -26,7 +28,7 @@
   shell: "docker volume rm $(docker volume ls -qf dangling=true)"
   become: yes
   become_method: sudo
-  when: "{{clean_db}}"
+  when: "{{clean_orientdb}}"
   ignore_errors: yes
 
 
