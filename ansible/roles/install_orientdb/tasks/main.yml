@@ -1,4 +1,10 @@
 
+- name: Delete Data
+  file:
+    state: absent
+    path: /docker/volumes/orientdb
+  when: "{{clean_orientdb}}"
+
 - name: Start OrientDB
   docker_container:
     name: orientdb
