@@ -12,8 +12,8 @@
       - 2424
       - 2480
     ports:
-      - "{{ orientdb_port | default(2424') }}:2424"
-      - "{{ orientdb_admin_port | default(2480') }}:2480"
+      - "{{ orientdb_port | default('2424') }}:2424"
+      - "{{ orientdb_admin_port | default('2480') }}:2480"
     volumes:
       - /docker/volumes/orientdb/databases:/orientdb/databases
       - /docker/volumes/orientdb/backup:/orientdb/backup
