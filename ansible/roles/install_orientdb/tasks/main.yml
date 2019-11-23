@@ -13,6 +13,8 @@
   file:
     state: absent
     path: /docker/volumes/orientdb
+  become: yes
+  become_method: sudo
   when: "{{clean_orientdb}}"
 
 - name: Start OrientDB
