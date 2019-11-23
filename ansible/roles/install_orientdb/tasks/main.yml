@@ -1,4 +1,14 @@
 
+- name: Kill OrientDB
+  docker_container:
+    name: orientdb
+    state: absent
+    force_kill: yes
+    keep_volumes: no
+  become: yes
+  become_method: sudo
+  when: "{{clean_orientdb}}"
+
 - name: Delete Data
   file:
     state: absent
