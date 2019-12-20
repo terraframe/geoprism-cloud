@@ -32,9 +32,13 @@
   file:
     state: absent
     path: "/tmp/staging/solr/"
+  become: yes
+  become_method: sudo
 - name: Stage Solr Config
   copy: src="{{solr_core_path}}/"
         dest="/tmp/staging/solr/"
+  become: yes
+  become_method: sudo
 # This doesn't work because I don't know how to stat a file inside a docker container
 #- name: Does the solr core exist?
 #  stat:
