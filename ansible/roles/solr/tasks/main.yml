@@ -38,6 +38,8 @@
   file:
     state: absent
     path: "/docker/volumes/solr/"
+  become: yes
+  become_method: sudo
   when: "{{clean_solr}} and {{solr_enabled}}"
 - name: Create Solr Core
   shell: '{{item}}'
@@ -50,6 +52,8 @@
   copy: src="{{solr_core_path}}/"
         dest="/docker/volumes/solr/"
   when: "{{solr_enabled}}"
+  become: yes
+  become_method: sudo
 - name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
