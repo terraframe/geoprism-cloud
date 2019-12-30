@@ -5,7 +5,7 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-  when: "{{clean_solr}} and {{solr_enabled}}"
+  when: "{{solr_enabled}} and {{clean_solr}}"
 - name: Start Solr
   docker_container:
     name: solr
@@ -19,14 +19,14 @@
       - /docker/volumes/solr/{{solr_core_name}}:{{solr_server}/solr/{{solr_core_name}}
   become: yes
   become_method: sudo
-  when: "{{clean_solr}} and {{solr_enabled}}"
+  when: "{{solr_enabled}} and {{clean_solr}}"
 
 # Third party libs
 - name: Install libgdal
   shell: docker exec geoprism bash -c 'apt-get update && apt-get -y install libgdal-java'
   become: yes
   become_method: sudo
-  when: "{{clean_solr}} and {{solr_enabled}}"
+  when: "{{solr_enabled}} and {{clean_solr}}"
 
 - name: Does the solr core exist?
   stat:
@@ -34,26 +34,27 @@
   register: solr_core_exists
   become: yes
   become_method: sudo
+  when: "{{solr_enabled}}"
 - name: Delete Existing Solr Config
   file:
     state: absent
     path: "/docker/volumes/solr/"
   become: yes
   become_method: sudo
-  when: "{{clean_solr}} and {{solr_enabled}}"
+  when: "{{solr_enabled}} and {{clean_solr}}"
 - name: Create Solr Core
   shell: '{{item}}'
   with_items:
     - docker exec solr bash -c '/opt/solr/bin/solr create_core -c {{solr_core_name}}'
   become: yes
   become_method: sudo
-  when: "(not solr_core_exists.stat.exists or {{clean_solr}}) and {{solr_enabled}}"
+  when: "{{solr_enabled}} and (not solr_core_exists.stat.exists or {{clean_solr}})"
 - name: Copy Solr Config
   copy: src="{{solr_core_path}}/"
         dest="/docker/volumes/solr/"
-  when: "{{solr_enabled}}"
   become: yes
   become_method: sudo
+  when: "{{solr_enabled}}"
 - name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
@@ -61,7 +62,7 @@
     - docker cp /docker/volumes/solr/server 'solr:{{solr_server}}/../staging'
     - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/../staging/* {{solr_server}}'
     - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/../staging'
-  when: "{{solr_jts}} and {{solr_enabled}}"
+  when: "{{solr_enabled}} and {{solr_jts}}"
   become: yes
   become_method: sudo
 - name: Restart Solr
