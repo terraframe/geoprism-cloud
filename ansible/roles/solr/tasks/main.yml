@@ -5,7 +5,7 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-  when: "{{solr_enabled}} and {{clean_solr}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 - name: Start Solr
   docker_container:
     name: solr
@@ -19,14 +19,14 @@
       - /docker/volumes/solr/{{solr_core_name}}:{{solr_server}/solr/{{solr_core_name}}
   become: yes
   become_method: sudo
-  when: "{{solr_enabled}} and {{clean_solr}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 
 # Third party libs
 - name: Install libgdal
   shell: docker exec geoprism bash -c 'apt-get update && apt-get -y install libgdal-java'
   become: yes
   become_method: sudo
-  when: "{{solr_enabled}} and {{clean_solr}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 
 - name: Does the solr core exist?
   stat:
@@ -34,27 +34,27 @@
   register: solr_core_exists
   become: yes
   become_method: sudo
-  when: "{{solr_enabled}}"
+  when: "{{solr_enabled | default(false)}}"
 - name: Delete Existing Solr Config
   file:
     state: absent
     path: "/docker/volumes/solr/"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled}} and {{clean_solr}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 - name: Create Solr Core
   shell: '{{item}}'
   with_items:
     - docker exec solr bash -c '/opt/solr/bin/solr create_core -c {{solr_core_name}}'
   become: yes
   become_method: sudo
-  when: "{{solr_enabled}} and (not solr_core_exists.stat.exists or {{clean_solr}})"
+  when: "{{solr_enabled | default(false)}} and (not solr_core_exists.stat.exists or {{clean_solr | default(false)}})"
 - name: Copy Solr Config
   copy: src="{{solr_core_path}}/"
         dest="/docker/volumes/solr/"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled}}"
+  when: "{{solr_enabled | default(false)}}"
 - name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
@@ -62,7 +62,7 @@
     - docker cp /docker/volumes/solr/server 'solr:{{solr_server}}/../staging'
     - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/../staging/* {{solr_server}}'
     - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/../staging'
-  when: "{{solr_enabled}} and {{solr_jts}}"
+  when: "{{solr_enabled | default(false)}} and {{solr_jts | default(false)}}"
   become: yes
   become_method: sudo
 - name: Restart Solr
@@ -72,9 +72,9 @@
     - docker start solr
   become: yes
   become_method: sudo
-  when: "{{solr_enabled}}"
+  when: "{{solr_enabled | default(false)}}"
   
 - name: Wait for Solr to be up
   wait_for: host="127.0.0.1" port=8983 delay=5 timeout=60 state=started
-  when: "{{solr_enabled}}"
+  when: "{{solr_enabled | default(false)}}"
   
