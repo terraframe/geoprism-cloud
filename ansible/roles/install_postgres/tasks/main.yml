@@ -2,6 +2,22 @@
 # Our job is to SSH into the database server, install docker and a postgres image
 # This script is useful for when we're not using amazon RDS but just a bare bones server
 
+- name: Delete Data
+  file:
+    state: absent
+    path: /docker/volumes/postgresql/data
+  become: yes
+  become_method: sudo
+  when: "{{clean_db | default(false)}}"
+
+# This item is only used to migrate systems that were built before we started using volumes 
+- name: Db Volume Migrate
+  shell: '{{item}}'
+  with_items:
+    - docker cp 'postgres:/var/lib/postgresql/data' /docker/volumes/postgresql/data
+  when: "{{clean_db | default(false)}} and {{db_volume_migrate | default(false)}}"
+  become: yes
+  become_method: sudo
 
 - name: Start Postgres Docker
   docker_container:
@@ -17,6 +33,8 @@
     ports:
       - "{{ db_port | default(5432) }}:5432"
     restart_policy: always
+    volumes:
+      - /docker/volumes/postgresql/data:/var/lib/postgresql/data
   become: yes
   become_method: sudo
   when: "{{clean_db}}"
