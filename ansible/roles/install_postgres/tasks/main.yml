@@ -29,7 +29,7 @@
 - name: Start Postgres Docker
   docker_container:
     name: postgres
-    image: "{{ db_image | default('mdillon/postgis:9.6') }}"
+    image: "{{ db_image | default('mdillon/postgis:9.5') }}"
     state: started
     recreate: false
     pull: true
