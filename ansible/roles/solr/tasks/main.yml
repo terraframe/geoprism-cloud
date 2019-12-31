@@ -18,7 +18,7 @@
 - name: Solr Volume Migrate
   shell: '{{item}}'
   with_items:
-    - docker cp 'solr:{{solr_server}/solr/{{solr_core_name}}' /docker/volumes/solr/{{solr_core_name}}
+    - docker cp 'solr:{{solr_server}}/solr/{{solr_core_name}}' /docker/volumes/solr/{{solr_core_name}}
   when: "{{solr_volume_migrate | default(false)}}"
   become: yes
   become_method: sudo
