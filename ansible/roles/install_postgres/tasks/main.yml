@@ -15,16 +15,16 @@
   shell: '{{item}}'
   with_items:
     - docker cp 'postgres:/var/lib/postgresql/data' /docker/volumes/postgresql/data
-  when: "{{clean_db | default(false)}} and {{db_volume_migrate | default(false)}}"
+  when: "{{db_volume_migrate | default(false)}}"
   become: yes
   become_method: sudo
 
 - name: Start Postgres Docker
   docker_container:
     name: postgres
-    image: "{{ db_image | default('mdillon/postgis:9.5') }}"
+    image: "{{ db_image | default('mdillon/postgis:9.6') }}"
     state: started
-    recreate: true
+    recreate: false
     pull: true
     env:
       POSTGRES_PASSWORD: "{{rootdb_pass}}"
@@ -37,7 +37,6 @@
       - /docker/volumes/postgresql/data:/var/lib/postgresql/data
   become: yes
   become_method: sudo
-  when: "{{clean_db}}"
   
 # When we're recreating the docker image for some reason docker leaves the old volume just sitting around unused. This was causing us to run out of space after x number of deploys
 # https://lebkowski.name/docker-volumes/
