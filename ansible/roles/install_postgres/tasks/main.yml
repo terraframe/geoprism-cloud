@@ -11,6 +11,13 @@
   when: "{{clean_db | default(false)}}"
 
 # This item is only used to migrate systems that were built before we started using volumes 
+- name: Db Volume Migrate Make directory
+  file:
+    state: present
+    path: /docker/volumes/postgresql
+  become: yes
+  become_method: sudo
+  when: "{{db_volume_migrate | default(false)}}"
 - name: Db Volume Migrate
   shell: '{{item}}'
   with_items:
