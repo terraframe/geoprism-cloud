@@ -15,7 +15,7 @@
 #   become_method: sudo
 #   ignore_errors: yes
 #   when: "{{stop_all_docker_containers | default(false)}}"
-- name: Start Docker
+- name: Start Geoprism Webserver
   docker_container:
     name: geoprism
     image: "{{docker_image}}"
@@ -52,6 +52,53 @@
     volumes: /opt/geoprism:/opt/geoprism
   become: yes
   become_method: sudo
+  when: "not {{debug | default('false')}}"
+  
+- name: Start Geoprism Webserver (Debug)
+  docker_container:
+    name: geoprism
+    image: "{{docker_image}}"
+    state: started
+    recreate: yes
+    pull: yes
+    restart_policy: always
+    env: >
+        JAVA_OPTS="
+        -Xms512M
+        -Xmx{{tomcat_memory}}
+        -Djava.rmi.server.hostname={{ inventory_hostname }}
+        -Ddatabase.hostURL={{webserver_database}}
+        -Dappcfg={{catalina_home}}/appcfg
+        -Dproject.basedir={{catalina_home}}
+        -Dtomcat.home={{catalina_home}}
+        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
+        -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
+        -Dbirt-server=true
+        -DFile.encoding=UTF-8      
+        -Ddatabase.user={{db_user}}
+        -Ddatabase.password={{db_pass}}
+        -Ddatabase.port=5432
+        -Demail.username={{ email_user | default('x') }}
+        -Demail.password={{ email_pass | default('x') }}
+        -Dbucket.name={{bucket_name | default('x')}}
+        -Dsolr.enabled={{solr_enabled | default('x')}}
+        -Dgeoprism.volume=/opt/geoprism/misc
+        -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
+        -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
+        -Dcom.sun.management.jmxremote
+        -Dcom.sun.management.jmxremote.port=9010
+        -Dcom.sun.management.jmxremote.rmi.port=9010
+        -Dcom.sun.management.jmxremote.local.only=false
+        -Dcom.sun.management.jmxremote.authenticate=false
+        -Dcom.sun.management.jmxremote.ssl=false
+        -Xdebug
+        -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000
+        "
+    network_mode: host
+    volumes: /opt/geoprism:/opt/geoprism
+  become: yes
+  become_method: sudo
+  when: "{{debug | default('false')}}"
   
 - name: Forward port (iptables)
   shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
