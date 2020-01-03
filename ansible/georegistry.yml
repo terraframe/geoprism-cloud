@@ -51,10 +51,10 @@
 
 
 # This part entirely optional. It is included to test the email architecture and make sure emails can be sent properly.
-- name: Test Send Email
-  hosts: webservers
-  vars:
-    apps: '["ROOT"]'
-    emailToAddr: rrowlands@terraframe.com
-  roles:
-    - send-email
+#- name: Test Send Email
+#  hosts: webservers
+#  vars:
+#    apps: '["ROOT"]'
+#    emailToAddr: rrowlands@terraframe.com
+#  roles:
+#    - send-email
