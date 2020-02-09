@@ -7,7 +7,18 @@
     - "{{ apps | default([]) }}"
   become: yes
   become_method: sudo
-  when: apps is defined
+  when: "apps is defined and not {{debug | default('false')}}"
+  
+- name: Patch (debug)
+  shell: >
+    docker exec geoprism bash -c '
+      java $JAVA_OPTS_NO_DEBUG -cp "$CATALINA_HOME/webapps/{{item}}/WEB-INF/classes:$CATALINA_HOME/webapps/{{item}}/WEB-INF/lib/*" net.geoprism.GeoprismPatcher $CATALINA_HOME/webapps/{{item}}/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --clean={{clean_db}} 2>&1 | tee $CATALINA_HOME/logs/patch-{{item}}.log
+      '
+  with_items: 
+    - "{{ apps | default([]) }}"
+  become: yes
+  become_method: sudo
+  when: "apps is defined and {{debug | default('false')}}"
   
 - name: Boot
   shell: docker restart geoprism
