@@ -18,7 +18,7 @@
 - name: Solr Volume Migrate
   shell: '{{item}}'
   with_items:
-    - docker cp 'solr:{{solr_server}}/solr/{{solr_core_name}}' /docker/volumes/solr/{{solr_core_name}}
+    - docker cp 'solr:{{solr_server}}/solr/{{solr_core_name}}/.' /docker/volumes/solr/{{solr_core_name}}
   when: "{{solr_volume_migrate | default(false)}}"
   become: yes
   become_method: sudo
@@ -40,7 +40,7 @@
     restart_policy: always
     network_mode: host
     volumes:
-      - "/docker/volumes/solr/{{solr_core_name}}:{{solr_server}}/solr/{{solr_core_name}}"
+      - "/docker/volumes/solr:{{solr_server}}/solr"
   become: yes
   become_method: sudo
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
