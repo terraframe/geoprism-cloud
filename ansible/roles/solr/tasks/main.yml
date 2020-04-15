@@ -2,27 +2,24 @@
 - name: Delete Data
   file:
     state: absent
-    path: /docker/volumes/solr
+    path: /docker/volumes/solr/configsets
   become: yes
   become_method: sudo
   when: "{{clean_solr | default(false)}}"
-
-# This item is only used to migrate systems that were built before we started using volumes 
-- name: Volume Migrate Make directory
+- name: Solr Make Configsets Dir
   file:
     state: directory
-    path: /docker/volumes/solr
+    path: /docker/volumes/solr/configsets
   become: yes
   become_method: sudo
-  when: "{{solr_volume_migrate | default(false)}}"
-- name: Solr Volume Migrate
-  shell: '{{item}}'
-  with_items:
-    - docker cp 'solr:{{solr_server}}/solr/{{solr_core_name}}/.' /docker/volumes/solr/{{solr_core_name}}
-  when: "{{solr_volume_migrate | default(false)}}"
+  when: "{{clean_solr | default(false)}}"
+  
+- name: Copy Solr Config
+  copy: src="{{solr_core_path}}/"
+        dest="/docker/volumes/solr/configsets/"
   become: yes
   become_method: sudo
-  ignore_errors: yes
+  when: "{{solr_enabled | default(false)}}"
 
 # Solr Docker container
 - name: Kill Solr
@@ -40,8 +37,9 @@
     pull: yes
     restart_policy: always
     network_mode: host
+    command: "solr-precreate {{solr_core_name}} {{solr_server}}/solr/configsets/{{solr_core_name}}"
     volumes:
-      - "/docker/volumes/solr/{{solr_core_name}}:{{solr_server}}/solr/{{solr_core_name}}"
+      - "/docker/volumes/solr/{{solr_core_name}}:{{solr_server}}/solr/configsets/{{solr_core_name}}"
   become: yes
   become_method: sudo
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
@@ -53,33 +51,6 @@
   become_method: sudo
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 
-- name: Does the solr core exist?
-  stat:
-    path: "/docker/volumes/solr/{{solr_core_name}}"
-  register: solr_core_exists
-  become: yes
-  become_method: sudo
-  when: "{{solr_enabled | default(false)}}"
-- name: Delete Existing Solr Config
-  file:
-    state: absent
-    path: "/docker/volumes/solr/{{solr_core_name}}"
-  become: yes
-  become_method: sudo
-  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
-- name: Create Solr Core
-  shell: '{{item}}'
-  with_items:
-    - docker exec solr bash -c '/opt/solr/bin/solr create_core -c {{solr_core_name}}'
-  become: yes
-  become_method: sudo
-  when: "{{solr_enabled | default(false)}} and (not solr_core_exists.stat.exists or {{clean_solr | default(false)}})"
-- name: Copy Solr Config
-  copy: src="{{solr_core_path}}/"
-        dest="/docker/volumes/solr/"
-  become: yes
-  become_method: sudo
-  when: "{{solr_enabled | default(false)}}"
 - name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
