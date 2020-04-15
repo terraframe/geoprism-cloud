@@ -1,6 +1,4 @@
 
-#- name: Ensure postgres is running
-#  local_action: wait_for host="{{inventory_hostname}}" port="{{ db_port | default(5432) }}" delay=0 timeout=30 state=started
 - name: Wait for postgres to be up
   wait_for: 'host="127.0.0.1" port={{ db_port | default(5432) }} delay=0 timeout=60 state=started'
 
@@ -9,7 +7,7 @@
     name: "{{item}}"
     state: absent
     port: "{{ db_port | default(5432) }}"
-    login_host: "{{inventory_hostname}}"
+    login_host: "127.0.0.1"
     login_user: "{{rootdb_user}}"
     login_password: "{{rootdb_pass}}"
   with_items: 
@@ -21,7 +19,7 @@
     name: "{{item}}"
     state: present
     port: "{{ db_port | default(5432) }}"
-    login_host: "{{inventory_hostname}}"
+    login_host: "127.0.0.1"
     login_user: "{{rootdb_user}}"
     login_password: "{{rootdb_pass}}"
   with_items: 
@@ -33,7 +31,7 @@
     state: absent
     db: "{{item}}"
     port: "{{ db_port | default(5432) }}"
-    login_host: "{{inventory_hostname}}"
+    login_host: "127.0.0.1"
     login_user: "{{rootdb_user}}"
     login_password: "{{rootdb_pass}}"
   with_items: 
@@ -46,7 +44,7 @@
     state: present
     db: "{{item}}"
     port: "{{ db_port | default(5432) }}"
-    login_host: "{{inventory_hostname}}"
+    login_host: "127.0.0.1"
     login_user: "{{rootdb_user}}"
     login_password: "{{rootdb_pass}}"
     password: "{{db_pass}}"
@@ -60,7 +58,7 @@
     name: "{{item}}"
     state: present
     port: "{{ db_port | default(5432) }}"
-    login_host: "{{inventory_hostname}}"
+    login_host: "127.0.0.1"
     login_user: "{{rootdb_user}}"
     login_password: "{{rootdb_pass}}"
     owner: "{{item}}"
@@ -73,7 +71,7 @@
     db: "{{item}}"
     state: present
     port: "{{ db_port | default(5432) }}"
-    login_host: "{{inventory_hostname}}"
+    login_host: "127.0.0.1"
     login_user: "{{rootdb_user}}"
     login_password: "{{rootdb_pass}}"
   with_items: 
@@ -85,7 +83,7 @@
     db: "{{item}}"
     state: present
     port: "{{ db_port | default(5432) }}"
-    login_host: "{{inventory_hostname}}"
+    login_host: "127.0.0.1"
     login_user: "{{rootdb_user}}"
     login_password: "{{rootdb_pass}}"
   with_items: 
