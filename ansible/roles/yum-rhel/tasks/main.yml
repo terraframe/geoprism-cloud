@@ -70,6 +70,12 @@
   shell: pip install boto
   become: yes
   become_method: sudo
+  
+# Required for database management (deploy_postgres)
+- name: Install db management prerequisites
+  shell: yum install -y libpq-dev python-psycopg2
+  become: yes
+  become_method: sudo
 
 # Docker-py
 - name: Install docker-py
