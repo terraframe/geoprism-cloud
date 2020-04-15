@@ -23,7 +23,7 @@
 - name: Db Volume Migrate
   shell: '{{item}}'
   with_items:
-    - docker cp 'postgres:/var/lib/postgresql/data' /docker/volumes/postgresql/data
+    - docker cp 'postgres:/var/lib/postgresql/data/.' /docker/volumes/postgresql/data
   when: "{{db_volume_migrate | default(false)}}"
   become: yes
   become_method: sudo
