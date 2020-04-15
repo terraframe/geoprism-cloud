@@ -20,7 +20,7 @@
 - name: Start OrientDB
   docker_container:
     name: orientdb
-    image: "{{ orientdb_image | default('orientdb:3.0.25') }}"
+    image: "{{ orientdb_image | default('orientdb:3.0') }}"
     state: started
     recreate: true
     pull: true

@@ -2,6 +2,8 @@
 # Our job is to SSH into the database server, install docker and a postgres image
 # This script is useful for when we're not using amazon RDS but just a bare bones server
 
+# Thinking about upgrading? 9.5 -> 9.6 requires a data migration https://github.com/janLo/postgres-docker-upgrade
+
 - name: Delete Data
   file:
     state: absent
@@ -29,7 +31,7 @@
 - name: Start Postgres Docker
   docker_container:
     name: postgres
-    image: "{{ db_image | default('mdillon/postgis:9.5') }}"
+    image: "{{ db_image | default('postgis/postgis:9.5-2.5') }}"
     state: started
     recreate: "{{clean_db | default(false)}}"
     pull: true
@@ -42,6 +44,14 @@
     restart_policy: always
     volumes:
       - /docker/volumes/postgresql/data:/var/lib/postgresql/data
+  become: yes
+  become_method: sudo
+  
+# In the case that we've updated the postgis version, we need to run this code. If we haven't updated, then this code is a NOOP
+- name: Postgis upgrade
+  shell: '{{item}}'
+  with_items:
+    - docker exec postgres update-postgis.sh
   become: yes
   become_method: sudo
   

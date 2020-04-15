@@ -33,7 +33,7 @@
 - name: Start Solr
   docker_container:
     name: solr
-    image: solr:6.6.5
+    image: solr:6.6
     state: started
     recreate: "{{clean_solr}}"
     pull: yes
