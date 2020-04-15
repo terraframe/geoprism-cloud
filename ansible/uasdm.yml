@@ -23,6 +23,7 @@
   roles:
     - yum-rhel
     - install_postgres
+    - install_orientdb
     
 
 - name: Deploy Webserver
