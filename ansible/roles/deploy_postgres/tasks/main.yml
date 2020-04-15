@@ -1,6 +1,9 @@
 
 - name: Wait for postgres to be up
   wait_for: 'host="127.0.0.1" port={{ db_port | default(5432) }} delay=0 timeout=60 state=started'
+- name: sleep for a short time
+  wait_for:
+    timeout: 10
 
 - name: Drop DB
   postgresql_db:
