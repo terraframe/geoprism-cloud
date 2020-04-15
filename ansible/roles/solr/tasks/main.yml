@@ -22,6 +22,7 @@
   when: "{{solr_volume_migrate | default(false)}}"
   become: yes
   become_method: sudo
+  ignore_errors: yes
 
 # Solr Docker container
 - name: Kill Solr
