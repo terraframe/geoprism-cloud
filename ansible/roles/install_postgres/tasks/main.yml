@@ -50,9 +50,9 @@
 # In the case that we've updated the postgis version, we need to run this code. If we haven't updated, then this code is a NOOP
 - name: Wait for postgres to be up
   wait_for: 'host="127.0.0.1" port={{ db_port | default(5432) }} delay=0 timeout=60 state=started'
-- name: sleep for 30 seconds
+- name: sleep for 60 seconds
   wait_for:
-    timeout: 30
+    timeout: 60
   delegate_to: localhost
 - name: Postgis upgrade
   shell: '{{item}}'
