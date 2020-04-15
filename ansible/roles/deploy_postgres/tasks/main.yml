@@ -5,8 +5,10 @@
 
 # If this task here is giving you a timeout then its probably because your computer (the one running the ansible command) does not have access through the AWS firewall to hit the database server on port 5432.
 # This command has to be a local_action because you can't SSH into RDS.
-- name: Ensure postgres is running
-  local_action: wait_for host="{{inventory_hostname}}" port="{{ db_port | default(5432) }}" delay=0 timeout=30 state=started
+#- name: Ensure postgres is running
+#  local_action: wait_for host="{{inventory_hostname}}" port="{{ db_port | default(5432) }}" delay=0 timeout=30 state=started
+- name: Wait for postgres to be up
+  wait_for: 'host="127.0.0.1" port={{ db_port | default(5432) }} delay=0 timeout=60 state=started'
 
 # vars_prompt:
 #   - name: "prompt_delete_db"
