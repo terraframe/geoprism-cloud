@@ -40,7 +40,7 @@
     restart_policy: always
     network_mode: host
     volumes:
-      - "/docker/volumes/solr/{{solr_core_name}}:{{solr_server}/solr/{{solr_core_name}}"
+      - "/docker/volumes/solr/{{solr_core_name}}:{{solr_server}}/solr/{{solr_core_name}}"
   become: yes
   become_method: sudo
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
