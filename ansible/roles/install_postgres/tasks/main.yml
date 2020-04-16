@@ -13,18 +13,24 @@
   when: "{{clean_db | default(false)}}"
 
 # This item is only used to migrate systems that were built before we started using volumes 
-- name: Db Volume Migrate Make directory
-  file:
-    state: directory
-    path: /docker/volumes/postgresql
+- name: Does the docker volume exist already?
+  stat: path=/docker/volumes/postgresql
+  register: volume_exists
   become: yes
   become_method: sudo
   when: "{{db_volume_migrate | default(false)}}"
+- name: Db Volume Migrate Make directory
+  file:
+    state: directory
+    path: /docker/volumes/postgresql/data
+  become: yes
+  become_method: sudo
+  when: "not volume_exists.stat.exists and {{db_volume_migrate | default(false)}}"
 - name: Db Volume Migrate
   shell: '{{item}}'
   with_items:
     - docker cp 'postgres:/var/lib/postgresql/data/.' /docker/volumes/postgresql/data
-  when: "{{db_volume_migrate | default(false)}}"
+  when: "not volume_exists.stat.exists and {{db_volume_migrate | default(false)}}"
   become: yes
   become_method: sudo
 
