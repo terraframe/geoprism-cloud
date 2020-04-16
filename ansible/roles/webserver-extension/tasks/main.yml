@@ -45,16 +45,16 @@
   become: yes
   become_method: sudo
 - name: Stage log4j.properties
-  copy: src="../envcfg/webapp-replace/log4j.properties"
-        dest="/tmp/staging/webapp-replace/log4j.properties"
+  copy: src="../envcfg/webapp-replace/log4j2.properties"
+        dest="/tmp/staging/webapp-replace/log4j2.properties"
   become: yes
   become_method: sudo
 - name: Deploy log4j.properties to Docker
   shell: "{{item}}"
   with_items:
-    - sed -i -e "s/log4j.rootLogger=ERROR/log4j.rootLogger={{log_level | default("ERROR")}}/g" /tmp/staging/webapp-replace/log4j.properties
-    - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/wars/geoprism/WEB-INF/classes/log4j.properties'
-    - docker cp /tmp/staging/webapp-replace/log4j.properties geoprism:"{{catalina_home}}/wars/geoprism/WEB-INF/classes/log4j.properties"
+    - sed -i -e "s/rootLogger.level=error/rootLogger.level={{log_level | default("error")}}/g" /tmp/staging/webapp-replace/log4j2.properties
+    - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/wars/geoprism/WEB-INF/classes/log4j2.properties'
+    - docker cp /tmp/staging/webapp-replace/log4j2.properties geoprism:"{{catalina_home}}/wars/geoprism/WEB-INF/classes/log4j2.properties"
   become: yes
   become_method: sudo
   
@@ -62,7 +62,7 @@
 - name: Download & deploy geoserver
   shell: "{{item}}"
   with_items:
-    - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/releases/content/org/geoserver/geoserver/2.9.1/geoserver-2.9.1.war"'
+    - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/releases/content/org/geoserver/geoserver/2.14.2/geoserver-2.14.2.war"'
     - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoserver.war'
   become: yes
   become_method: sudo
