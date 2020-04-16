@@ -15,7 +15,7 @@
     login_password: "{{rootdb_pass}}"
   with_items: 
     - "{{ apps | default([]) }}"
-  when: "{{clean_db}}"
+  when: "{{clean_db | default(false)}}"
   
 - name: Make DB
   postgresql_db:
@@ -27,6 +27,7 @@
     login_password: "{{rootdb_pass}}"
   with_items: 
     - "{{ apps | default([]) }}"
+  when: "{{clean_db | default(false)}}"
   
 - name: Drop User
   postgresql_user:
@@ -39,7 +40,7 @@
     login_password: "{{rootdb_pass}}"
   with_items: 
     - "{{apps}}"
-  when: "{{clean_db}}"
+  when: "{{clean_db | default(false)}}"
   
 - name: Make User
   postgresql_user:
@@ -54,7 +55,7 @@
     role_attr_flags: LOGIN,NOSUPERUSER
   with_items: 
     - "{{apps}}"
-  when: "{{clean_db}}"
+  when: "{{clean_db | default(false)}}"
   
 - name: DB Owner to new User
   postgresql_db:
@@ -67,6 +68,7 @@
     owner: "{{item}}"
   with_items: 
     - "{{ apps | default([]) }}"
+  when: "{{clean_db | default(false)}}"
 
 - name: Add PostGIS
   postgresql_ext:
@@ -79,6 +81,7 @@
     login_password: "{{rootdb_pass}}"
   with_items: 
     - "{{apps}}"
+  when: "{{clean_db | default(false)}}"
     
 - name: Add uuid-ossp
   postgresql_ext:
@@ -91,6 +94,7 @@
     login_password: "{{rootdb_pass}}"
   with_items: 
     - "{{apps}}"
+  when: "{{clean_db | default(false)}}"
     
 #- name: restart postgresql container
 #  docker_container:
