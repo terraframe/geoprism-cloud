@@ -1,26 +1,4 @@
 
-- name: Delete Data
-  file:
-    state: absent
-    path: /docker/volumes/solr/configsets
-  become: yes
-  become_method: sudo
-  when: "{{clean_solr | default(false)}}"
-- name: Solr Make Configsets Dir
-  file:
-    state: directory
-    path: /docker/volumes/solr/configsets
-  become: yes
-  become_method: sudo
-  when: "{{clean_solr | default(false)}}"
-  
-- name: Copy Solr Config
-  copy: src="{{solr_core_path}}/"
-        dest="/docker/volumes/solr/configsets/"
-  become: yes
-  become_method: sudo
-  when: "{{solr_enabled | default(false)}}"
-
 # Solr Docker container
 - name: Kill Solr
   shell: docker kill solr
@@ -28,18 +6,16 @@
   become_method: sudo
   ignore_errors: yes
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+# Be careful with this command. On ansible 2.3.0 I was setting recreate to false and it was still deleting solr volume data (but only sometimes)
 - name: Start Solr
   docker_container:
     name: solr
-    image: solr:6.6
+    image: solr:6.6.5
     state: started
     recreate: "{{clean_solr}}"
     pull: yes
     restart_policy: always
     network_mode: host
-    command: "solr-precreate {{solr_core_name}} {{solr_server}}/solr/configsets/{{solr_core_name}}"
-    volumes:
-      - "/docker/volumes/solr/{{solr_core_name}}:{{solr_server}}/solr/configsets/{{solr_core_name}}"
   become: yes
   become_method: sudo
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
@@ -51,16 +27,47 @@
   become_method: sudo
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 
+# Deploy Solr Core
+- name: Delete Solr Config staging
+  file:
+    state: absent
+    path: "/tmp/staging/solr/"
+  become: yes
+  become_method: sudo
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+- name: Stage Solr Config
+  copy: src="{{solr_core_path}}/"
+        dest="/tmp/staging/solr/"
+  become: yes
+  become_method: sudo
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+- name: Create Solr Core
+  shell: '{{item}}'
+  with_items:
+    - docker exec solr bash -c '/opt/solr/bin/solr create_core -c {{solr_core_name}}'
+  become: yes
+  become_method: sudo
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 - name: Deploy Solr JTS
   shell: '{{item}}'
   with_items:
   # Install JTS into solr/server
-    - docker cp /docker/volumes/solr/server 'solr:{{solr_server}}/../staging'
+    - docker cp /tmp/staging/solr/server 'solr:{{solr_server}}/../staging'
     - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/../staging/* {{solr_server}}'
     - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/../staging'
-  when: "{{solr_enabled | default(false)}} and {{solr_jts | default(false)}}"
+  when: "{{solr_jts}}"
   become: yes
   become_method: sudo
+- name: Deploy Solr Core Config
+  shell: '{{item}}'
+  with_items:
+    - docker cp '/tmp/staging/solr/{{solr_core_name}}' 'solr:{{solr_server}}/solr/staging'
+    - docker exec -u root solr bash -c 'cp -rf {{solr_server}}/solr/staging/* {{solr_server}}/solr/{{solr_core_name}}'
+    - docker exec -u root solr bash -c 'rm -rf {{solr_server}}/solr/staging'
+    - docker exec -u root solr bash -c 'chown -R solr:solr {{solr_server}}/solr/{{solr_core_name}}'
+  become: yes
+  become_method: sudo
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 - name: Restart Solr
   shell: "{{item}}"
   with_items:
@@ -68,9 +75,9 @@
     - docker start solr
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
   
 - name: Wait for Solr to be up
   wait_for: host="127.0.0.1" port=8983 delay=5 timeout=60 state=started
-  when: "{{solr_enabled | default(false)}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
   
