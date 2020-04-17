@@ -52,7 +52,7 @@
 - name: Deploy log4j2.xml to Docker
   shell: "{{item}}"
   with_items:
-    - sed -i -e "s/rootLogger.level=error/rootLogger.level={{log_level | default("error")}}/g" /tmp/staging/webapp-replace/log4j2.xml
+    - sed -i -e "s/<Root level="error">/<Root level="{{log_level | default("error")}}">/g" /tmp/staging/webapp-replace/log4j2.xml
     - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/wars/geoprism/WEB-INF/classes/log4j2.xml'
     - docker cp /tmp/staging/webapp-replace/log4j2.xml geoprism:"{{catalina_home}}/wars/geoprism/WEB-INF/classes/log4j2.xml"
   become: yes
