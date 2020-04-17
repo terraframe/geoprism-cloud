@@ -34,7 +34,7 @@
   when: nexus_password is defined
   
 - name: Extract Artifact
-  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/geoprism && cd $CATALINA_HOME/wars/geoprism && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoprism.war'
+  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/geoprism && cd $CATALINA_HOME/wars/geoprism && $JAVA_HOME/bin/jar xf $CATALINA_HOME/wars/geoprism.war'
   become: yes
   become_method: sudo
 
@@ -63,7 +63,7 @@
   shell: "{{item}}"
   with_items:
     - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/allrepos/content/org/geoserver/geoserver/2.14.2/geoserver-2.14.2.war"'
-    - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoserver.war'
+    - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xf $CATALINA_HOME/wars/geoserver.war'
   become: yes
   become_method: sudo
 

@@ -28,7 +28,7 @@
   when: apps is defined
   
 - name: Extract Geoprism
-  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/{{item.value}} && cd $CATALINA_HOME/wars/{{item.value}} && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoprism.war && sed -i -e "s/<Root level="error">/<Root level="{{log_level | default("ERROR")}}">/g" $CATALINA_HOME/wars/{{item.value}}/WEB-INF/classes/log4j2.xml'
+  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/{{item.value}} && cd $CATALINA_HOME/wars/{{item.value}} && $JAVA_HOME/bin/jar xf $CATALINA_HOME/wars/geoprism.war && sed -i -e "s/<Root level="error">/<Root level="{{log_level | default("ERROR")}}">/g" $CATALINA_HOME/wars/{{item.value}}/WEB-INF/classes/log4j2.xml'
   become: yes
   become_method: sudo
   when: apps is defined
@@ -38,7 +38,7 @@
   shell: "{{item}}"
   with_items:
     - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/releases/content/org/geoserver/geoserver/2.14.2/geoserver-2.14.2.war"'
-    - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoserver.war'
+    - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xf $CATALINA_HOME/wars/geoserver.war'
   become: yes
   become_method: sudo
 
