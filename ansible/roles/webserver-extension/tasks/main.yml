@@ -39,22 +39,22 @@
   become_method: sudo
 
 
-## Configure log4j.properties ##
+## Configure log4j2.xml ##
 - name: Make webapp-replace directory
   shell: "mkdir -p /tmp/staging/webapp-replace"
   become: yes
   become_method: sudo
-- name: Stage log4j.properties
-  copy: src="../envcfg/webapp-replace/log4j2.properties"
-        dest="/tmp/staging/webapp-replace/log4j2.properties"
+- name: Stage log4j2.xml
+  copy: src="../envcfg/webapp-replace/log4j2.xml"
+        dest="/tmp/staging/webapp-replace/log4j2.xml"
   become: yes
   become_method: sudo
-- name: Deploy log4j.properties to Docker
+- name: Deploy log4j2.xml to Docker
   shell: "{{item}}"
   with_items:
-    - sed -i -e "s/rootLogger.level=error/rootLogger.level={{log_level | default("error")}}/g" /tmp/staging/webapp-replace/log4j2.properties
-    - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/wars/geoprism/WEB-INF/classes/log4j2.properties'
-    - docker cp /tmp/staging/webapp-replace/log4j2.properties geoprism:"{{catalina_home}}/wars/geoprism/WEB-INF/classes/log4j2.properties"
+    - sed -i -e "s/rootLogger.level=error/rootLogger.level={{log_level | default("error")}}/g" /tmp/staging/webapp-replace/log4j2.xml
+    - docker exec geoprism bash -c 'rm -f $CATALINA_HOME/wars/geoprism/WEB-INF/classes/log4j2.xml'
+    - docker cp /tmp/staging/webapp-replace/log4j2.xml geoprism:"{{catalina_home}}/wars/geoprism/WEB-INF/classes/log4j2.xml"
   become: yes
   become_method: sudo
   

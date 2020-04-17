@@ -28,7 +28,7 @@
   when: apps is defined
   
 - name: Extract Geoprism
-  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/{{item.value}} && cd $CATALINA_HOME/wars/{{item.value}} && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoprism.war && sed -i -e "s/log4j.rootLogger=ERROR/log4j.rootLogger={{log_level | default("ERROR")}}/g" $CATALINA_HOME/wars/{{item.value}}/WEB-INF/classes/log4j.properties'
+  shell: docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/wars/{{item.value}} && cd $CATALINA_HOME/wars/{{item.value}} && $JAVA_HOME/bin/jar xvf $CATALINA_HOME/wars/geoprism.war && sed -i -e "s/<Root level="error">/<Root level="{{log_level | default("ERROR")}}">/g" $CATALINA_HOME/wars/{{item.value}}/WEB-INF/classes/log4j2.xml'
   become: yes
   become_method: sudo
   when: apps is defined
