@@ -40,5 +40,26 @@
     - webserver-extension
     - restore-vault
     - solr
+
+- name: Graph Database Creator
+  hosts: webservers
+  tasks:
+    - name: Patch
+      shell: >
+        docker exec geoprism bash -c '
+          java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*" com.runwaysdk.patcher.domain.GraphDatabaseCreator 2>&1 | tee $CATALINA_HOME/logs/graphdb-creator.log
+          '
+      become: yes
+      become_method: sudo
+      
+- name: Patch
+  hosts: webservers
+  vars:
+    catalina_home: /usr/local/tomcat
+    apps: '["ROOT"]'
+    solr_server: /opt/solr/server
+    
+  roles:
     - patch
     - boot
+    
