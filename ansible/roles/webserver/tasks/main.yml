@@ -3,11 +3,18 @@
   wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
   when: "aws_access_key is defined"
 
-# Docker stuff
-- name: Log into ECR
-  shell: "export AWS_ACCESS_KEY_ID={{aws_access_key}} && export AWS_SECRET_ACCESS_KEY={{aws_secret_key}} && eval $(aws ecr get-login --region us-west-2 --no-include-email)"
+- name: Stage SSL certificates
+  copy: src="../docker/web-private/security/geoprism.ks"
+        dest="/opt/tomcat/ssl/geoprism.ks"
   become: yes
   become_method: sudo
+- name: Stage SSL certificates
+  copy: src="../docker/web-private/security/server.xml"
+        dest="/opt/tomcat/ssl/server.xml"
+  become: yes
+  become_method: sudo
+
+# Docker stuff
 # TODO: Errors out when Postgres & Geoprism are on the same machine
 # - name: Stop all docker containers
 #   shell: docker stop $(docker ps -a -q)
@@ -15,10 +22,10 @@
 #   become_method: sudo
 #   ignore_errors: yes
 #   when: "{{stop_all_docker_containers | default(false)}}"
-- name: Start Geoprism Webserver
+- name: Start Tomcat Webserver
   docker_container:
     name: geoprism
-    image: "{{docker_image}}"
+    image: "{{webserver_docker_image}}"
     state: started
     recreate: yes
     pull: yes
@@ -49,7 +56,10 @@
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
         "
     network_mode: host
-    volumes: /opt/geoprism:/opt/geoprism
+    volumes:
+        - /opt/geoprism:/opt/geoprism
+        - /opt/tomcat/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks
+        - /opt/tomcat/ssl/server.xml:{{catalina_home}}/conf/server.xml
   become: yes
   become_method: sudo
   when: "not {{debug | default('false')}}"
@@ -118,7 +128,10 @@
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
         "
     network_mode: host
-    volumes: /opt/geoprism:/opt/geoprism
+    volumes:
+        - /opt/geoprism:/opt/geoprism
+        - /opt/tomcat/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks
+        - /opt/tomcat/ssl/server.xml:{{catalina_home}}/conf/server.xml
   become: yes
   become_method: sudo
   when: "{{debug | default('false')}}"
