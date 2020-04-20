@@ -4,6 +4,15 @@
   when: "aws_access_key is defined"
 
 - name: Stage SSL certificates
+  file:
+    path: /opt/tomcat/ssl
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Stage SSL certificates
   copy: src="../docker/web-private/security/geoprism.ks"
         dest="/opt/tomcat/ssl/geoprism.ks"
   become: yes
