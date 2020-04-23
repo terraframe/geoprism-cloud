@@ -25,12 +25,12 @@
     path: /docker/volumes/postgresql/data
   become: yes
   become_method: sudo
-  when: "not volume_exists.stat.exists and {{db_volume_migrate | default(false)}}"
+  when: "{{db_volume_migrate | default(false)}} and not volume_exists.stat.exists"
 - name: Db Volume Migrate
   shell: '{{item}}'
   with_items:
     - docker cp 'postgres:/var/lib/postgresql/data/.' /docker/volumes/postgresql/data
-  when: "not volume_exists.stat.exists and {{db_volume_migrate | default(false)}}"
+  when: "{{db_volume_migrate | default(false)}} and not volume_exists.stat.exists"
   become: yes
   become_method: sudo
 
