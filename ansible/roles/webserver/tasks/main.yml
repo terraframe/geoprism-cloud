@@ -76,7 +76,7 @@
 - name: Start Geoprism Webserver (Debug)
   docker_container:
     name: geoprism
-    image: "{{docker_image}}"
+    image: "{{webserver_docker_image}}"
     state: started
     recreate: yes
     pull: yes
