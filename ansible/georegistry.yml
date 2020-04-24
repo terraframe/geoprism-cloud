@@ -45,6 +45,7 @@
     - webserver
     - webserver-extension
     - restore-vault
+    - certbot-centos7
     - solr
     - patch
     - boot

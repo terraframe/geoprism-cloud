@@ -3,23 +3,14 @@
   wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
   when: "aws_access_key is defined"
 
-- name: Stage SSL certificates
-  file:
-    path: /opt/tomcat/ssl
-    state: directory
-    mode: 0700
-    owner: "{{ansible_user}}"
-    recurse: yes
-  become: yes
-  become_method: sudo
-- name: Stage SSL certificates
-  copy: src="../docker/web-private/security/geoprism.ks"
-        dest="/opt/tomcat/ssl/geoprism.ks"
-  become: yes
-  become_method: sudo
-- name: Stage SSL certificates
-  copy: src="../docker/web-private/security/server.xml"
+- name: Stage server.xml
+  copy: src="../tomcat/conf/server.xml"
         dest="/opt/tomcat/ssl/server.xml"
+  become: yes
+  become_method: sudo
+  
+- name: Delete webapp data
+  shell: /bin/rm -rf /opt/tomcat/webapps/*
   become: yes
   become_method: sudo
 
@@ -63,12 +54,16 @@
         -Dgeoprism.volume=/opt/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
+        -DGEOSERVER_DATA_DIR=/opt/geoserver
         "
     network_mode: host
     volumes:
+        - /opt/tomcat/webapps:{{catalina_home}}/webapps
         - /opt/geoprism:/opt/geoprism
-        - /opt/tomcat/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks
+        - /opt/webserver/vault:{{catalina_home}}/vault
+        - /etc/letsencrypt/live/{{ssl_domain}}:{{catalina_home}}/ssl
         - /opt/tomcat/ssl/server.xml:{{catalina_home}}/conf/server.xml
+        - /opt/geoserver:/opt/geoserver
   become: yes
   become_method: sudo
   when: "not {{debug | default('false')}}"
@@ -104,6 +99,7 @@
         -Dgeoprism.volume=/opt/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
+        -DGEOSERVER_DATA_DIR=/opt/geoserver
         -Dcom.sun.management.jmxremote
         -Dcom.sun.management.jmxremote.port=9010
         -Dcom.sun.management.jmxremote.rmi.port=9010
@@ -135,12 +131,16 @@
         -Dgeoprism.volume=/opt/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
+        -DGEOSERVER_DATA_DIR=/opt/geoserver
         "
     network_mode: host
     volumes:
+        - /opt/tomcat/webapps:{{catalina_home}}/webapps
         - /opt/geoprism:/opt/geoprism
-        - /opt/tomcat/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks
+        - /opt/webserver/vault:{{catalina_home}}/vault
+        - /etc/letsencrypt/live/{{ssl_domain}}:{{catalina_home}}/ssl
         - /opt/tomcat/ssl/server.xml:{{catalina_home}}/conf/server.xml
+        - /opt/geoserver:/opt/geoserver
   become: yes
   become_method: sudo
   when: "{{debug | default('false')}}"

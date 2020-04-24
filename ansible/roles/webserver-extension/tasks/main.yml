@@ -67,6 +67,17 @@
   become: yes
   become_method: sudo
 
+- name: Does the geoserver data directory exist already?
+  stat: path=/opt/geoserver/gwc
+  register: geoserver_data_exists
+  become: yes
+  become_method: sudo
+- name: Copy default geoserver data to geoserver data directory
+  copy:
+    src: $CATALINA_HOME/webapps/geoserver/data
+    dest: /opt/geoserver/gwc
+  when: "not geoserver_data_exists.stat.exists"
+
 - name: Deploy Artifact
   shell: docker exec geoprism bash -c 'mv $CATALINA_HOME/wars/geoprism $CATALINA_HOME/webapps/ROOT'
   become: yes

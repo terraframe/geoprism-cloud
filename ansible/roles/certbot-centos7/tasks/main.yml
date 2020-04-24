@@ -1,0 +1,27 @@
+
+# Install Certbot
+- name: Install Certbot
+  yum: name="yum-utils" state=latest
+  become: yes
+  become_method: sudo
+- name: Install Certbot
+  shell: yum-config-manager --enable rhui-REGION-rhel-server-extras rhui-REGION-rhel-server-optional
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: Install Certbot
+  yum: name="certbot" state=latest
+  become: yes
+  become_method: sudo
+
+- name: Get a certificate with Certbot
+  shell: >
+    sudo certbot certonly \
+    --webroot \
+    --webroot-path /opt/tomcat/webapps \
+    --non-interactive \
+    --agree-tos \
+    --email security@terraframe.com \
+    --domains {{ssl_domain}}
+  become: yes
+  become_method: sudo

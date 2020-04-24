@@ -120,16 +120,17 @@
 #   become: yes
 #   become_method: sudo
 #   when: should_backup | default(true)
-  
-- name: Create vault stage if not exist
-  file:
-    path: /tmp/staging/vault
-    state: directory
-    mode: 0700
-    owner: "{{ansible_user}}"
-    recurse: yes
+
+- name: Does the docker volume exist already?
+  stat: path=/opt/webserver/vault
+  register: volume_exists
   become: yes
   become_method: sudo
+- name: Copy volume to docker volume vault
+  copy:
+    src: /tmp/staging/vault
+    dest: /opt/webserver/vault
+  when: "not volume_exists.stat.exists"
 
 # - name: Delete NAS backups (SHOULD ONLY BE USED FOR DEV)
 #   file: 

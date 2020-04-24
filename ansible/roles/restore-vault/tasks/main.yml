@@ -55,10 +55,10 @@
   become: yes
   become_method: sudo
   
-- name: Delete vault archive
-  file: 
-    state: absent
-    path: /tmp/staging/vault.tar.gz
-  become: yes
-  become_method: sudo
+#- name: Delete vault archive
+#  file: 
+#    state: absent
+#   path: /tmp/staging/vault.tar.gz
+#  become: yes
+#  become_method: sudo
   

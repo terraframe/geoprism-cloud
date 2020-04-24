@@ -32,6 +32,41 @@
   yum: name="python-pip" state=latest
   become: yes
   become_method: sudo
+- name: Yum install certbot
+  yum: name="python-pip" state=latest
+  become: yes
+  become_method: sudo
+
+
+# Install and configure yum-cron so that our servers remain up-to-date with security updates
+- name: Yum install yum-cron
+  yum: name="yum-cron" state=latest
+  become: yes
+  become_method: sudo
+- name: Yum-cron configure
+  replace:
+    path: /etc/yum/yum-cron.conf # CentOS 7 specific
+    regexp: '^email_to\s*=.*$'
+    replace: 'email_to=security@terraframe.com'
+- name: Yum-cron configure
+  replace:
+    path: /etc/yum/yum-cron.conf # CentOS 7 specific
+    regexp: '^email_from\s*=.*$'
+    replace: 'email_from=builder@terraframe.com'
+- name: Yum-cron configure
+  replace:
+    path: /etc/yum/yum-cron.conf # CentOS 7 specific
+    regexp: '^update_cmd\s*=.*$'
+    replace: 'update_cmd=security'
+- name: Yum-cron configure
+  replace:
+    path: /etc/yum/yum-cron.conf # CentOS 7 specific
+    regexp: '^apply_updates\s*=.*$'
+    replace: 'apply_updates=yes'
+- name: Start yum-cron service
+  service: name=yum-cron state=started enabled=yes
+  become: yes
+  become_method: sudo
 
 
 # AWS CLI tools (for pulling docker images from ecs)
