@@ -127,9 +127,7 @@
   become: yes
   become_method: sudo
 - name: Copy volume to docker volume vault
-  copy:
-    src: /tmp/staging/vault
-    dest: /opt/webserver/vault
+  shell: 'docker cp "geoprism:{{catalina_home}}/vault" /opt/webserver/vault'
   when: "not volume_exists.stat.exists"
 
 # - name: Delete NAS backups (SHOULD ONLY BE USED FOR DEV)

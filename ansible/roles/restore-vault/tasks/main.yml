@@ -3,13 +3,13 @@
 # Otherwise, the vault will be restored from /tmp/staging/vault
 
 # Staging must exist
-- name: Create the vault staging if not exist
-  file:
-    path: /tmp/staging/vault
-    state: directory
-    mode: 0700
-  become: yes
-  become_method: sudo
+#- name: Create the vault staging if not exist
+#  file:
+#    path: /tmp/staging/vault
+#    state: directory
+#    mode: 0700
+#  become: yes
+#  become_method: sudo
   
 # Restore from S3
 # - name: Download vault from S3
@@ -47,13 +47,13 @@
 #   when: vault_s3_folder is defined
   
 # Deploy vault staging to docker
-- name: Restore vault to Docker
-  shell: "{{item}}"
-  with_items:
-    - docker exec geoprism bash -c 'rm -rf {{catalina_home}}/vault'
-    - docker cp /tmp/staging/vault "geoprism:{{catalina_home}}/vault"
-  become: yes
-  become_method: sudo
+#- name: Restore vault to Docker
+#  shell: "{{item}}"
+#  with_items:
+#    - docker exec geoprism bash -c 'rm -rf {{catalina_home}}/vault'
+#    - docker cp /tmp/staging/vault "geoprism:{{catalina_home}}/vault"
+#  become: yes
+#  become_method: sudo
   
 #- name: Delete vault archive
 #  file: 

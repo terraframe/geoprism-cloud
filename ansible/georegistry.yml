@@ -41,10 +41,9 @@
   
   roles:
     - yum
-    - backup-vault
+    - backup-vault # TODO : Get rid of this after the vault patching has been done
     - webserver
     - webserver-extension
-    - restore-vault
     - certbot-centos7
     - solr
     - patch
