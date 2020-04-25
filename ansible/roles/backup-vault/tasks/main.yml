@@ -126,6 +126,12 @@
   register: volume_exists
   become: yes
   become_method: sudo
+- name: Create docker volume directory
+  file:
+    state: directory
+    path: "/opt/webserver/vault"
+  become: yes
+  become_method: sudo
 - name: Copy volume to docker volume vault
   shell: 'docker cp "geoprism:{{catalina_home}}/vault" /opt/webserver/vault'
   when: "not volume_exists.stat.exists"
