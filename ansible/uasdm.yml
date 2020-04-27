@@ -38,6 +38,7 @@
     - backup-vault
     - webserver
     - webserver-extension
+    - certbot-centos7
     - restore-vault
     - solr
 

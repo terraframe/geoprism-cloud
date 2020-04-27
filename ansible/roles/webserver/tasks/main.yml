@@ -40,7 +40,7 @@
         -Dappcfg={{catalina_home}}/appcfg
         -Dproject.basedir={{catalina_home}}
         -Dtomcat.home={{catalina_home}}
-        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
+        -Djavax.net.ssl.keyStore={{catalina_home}}/ssl/geoprism.ks
         -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
         -Dbirt-server=true
         -DFile.encoding=UTF-8      
