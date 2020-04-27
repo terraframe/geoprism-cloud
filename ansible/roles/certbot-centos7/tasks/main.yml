@@ -16,7 +16,7 @@
 
 - name: Get a certificate with Certbot
   shell: >
-    sudo certbot certonly \
+    certbot certonly \
     --webroot \
     --webroot-path /opt/tomcat/webapps \
     --non-interactive \
