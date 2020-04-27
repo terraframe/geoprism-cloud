@@ -79,7 +79,7 @@
   become: yes
   become_method: sudo
 - name: Copy default geoserver data to geoserver data directory
-  shell: 'docker cp "$CATALINA_HOME/webapps/geoserver/data" /opt/geoserver'
+  shell: 'docker cp "geoprism:$CATALINA_HOME/webapps/geoserver/data" /opt/geoserver'
   when: "not volume_exists.stat.exists"
   become: yes
   become_method: sudo
