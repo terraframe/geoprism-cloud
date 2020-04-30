@@ -5,7 +5,7 @@
 
 - name: Stage SSL certificates
   file:
-    path: /data/webserver/tomcat/ssl
+    path: "{{app_data}}/ssl"
     state: directory
     mode: 0700
     owner: "{{ansible_user}}"
@@ -14,12 +14,12 @@
   become_method: sudo
 - name: Stage SSL certificates
   copy: src="../docker/web-private/security/geoprism.ks"
-        dest="/data/ssl/geoprism.ks"
+        dest="{{app_data}}/ssl/geoprism.ks"
   become: yes
   become_method: sudo
 - name: Stage SSL certificates
   copy: src="../docker/web-private/security/server.xml"
-        dest="/data/ssl/server.xml"
+        dest="{{app_data}}/ssl/server.xml"
   become: yes
   become_method: sudo
   
