@@ -12,10 +12,42 @@
 - name: Delete Data
   file:
     state: absent
-    path: /docker/volumes/orientdb
+    path: "{{app_data}}/orientdb"
   become: yes
   become_method: sudo
   when: "{{clean_orientdb}}"
+  
+# Move existing data over to {app_data}
+- name: Does the new docker volume exist already?
+  stat: "path={{app_data}}/orientdb"
+  register: new_volume_exists
+  become: yes
+  become_method: sudo
+- name: Does the old docker volume exist?
+  stat: "path=/docker/volumes/orientdb"
+  register: old_volume_exists
+  become: yes
+  become_method: sudo
+- name: Create docker volume directory
+  file:
+    state: directory
+    path: "{{app_data}}/orientdb"
+  become: yes
+  become_method: sudo
+- name: Copy volume to docker volume vault
+  copy:
+    src: "/docker/volumes/orientdb/"
+    dest: "{{app_data}}/orientdb/"
+  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
+  become: yes
+  become_method: sudo
+- name: Delete Old Data
+  file:
+    state: absent
+    path: "/docker/volumes/orientdb"
+  become: yes
+  become_method: sudo
+  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
 
 - name: Start OrientDB
   docker_container:
@@ -33,8 +65,8 @@
       - "{{ orientdb_port | default('2424') }}:2424"
       - "{{ orientdb_admin_port | default('2480') }}:2480"
     volumes:
-      - /docker/volumes/orientdb/databases:/orientdb/databases
-      - /docker/volumes/orientdb/backup:/orientdb/backup
+      - "{{app_data}}/orientdb/databases:/orientdb/databases"
+      - "{{app_data}}/orientdb/backup:/orientdb/backup"
     restart_policy: always
   become: yes
   become_method: sudo

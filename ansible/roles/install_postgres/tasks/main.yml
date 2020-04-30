@@ -7,32 +7,42 @@
 - name: Delete Data
   file:
     state: absent
-    path: /docker/volumes/postgresql/data
+    path: "{{app_data}}/postgres/data"
   become: yes
   become_method: sudo
   when: "{{clean_db | default(false)}}"
 
-# This item is only used to migrate systems that were built before we started using volumes 
-- name: Does the docker volume exist already?
-  stat: path=/docker/volumes/postgresql
-  register: volume_exists
+# Move existing data over to {app_data}
+- name: Does the new docker volume exist already?
+  stat: "path={{app_data}}/postgres"
+  register: new_volume_exists
   become: yes
   become_method: sudo
-  when: "{{db_volume_migrate | default(false)}}"
-- name: Db Volume Migrate Make directory
+- name: Does the old docker volume exist?
+  stat: "path=/docker/volumes/postgresql"
+  register: old_volume_exists
+  become: yes
+  become_method: sudo
+- name: Create docker volume directory
   file:
     state: directory
-    path: /docker/volumes/postgresql/data
+    path: "{{app_data}}/postgres"
   become: yes
   become_method: sudo
-  when: "{{db_volume_migrate | default(false)}} and not volume_exists.stat.exists"
-- name: Db Volume Migrate
-  shell: '{{item}}'
-  with_items:
-    - docker cp 'postgres:/var/lib/postgresql/data/.' /docker/volumes/postgresql/data
-  when: "{{db_volume_migrate | default(false)}} and not volume_exists.stat.exists"
+- name: Copy volume to docker volume vault
+  copy:
+    src: "/docker/volumes/postgresql/"
+    dest: "{{app_data}}/postgres/"
+  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo
+- name: Delete Old Data
+  file:
+    state: absent
+    path: "/docker/volumes/postgresql"
+  become: yes
+  become_method: sudo
+  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
 
 - name: Start Postgres Docker
   docker_container:
@@ -49,7 +59,7 @@
       - "{{ db_port | default(5432) }}:5432"
     restart_policy: always
     volumes:
-      - /docker/volumes/postgresql/data:/var/lib/postgresql/data
+      - "{{app_data}}/postgres/data:/var/lib/postgresql/data"
   become: yes
   become_method: sudo
   
