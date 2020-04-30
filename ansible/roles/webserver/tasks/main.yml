@@ -42,10 +42,8 @@
   become: yes
   become_method: sudo
 - name: Copy volume to docker volume vault
-  copy:
-    src: "/opt/geoprism/"
-    dest: "{{app_data}}/geoprism/"
-  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
+  shell: "cp -a /opt/geoprism/. {{app_data}}/geoprism/"
+  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo
   
