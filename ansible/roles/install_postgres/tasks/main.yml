@@ -33,7 +33,7 @@
   copy:
     src: "/docker/volumes/postgresql/"
     dest: "{{app_data}}/postgres/"
-  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
+  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo
 - name: Delete Old Data
@@ -42,7 +42,7 @@
     path: "/docker/volumes/postgresql"
   become: yes
   become_method: sudo
-  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
+  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
 
 - name: Start Postgres Docker
   docker_container:

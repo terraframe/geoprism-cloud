@@ -38,7 +38,7 @@
   copy:
     src: "/docker/volumes/orientdb/"
     dest: "{{app_data}}/orientdb/"
-  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
+  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo
 - name: Delete Old Data
@@ -47,7 +47,7 @@
     path: "/docker/volumes/orientdb"
   become: yes
   become_method: sudo
-  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
+  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
 
 - name: Start OrientDB
   docker_container:
