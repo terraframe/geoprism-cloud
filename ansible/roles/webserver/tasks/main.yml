@@ -5,7 +5,7 @@
 
 - name: Stage SSL certificates
   file:
-    path: /opt/tomcat/ssl
+    path: /data/webserver/tomcat/ssl
     state: directory
     mode: 0700
     owner: "{{ansible_user}}"
@@ -14,23 +14,43 @@
   become_method: sudo
 - name: Stage SSL certificates
   copy: src="../docker/web-private/security/geoprism.ks"
-        dest="/opt/tomcat/ssl/geoprism.ks"
+        dest="/data/ssl/geoprism.ks"
   become: yes
   become_method: sudo
 - name: Stage SSL certificates
   copy: src="../docker/web-private/security/server.xml"
-        dest="/opt/tomcat/ssl/server.xml"
+        dest="/data/ssl/server.xml"
   become: yes
   become_method: sudo
-
-# Docker stuff
-# TODO: Errors out when Postgres & Geoprism are on the same machine
-# - name: Stop all docker containers
-#   shell: docker stop $(docker ps -a -q)
-#   become: yes
-#   become_method: sudo
-#   ignore_errors: yes
-#   when: "{{stop_all_docker_containers | default(false)}}"
+  
+  
+# Move existing geoprism data over to /data/geoprism
+- name: Does the new docker volume exist already?
+  stat: "path={{app_data}}/geoprism"
+  register: new_volume_exists
+  become: yes
+  become_method: sudo
+- name: Does the old docker volume exist?
+  stat: "path=/opt/geoprism"
+  register: old_volume_exists
+  become: yes
+  become_method: sudo
+- name: Create docker volume directory
+  file:
+    state: directory
+    path: "{{app_data}}/geoprism"
+  become: yes
+  become_method: sudo
+- name: Copy volume to docker volume vault
+  copy:
+    src: "/opt/geoprism/"
+    dest: "{{app_data}}/geoprism/"
+  when: "not volume_exists.stat.exists and old_volume_exists.stat.exists"
+  become: yes
+  become_method: sudo
+  
+  
+# Start the Geoprism Docker container
 - name: Start Tomcat Webserver
   docker_container:
     name: geoprism
@@ -60,15 +80,17 @@
         -Demail.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
         -Dsolr.enabled={{solr_enabled | default('x')}}
-        -Dgeoprism.volume=/opt/geoprism/misc
+        -Dgeoprism.volume=/data/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
+        -DGEOSERVER_DATA_DIR=/data/geoserver
         "
     network_mode: host
     volumes:
-        - /opt/geoprism:/opt/geoprism
-        - /opt/tomcat/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks
-        - /opt/tomcat/ssl/server.xml:{{catalina_home}}/conf/server.xml
+        - "{{app_data}}/geoprism:/data/geoprism"
+        - "{{app_data}}/geoserver:/data/geoserver"
+        - "{{app_data}}/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks"
+        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
   become: yes
   become_method: sudo
   when: "not {{debug | default('false')}}"
@@ -112,6 +134,7 @@
         -Dcom.sun.management.jmxremote.ssl=false
         -Xdebug
         -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000
+        -DGEOSERVER_DATA_DIR=/data/geoserver
         "
         JAVA_OPTS_NO_DEBUG="
         -Xms512M
@@ -132,15 +155,17 @@
         -Demail.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
         -Dsolr.enabled={{solr_enabled | default('x')}}
-        -Dgeoprism.volume=/opt/geoprism/misc
+        -Dgeoprism.volume=/data/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
+        -DGEOSERVER_DATA_DIR=/data/geoserver
         "
     network_mode: host
     volumes:
-        - /opt/geoprism:/opt/geoprism
-        - /opt/tomcat/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks
-        - /opt/tomcat/ssl/server.xml:{{catalina_home}}/conf/server.xml
+        - "{{app_data}}/geoprism:/data/geoprism"
+        - "{{app_data}}/geoserver:/data/geoserver"
+        - "{{app_data}}/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks"
+        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
   become: yes
   become_method: sudo
   when: "{{debug | default('false')}}"

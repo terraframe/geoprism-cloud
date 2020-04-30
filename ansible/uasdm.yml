@@ -35,10 +35,8 @@
     solr_server: /opt/solr/server
     
   roles:
-    - backup-vault
     - webserver
     - webserver-extension
-    - restore-vault
     - solr
 
 - name: Graph Database Creator

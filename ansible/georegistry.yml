@@ -41,10 +41,8 @@
   
   roles:
     - yum
-    - backup-vault
     - webserver
     - webserver-extension
-    - restore-vault
     - solr
     - patch
     - boot

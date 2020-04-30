@@ -119,5 +119,4 @@
 - name: Deploy Webserver
   hosts: webservers
   roles:
-    - restore-vault
     - boot

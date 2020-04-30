@@ -32,8 +32,6 @@
     apps: { "demo2": "demo2", "srl": "srl" }
   roles:
     - yum
-    - backup-vault
     - webserver
     - solr
-    - restore-vault
     - patch
