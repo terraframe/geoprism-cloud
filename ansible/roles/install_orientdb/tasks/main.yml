@@ -35,9 +35,7 @@
   become: yes
   become_method: sudo
 - name: Copy volume to docker volume vault
-  copy:
-    src: "/docker/volumes/orientdb/"
-    dest: "{{app_data}}/orientdb/"
+  shell: "cp -a /docker/volumes/orientdb/. {{app_data}}/orientdb/"
   when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo

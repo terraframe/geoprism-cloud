@@ -30,9 +30,7 @@
   become: yes
   become_method: sudo
 - name: Copy volume to docker volume vault
-  copy:
-    src: "/docker/volumes/postgresql/"
-    dest: "{{app_data}}/postgres/"
+  shell: "cp -a /docker/volumes/postgresql/. {{app_data}}/postgres/"
   when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo
