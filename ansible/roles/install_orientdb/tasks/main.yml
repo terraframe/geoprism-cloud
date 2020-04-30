@@ -28,6 +28,13 @@
   register: old_volume_exists
   become: yes
   become_method: sudo
+- name: Stop OrientDB
+  docker_container:
+    name: orientdb
+    state: stopped
+  become: yes
+  become_method: sudo
+  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
 - name: Create docker volume directory
   file:
     state: directory
