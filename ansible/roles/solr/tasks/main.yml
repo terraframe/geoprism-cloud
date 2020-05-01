@@ -49,6 +49,7 @@
   
 - pause:
     seconds: 30
+  when: "{{solr_enabled | default(false)}} and ({{clean_solr | default(false)}} or {{solr_volume_patch | default(false)}})"
   
 - name: Mount Solr Data
   shell: docker exec --user root solr bash -c 'mv /opt/solr/server/solr/mycores/uasdm/data/* /data/ && rm -rf /opt/solr/server/solr/mycores/uasdm/data && ln -s /data /opt/solr/server/solr/mycores/uasdm/data && chown -R solr:solr /opt/solr/server/solr/mycores/uasdm/data && chown -R solr:solr /data'
