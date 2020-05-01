@@ -6,13 +6,13 @@
     path: "{{app_data}}/solr/configsets"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 - name: Stage Solr Config
   copy: src="{{solr_core_path}}/"
         dest="{{app_data}}/solr/configsets"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
   
 # Clean Solr Data
 - name: Delete Solr Data
@@ -45,7 +45,7 @@
       - "{{app_data}}/solr/mycores/{{solr_core_name}}/data:/data"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}}"
+  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
   
 - pause:
     seconds: 30
