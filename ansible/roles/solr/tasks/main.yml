@@ -41,8 +41,8 @@
     restart_policy: always
     network_mode: host
     volumes:
-      - "{{app_data}}/solr/configsets/{{solr_core_name}}}:/opt/solr/server/solr/configsets/{{solr_core_name}}}:ro"
-      - "{{app_data}}/solr/mycores/{{solr_core_name}}}/data:/data"
+      - "{{app_data}}/solr/configsets/{{solr_core_name}}:/opt/solr/server/solr/configsets/{{solr_core_name}}:ro"
+      - "{{app_data}}/solr/mycores/{{solr_core_name}}/data:/data"
   become: yes
   become_method: sudo
   when: "{{solr_enabled | default(false)}}"
