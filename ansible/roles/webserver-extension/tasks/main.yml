@@ -62,7 +62,7 @@
 - name: Download & deploy geoserver
   shell: "{{item}}"
   with_items:
-    - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/allrepos/content/org/geoserver/geoserver/2.14.2/geoserver-2.14.2.war"'
+    - docker exec geoprism bash -c 'wget -nv -O $CATALINA_HOME/wars/geoserver.war "http://nexus.terraframe.com/service/local/repositories/allrepos/content/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"'
     - docker exec geoprism bash -c 'mkdir -p $CATALINA_HOME/webapps/geoserver && cd $CATALINA_HOME/webapps/geoserver && $JAVA_HOME/bin/jar xf $CATALINA_HOME/wars/geoserver.war'
   become: yes
   become_method: sudo
