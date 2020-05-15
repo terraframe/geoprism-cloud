@@ -49,9 +49,7 @@
 
 # Delete temp files
 - name: Delete Tomcat Temp Files
-  file:
-    state: absent
-    path: "{{app_data}}/tomcat/tmp"
+  shell: "rm -rf {{app_data}}/tomcat/tmp/*"
   become: yes
   become_method: sudo
   
