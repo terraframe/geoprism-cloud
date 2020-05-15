@@ -46,7 +46,14 @@
   when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo
-  
+
+# Delete temp files
+- name: Delete Tomcat Temp Files
+  file:
+    state: absent
+    path: "{{app_data}}/tomcat/tmp"
+  become: yes
+  become_method: sudo
   
 # Start the Geoprism Docker container
 - name: Start Tomcat Webserver
@@ -86,6 +93,8 @@
     network_mode: host
     volumes:
         - "{{app_data}}/geoprism:/data/geoprism"
+        - "{{app_data}}/tomcat/logs:/usr/local/tomcat/logs"
+        - "{{app_data}}/tomcat/tmp:/usr/local/tomcat/temp"
         - "{{app_data}}/geoserver:/data/geoserver"
         - "{{app_data}}/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks"
         - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
