@@ -93,6 +93,7 @@
         - "{{app_data}}/geoprism:/data/geoprism"
         - "{{app_data}}/tomcat/logs:/usr/local/tomcat/logs"
         - "{{app_data}}/tomcat/tmp:/usr/local/tomcat/temp"
+        - "{{app_data}}/tomcat/webapps/.well-known:/usr/local/tomcat/webapps/.well-known"
         - "{{app_data}}/geoserver:/data/geoserver"
         - "{{app_data}}/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks"
         - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
@@ -168,6 +169,9 @@
     network_mode: host
     volumes:
         - "{{app_data}}/geoprism:/data/geoprism"
+        - "{{app_data}}/tomcat/logs:/usr/local/tomcat/logs"
+        - "{{app_data}}/tomcat/tmp:/usr/local/tomcat/temp"
+        - "{{app_data}}/tomcat/webapps/.well-known:/usr/local/tomcat/webapps/.well-known"
         - "{{app_data}}/geoserver:/data/geoserver"
         - "{{app_data}}/ssl/geoprism.ks:{{catalina_home}}/conf/geoprism.ks"
         - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
