@@ -1,21 +1,24 @@
 
 - name: Stage geoprism-certbot code
-  copy: src="../docker/geoprism-certbot/cli.ini"
-        dest="{{app_data}}/ssl/letsencrypt/cli.ini"
+  copy:
+    src: "../docker/geoprism-certbot/cli.ini"
+    dest: "{{app_data}}/ssl/letsencrypt/cli.ini"
   become: yes
   become_method: sudo
   
 - name: Stage geoprism-certbot code
-  copy: src="../docker/geoprism-certbot/post-hook.sh"
-        dest="{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
-  mode: a+x
+  copy:
+    src: "../docker/geoprism-certbot/post-hook.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
+    mode: a+x
   become: yes
   become_method: sudo
 
 - name: Stage geoprism-certbot code
-  copy: src="../docker/geoprism-certbot/geoprism-certbot.sh"
-        dest="{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh"
-  mode: a+x
+  copy:
+    src: "../docker/geoprism-certbot/geoprism-certbot.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh"
+    mode: a+x
   become: yes
   become_method: sudo
 
