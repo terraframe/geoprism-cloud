@@ -38,6 +38,7 @@
     - webserver
     - webserver-extension
     - solr
+    - docker-certbot
 
 - name: Graph Database Creator
   hosts: webservers

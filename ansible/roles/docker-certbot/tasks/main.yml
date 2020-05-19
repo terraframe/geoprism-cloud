@@ -1,0 +1,45 @@
+
+- name: Stage geoprism-certbot code
+  copy: src="../docker/geoprism-certbot/cli.ini"
+        dest="{{app_data}}/ssl/letsencrypt/cli.ini"
+  become: yes
+  become_method: sudo
+  
+- name: Stage geoprism-certbot code
+  copy: src="../docker/geoprism-certbot/post-hook.sh"
+        dest="{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
+  mode: a+x
+  become: yes
+  become_method: sudo
+
+- name: Stage geoprism-certbot code
+  copy: src="../docker/geoprism-certbot/geoprism-certbot.sh"
+        dest="{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh"
+  mode: a+x
+  become: yes
+  become_method: sudo
+
+- name: Start Geoprism Certbot Program
+  docker_container:
+    name: geoprism-certbot
+    image: docker:19
+    state: started
+    recreate: yes
+    pull: yes
+    restart_policy: always
+    entrypoint: /bin/sh
+    network_mode: host
+    command:
+        - "/etc/letsencrypt/geoprism-certbot.sh {{ssl_domain}} {{ssl_admin_email}} {{ssl_keystore_password}} geoprism"
+    volumes:
+        - "{{app_data}}/tomcat/webapps/.well-known:/data/tomcat/webapps/.well-known"
+        - "{{app_data}}/ssl/letsencrypt/cert:/etc/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/lib:/var/lib/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/log:/var/log/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/hooks:/etc/letsencrypt/hooks"
+        - "{{app_data}}/ssl/letsencrypt/cli.ini:/etc/letsencrypt/cli.ini"
+        - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/etc/letsencrypt/geoprism-certbot.sh"
+        - "/var/run/docker.sock:/var/run/docker.sock"
+  become: yes
+  become_method: sudo
+  
