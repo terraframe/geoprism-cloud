@@ -32,12 +32,7 @@
     restart_policy: always
     entrypoint: /bin/sh
     network_mode: host
-    command:
-        - "/etc/letsencrypt/geoprism-certbot.sh"
-        - "{{ssl_domain}}"
-        - "{{ssl_admin_email}}"
-        - "{{ssl_keystore_password}}"
-        - "geoprism"
+    command: "/etc/letsencrypt/geoprism-certbot.sh {{ssl_domain}} {{ssl_admin_email}} {{ssl_keystore_password}} geoprism"
     volumes:
         - "{{app_data}}/tomcat/webapps/.well-known:/data/tomcat/webapps/.well-known"
         - "{{app_data}}/ssl/letsencrypt/cert:/etc/letsencrypt"
