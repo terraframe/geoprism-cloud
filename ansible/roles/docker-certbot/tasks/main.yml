@@ -1,4 +1,11 @@
 
+- name: Create directory
+  file:
+    path: "{{app_data}}/ssl/letsencrypt/hooks"
+    state: directory
+  become: yes
+  become_method: sudo
+
 - name: Stage geoprism-certbot code
   copy:
     src: "../docker/geoprism-certbot/cli.ini"
