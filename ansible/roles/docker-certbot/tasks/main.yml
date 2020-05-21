@@ -26,6 +26,13 @@
     mode: a+x
   become: yes
   become_method: sudo
+- name: Stage geoprism-certbot code
+  copy:
+    src: "../docker/geoprism-certbot/pre-hook.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/pre-hook.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
 
 - name: Stage geoprism-certbot code
   copy:
