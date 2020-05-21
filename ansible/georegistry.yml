@@ -41,10 +41,10 @@
   
   roles:
     - yum
+    - docker-certbot # This won't work (initially) on a fresh install, but we can cross that bridge when (if) we get to it.
     - webserver
     - webserver-extension
     - solr
-    - docker-certbot
     - patch
     - boot
 
