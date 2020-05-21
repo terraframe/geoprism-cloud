@@ -57,3 +57,7 @@
   become: yes
   become_method: sudo
   
+- name: Wait until the certificate is present before continuing (otherwise docker will create this file as a directory when the webserver spins up)
+  wait_for:
+    path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+  
