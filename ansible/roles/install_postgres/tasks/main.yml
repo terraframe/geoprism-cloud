@@ -4,6 +4,14 @@
 
 # Thinking about upgrading? 9.5 -> 9.6 requires a data migration https://github.com/janLo/postgres-docker-upgrade
 
+# Delete any existing volumes if we're doing a clean
+- name: Stop Postgres Docker
+  docker_container:
+    name: postgres
+    state: stopped
+  become: yes
+  become_method: sudo
+  when: "{{clean_db | default(false)}}"
 - name: Delete Data
   file:
     state: absent
