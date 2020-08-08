@@ -34,7 +34,7 @@
     state: stopped
   become: yes
   become_method: sudo
-  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
+  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists and not {{clean_orientdb}}"
 - name: Create docker volume directory
   file:
     state: directory
