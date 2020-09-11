@@ -63,12 +63,9 @@
     pull: true
     ulimits:
       - nofile:500000:500000
-    env: >
-      ORIENTDB_ROOT_PASSWORD="{{orientdb_root_pass}}"
-      JAVA_OPTS="
-        -Xms512M
-        -Xmx{{orientdb_memory}}
-        "
+    env:
+      ORIENTDB_ROOT_PASSWORD: "{{orientdb_root_pass}}"
+      ORIENTDB_OPTS_MEMORY: "-Xms512M -Xmx{{orientdb_memory}}"
     exposed_ports:
       - 2424
       - 2480
