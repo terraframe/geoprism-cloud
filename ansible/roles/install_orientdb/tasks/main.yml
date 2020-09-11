@@ -61,6 +61,8 @@
     state: started
     recreate: true
     pull: true
+    ulimits:
+      - nofile:500000:500000
     env: >
       ORIENTDB_ROOT_PASSWORD="{{orientdb_root_pass}}"
       JAVA_OPTS="
