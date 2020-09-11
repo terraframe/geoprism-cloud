@@ -61,8 +61,12 @@
     state: started
     recreate: true
     pull: true
-    env:
-      ORIENTDB_ROOT_PASSWORD: "{{orientdb_root_pass}}"
+    env: >
+      ORIENTDB_ROOT_PASSWORD="{{orientdb_root_pass}}"
+      JAVA_OPTS="
+        -Xms512M
+        -Xmx{{orientdb_memory}}
+        "
     exposed_ports:
       - 2424
       - 2480
