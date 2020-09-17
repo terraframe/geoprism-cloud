@@ -12,6 +12,7 @@
   become: yes
   become_method: sudo
   when: "{{clean_db | default(false)}}"
+  ignore_errors: yes # This command may fail on new installs when postgres doesn't exist
 - name: Delete Data
   file:
     state: absent
