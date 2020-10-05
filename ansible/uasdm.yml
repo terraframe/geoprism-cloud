@@ -21,7 +21,7 @@
     apps: '["uasdm"]'
     
   roles:
-    - yum-rhel
+    - yum-ol7
     - install_postgres
     - install_orientdb
     - deploy_postgres
