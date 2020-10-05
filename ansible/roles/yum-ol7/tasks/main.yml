@@ -1,4 +1,9 @@
 
+- name: Yum install python-pip
+  yum: name="python-pip" state=latest
+  become: true
+  become_method: sudo
+
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools
   shell: pip install awscli
@@ -17,7 +22,7 @@
 
 # Docker-py
 - name: Install docker-py
-  command: pip install 'docker-py==1.9.0' # We're using pip verison 1.9 because there's an ansible bug that thinks version 1.10 is less than 1.7
+  command: pip install docker-py
   become: yes
   become_method: sudo
 
