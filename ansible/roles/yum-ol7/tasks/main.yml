@@ -1,28 +1,30 @@
 
-#- name: Yum install python-pip
-#  yum: name="python-pip" state=latest
-#  become: true
-#  become_method: sudo
-
-## pip should never be run as sudo! ##
+- name: Yum install python-pip
+  yum: name="python-pip" state=latest
+  become: true
+  become_method: sudo
 
 # AWS CLI tools (for pulling docker images from ecs)
-#- name: Install AWS CLI tools
-#  shell: pip install awscli
-#- name: Install Boto (for pulling data from s3)
-#  shell: pip install boto
+- name: Install AWS CLI tools
+  shell: pip install awscli
+  become: yes
+  become_method: sudo
+- name: Install Boto (for pulling data from s3)
+  shell: pip install boto
+  become: yes
+  become_method: sudo
   
 # Required for database management (deploy_postgres)
-#- name: Install db management prerequisites
-#  shell: yum install -y libpq-dev python-psycopg2
-#  become: yes
-#  become_method: sudo
+- name: Install db management prerequisites
+  shell: yum install -y libpq-dev python-psycopg2
+  become: yes
+  become_method: sudo
 
 # Docker-py
-#- name: Install docker-py
-#  command: pip install docker-py
-#  become: yes
-#  become_method: sudo
+- name: Install docker-py
+  command: pip install docker-py
+  become: yes
+  become_method: sudo
 
 # Ensure valid server time (ecs pull fails if time is wrong)
 - name: Update server time
