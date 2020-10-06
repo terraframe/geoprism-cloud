@@ -1,6 +1,6 @@
 
 - name: Kill OrientDB
-  docker_container:
+  community.general.docker_container:
     name: orientdb
     state: absent
     force_kill: yes
@@ -29,7 +29,7 @@
   become: yes
   become_method: sudo
 - name: Stop OrientDB
-  docker_container:
+  community.general.docker_container:
     name: orientdb
     state: stopped
   become: yes
@@ -55,7 +55,7 @@
   when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
 
 - name: Start OrientDB
-  docker_container:
+  community.general.docker_container:
     name: orientdb
     image: "{{ orientdb_image | default('orientdb:3.0') }}"
     state: started

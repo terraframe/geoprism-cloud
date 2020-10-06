@@ -113,7 +113,7 @@
     - "{{apps}}"
     
 #- name: restart postgresql container
-#  docker_container:
+#  community.general.docker_container:
 #    name: postgres
 #    state: started
 #    restart: yes

@@ -54,7 +54,7 @@
   
 # Start the Geoprism Docker container
 - name: Start Tomcat Webserver
-  docker_container:
+  community.general.docker_container:
     name: geoprism
     image: "{{webserver_docker_image}}"
     state: started
@@ -101,7 +101,7 @@
   when: "not {{debug | default('false')}}"
   
 - name: Start Geoprism Webserver (Debug)
-  docker_container:
+  community.general.docker_container:
     name: geoprism
     image: "{{webserver_docker_image}}"
     state: started

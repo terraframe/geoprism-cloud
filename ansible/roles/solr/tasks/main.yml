@@ -31,7 +31,7 @@
   ignore_errors: yes
   when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
 - name: Start Solr
-  docker_container:
+  community.general.docker_container:
     name: solr
     image: solr:6.6.5
     command: "solr-precreate {{solr_core_name}} /opt/solr/server/solr/configsets/{{solr_core_name}}"

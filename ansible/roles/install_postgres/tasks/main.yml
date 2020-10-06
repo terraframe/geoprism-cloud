@@ -6,7 +6,7 @@
 
 # Delete any existing volumes if we're doing a clean
 - name: Stop Postgres Docker
-  docker_container:
+  community.general.docker_container:
     name: postgres
     state: stopped
   become: yes
@@ -33,7 +33,7 @@
   become: yes
   become_method: sudo
 - name: Stop Postgres
-  docker_container:
+  community.general.docker_container:
     name: postgres
     state: stopped
   become: yes
@@ -59,7 +59,7 @@
   when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
 
 - name: Start Postgres Docker
-  docker_container:
+  community.general.docker_container:
     name: postgres
     image: "{{ db_image | default('mdillon/postgis:9.5') }}"
     state: started

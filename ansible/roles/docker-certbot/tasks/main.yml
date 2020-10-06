@@ -57,7 +57,7 @@
   become_method: sudo
 
 - name: Start Geoprism Certbot Program
-  docker_container:
+  community.general.docker_container:
     name: geoprism-certbot
     image: docker:19
     state: started
