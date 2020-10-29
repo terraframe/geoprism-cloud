@@ -74,7 +74,7 @@
         - "{{app_data}}/ssl/letsencrypt/log:/var/log/letsencrypt"
         - "{{app_data}}/ssl/letsencrypt/hooks:/var/lib/geoprism-certbot/hooks"
         - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
-        - "/var/run/docker.sock:/var/run/docker.sock"
+        - "/var/run:/var/run/parent"
   become: yes
   become_method: sudo
   
