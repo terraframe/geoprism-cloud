@@ -44,6 +44,7 @@ RUN sh -c "echo 'ec2-52-25-68-156.us-west-2.compute.amazonaws.com nexus.terrafra
 #RUN docker run --name postgres -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 mdillon/postgis:9.5
 #RUN docker run -d --name orientdb -p 2424:2424 -p 2480:2480  -e ORIENTDB_ROOT_PASSWORD=root orientdb:3.0.25
 
+# Install Android SDK
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip -O /tmp/android-studio.zip \
     && mkdir -p /tmp/android-sdk/cmdline-tools \
     && unzip -C /tmp/android-studio.zip -d /tmp/android-sdk \
@@ -52,4 +53,7 @@ RUN wget https://dl.google.com/android/repository/commandlinetools-linux-6858069
 ENV ANDROID_HOME=/opt/android-sdk
 RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
-ENTRYPOINT /bin/sh /workspace/georegistry/build/release/ci-release-docker.sh
+# Add a few known hosts so we can use git and SSH
+RUN mkdir -p /root/.ssh && ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
+
+ENTRYPOINT ['/bin/sh']
