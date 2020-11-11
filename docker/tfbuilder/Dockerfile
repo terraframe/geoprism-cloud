@@ -49,10 +49,6 @@ RUN mkdir -p /usr/local/nvm && wget -qO- https://raw.githubusercontent.com/nvm-s
 # Add nexus internal ip to /etc/hosts so we know how to reach it.
 RUN sh -c "echo 'ec2-52-25-68-156.us-west-2.compute.amazonaws.com nexus.terraframe.com' >> /etc/hosts"
 
-# Start up Postgres + Orient Docker containers
-#RUN docker run --name postgres -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 mdillon/postgis:9.5
-#RUN docker run -d --name orientdb -p 2424:2424 -p 2480:2480  -e ORIENTDB_ROOT_PASSWORD=root orientdb:3.0.25
-
 # Install Android SDK
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip -O /tmp/android-studio.zip \
     && mkdir -p /tmp/android-sdk/cmdline-tools \
