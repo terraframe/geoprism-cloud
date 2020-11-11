@@ -19,12 +19,19 @@ ENV MAVEN_HOME="$SDKMAN_DIR/candidates/maven/current"
 ENV GRADLE_HOME="$SDKMAN_DIR/candidates/gradle/current"
 ENV PATH="$JAVA_HOME/bin:$MAVEN_HOME/bin:$GRADLE_HOME/bin:$PATH"
 
+# Install pip and python dependencies
+RUN python3 -m pip install --upgrade pip \
+    && python3 -m pip install boto boto3 ansible docker
+    
+# Ansible dependencies
+RUN ansible-galaxy collection install amazon.aws community.general
+
 # Install virtualenv and pipx
-RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install pipx
-RUN python3 -m pipx ensurepath
-RUN pipx install virtualenv
-ENV PATH="/root/.local/pipx/venvs/virtualenv/bin:$PATH"
+#RUN python3 -m pip install --upgrade pip
+#RUN python3 -m pip install pipx
+#RUN python3 -m pipx ensurepath
+#RUN pipx install virtualenv
+#ENV PATH="/root/.local/pipx/venvs/virtualenv/bin:$PATH"
 
 # Install Github CLI
 RUN wget https://cli.github.com/packages/rpm/gh-cli.repo -O /etc/yum.repos.d/gh-cli.repo
