@@ -24,6 +24,7 @@ RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install pipx
 RUN python3 -m pipx ensurepath
 RUN pipx install virtualenv
+ENV PATH="/root/.local/pipx/venvs/virtualenv/bin:$PATH"
 
 # Make sure our server time is always up to date (otherwise our nexus deploy gets wacky)
 RUN yum install -y chrony
