@@ -141,6 +141,7 @@
         -Xdebug
         -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000
         -DGEOSERVER_DATA_DIR=/data/geoserver/data
+        {{tomcat_java_opts | default('')}}
         "
         JAVA_OPTS_NO_DEBUG="
         -Xms512M
@@ -165,6 +166,7 @@
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
         -DGEOSERVER_DATA_DIR=/data/geoserver/data
+        {{tomcat_java_opts | default('')}}
         "
     network_mode: host
     volumes:
