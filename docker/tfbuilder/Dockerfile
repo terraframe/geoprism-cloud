@@ -26,10 +26,6 @@ RUN python3 -m pipx ensurepath
 RUN pipx install virtualenv
 ENV PATH="/root/.local/pipx/venvs/virtualenv/bin:$PATH"
 
-# Make sure our server time is always up to date (otherwise our nexus deploy gets wacky)
-RUN yum install -y chrony
-RUN chkconfig chronyd on
-
 # Install Github CLI
 RUN wget https://cli.github.com/packages/rpm/gh-cli.repo -O /etc/yum.repos.d/gh-cli.repo
 RUN yum install -y gh
