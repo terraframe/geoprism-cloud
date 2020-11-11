@@ -1,6 +1,6 @@
 FROM centos:8
 
-RUN yum install -y unzip which zip python3 wget git
+RUN yum install -y unzip which zip python3 wget git curl
 
 # Install SDKMan
 RUN curl -s "https://get.sdkman.io" | bash
@@ -36,6 +36,10 @@ RUN yum install -y gh
 RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash
 RUN yum -y install git-lfs
 RUN git lfs install
+
+# Install NVM
+ENV NVM_DIR /root/.nvm
+RUN mkdir -p /usr/local/nvm && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.0/install.sh | bash
 
 # Add nexus internal ip to /etc/hosts so we know how to reach it.
 RUN sh -c "echo 'ec2-52-25-68-156.us-west-2.compute.amazonaws.com nexus.terraframe.com' >> /etc/hosts"
