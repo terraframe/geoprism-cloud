@@ -61,8 +61,4 @@ RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 # Add a few known hosts so we can use git and SSH
 RUN mkdir -p /root/.ssh && ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 
-RUN wget nexus.terraframe.com
-RUN cat index.html
-RUN cat /etc/hosts
-
 ENTRYPOINT ['/bin/sh']
