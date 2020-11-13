@@ -47,7 +47,7 @@ ENV NVM_DIR /root/.nvm
 RUN mkdir -p /usr/local/nvm && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.0/install.sh | bash
 
 # Add nexus internal ip to /etc/hosts so we know how to reach it.
-RUN sh -c "echo 'ec2-52-25-68-156.us-west-2.compute.amazonaws.com nexus.terraframe.com' >> /etc/hosts"
+#RUN sh -c "echo 'ec2-52-25-68-156.us-west-2.compute.amazonaws.com nexus.terraframe.com' >> /etc/hosts"
 
 # Install Android SDK
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip -O /tmp/android-studio.zip \
@@ -60,5 +60,9 @@ RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
 # Add a few known hosts so we can use git and SSH
 RUN mkdir -p /root/.ssh && ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
+
+RUN wget nexus.terraframe.com
+RUN cat index.html
+RUN cat /etc/hosts
 
 ENTRYPOINT ['/bin/sh']
