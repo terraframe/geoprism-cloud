@@ -12,10 +12,18 @@
   become: yes
   become_method: sudo
 - name: Stage SSL certificates
-  copy: src="../docker/web-private/security/server.xml"
+  copy: src="../docker/web-public/security/server.xml"
         dest="{{app_data}}/ssl/server.xml"
   become: yes
   become_method: sudo
+- name: Inject password into server.xml
+  ansible.builtin.replace:
+    path: "{{app_data}}/ssl/server.xml"
+    regexp: "keystorePass=\"changeit\""
+    replace: "keystorePass=\"{{ssl_keystore_password}}\""
+  become: yes
+  become_method: sudo
+  
   
   
 # Move existing geoprism data over to /data/geoprism
