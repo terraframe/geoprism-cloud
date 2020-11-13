@@ -84,7 +84,7 @@
         -Demail.username={{ email_user | default('x') }}
         -Demail.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
-        -Dsolr.enabled={{solr_enabled | default('x')}}
+        -Dsolr.enabled={{solr_enabled | default('false')}}
         -Dgeoprism.volume=/data/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
@@ -131,7 +131,7 @@
         -Demail.username={{ email_user | default('x') }}
         -Demail.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
-        -Dsolr.enabled={{solr_enabled | default('x')}}
+        -Dsolr.enabled={{solr_enabled | default('false')}}
         -Dgeoprism.volume=/opt/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
@@ -164,7 +164,7 @@
         -Demail.username={{ email_user | default('x') }}
         -Demail.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
-        -Dsolr.enabled={{solr_enabled | default('x')}}
+        -Dsolr.enabled={{solr_enabled | default('false')}}
         -Dgeoprism.volume=/data/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
