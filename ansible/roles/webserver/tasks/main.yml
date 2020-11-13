@@ -12,11 +12,6 @@
   become: yes
   become_method: sudo
 - name: Stage SSL certificates
-  copy: src="../docker/web-private/security/geoprism.ks"
-        dest="{{app_data}}/ssl/geoprism.ks"
-  become: yes
-  become_method: sudo
-- name: Stage SSL certificates
   copy: src="../docker/web-private/security/server.xml"
         dest="{{app_data}}/ssl/server.xml"
   become: yes
