@@ -21,7 +21,7 @@ ENV PATH="$JAVA_HOME/bin:$MAVEN_HOME/bin:$GRADLE_HOME/bin:$PATH"
 
 # Install pip and python dependencies
 RUN python3 -m pip install --upgrade pip \
-    && python3 -m pip install boto boto3 ansible docker
+    && python3 -m pip install boto boto3 ansible docker awscli
     
 # Ansible dependencies
 RUN ansible-galaxy collection install amazon.aws community.general
