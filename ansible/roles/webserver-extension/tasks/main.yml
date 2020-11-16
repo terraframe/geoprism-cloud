@@ -45,7 +45,7 @@
   become: yes
   become_method: sudo
 - name: Stage log4j2.xml
-  copy: src="../envcfg/webapp-replace/log4j2.xml"
+  copy: src="log4j2.xml"
         dest="/tmp/staging/webapp-replace/log4j2.xml"
   become: yes
   become_method: sudo
