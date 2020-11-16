@@ -1,0 +1,79 @@
+
+# This file is for documentation purposes only.
+# This text document contains notes on how to update an older server to the new certbot paradigm without redeploying it.
+
+
+# TODO : The way the docker socket is mounted has changed and has not been updated in this document
+
+
+1. If the server needs updates, 1. stop the docker service, 2. sudo yum update
+2. If we need yum-cron, install it   https://jonathansblog.co.uk/yum-cron
+3. If docker has updated and the docker containers don't work anymore due to a restart policy:
+   a. docker stop postgres  
+   b. Remove the 'maxRetrys' from /var/lib/docker/containers/<container-id>/hostconfig.json
+   c. sudo service docker restart
+4. Manually run steps in docker-certbot yml
+
+# Make directories
+mkdir -p /data/ssl/letsencrypt/hooks
+mkdir -p /data/ssl/letsencrypt/cert
+
+# Copy files over.
+vim /data/ssl/letsencrypt/cert/cli.ini
+vim /data/ssl/letsencrypt/hooks/post-hook.sh
+vim /data/ssl/letsencrypt/hooks/pre-hook.sh
+vim /data/ssl/letsencrypt/geoprism-certbot.sh
+
+# Add exeuction permissions
+chmod +x /data/ssl/letsencrypt/hooks/post-hook.sh
+chmod +x /data/ssl/letsencrypt/hooks/pre-hook.sh
+chmod +x /data/ssl/letsencrypt/geoprism-certbot.sh
+
+5. When you get to docker run command, here it is. Make sure to update your domain and keystore password
+
+docker run -d --name geoprism-certbot --restart always --network host \
+            -v "/data/tomcat/webapps/.well-known:/data/tomcat/webapps/.well-known" \
+            -v "/data/ssl/letsencrypt/cert:/etc/letsencrypt" \
+            -v "/data/ssl/letsencrypt/lib:/var/lib/letsencrypt" \
+            -v "/data/ssl/letsencrypt/log:/var/log/letsencrypt" \
+            -v "/data/ssl/letsencrypt/hooks:/var/lib/geoprism-certbot/hooks" \
+            -v "/data/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh" \
+            -v "/var/run:/var/run/parent" \
+            docker:19 /var/lib/geoprism-certbot/geoprism-certbot.sh REPLACEME.geoprism.net security@terraframe.com REPLACEME geoprism
+            
+6. Copy tomcat ssl config file from /docker/web-private/security/server.xml to /data/ssl/server.xml
+
+7. Modify geoprism config to mount new ssl cert, by updating "mountPoints". Make sure to change "REPLACEME" with your domain:
+
+"MountPoints":{
+    "/usr/local/tomcat/conf/geoprism.ks": {
+      "Source": "/data/ssl/letsencrypt/cert/live/spatialiq.geoprism.net/keystore.jks",
+      "Destination": "/usr/local/tomcat/conf/geoprism.ks",
+      "RW": true,
+      "Name": "",
+      "Driver": "",
+      "Type": "bind",
+      "Propagation": "rprivate",
+      "Spec": {
+        "Type": "bind",
+        "Source": "/usr/local/tomcat/conf/geoprism.ks",
+        "Target": "/usr/local/tomcat/conf/geoprism.ks"
+      },
+      "SkipMountpointCreation": false
+    },
+    "/usr/local/tomcat/conf/server.xml": {
+      "Source": "/data/ssl/server.xml",
+      "Destination": "/usr/local/tomcat/conf/server.xml",
+      "RW": true,
+      "Name": "",
+      "Driver": "",
+      "Type": "bind",
+      "Propagation": "rprivate",
+      "Spec": {
+        "Type": "bind",
+        "Source": "/usr/local/tomcat/conf/server.xml",
+        "Target": "/usr/local/tomcat/conf/server.xml"
+      },
+      "SkipMountpointCreation": false
+    }
+}
