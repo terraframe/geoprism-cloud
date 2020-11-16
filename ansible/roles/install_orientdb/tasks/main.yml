@@ -8,7 +8,7 @@
   become: yes
   become_method: sudo
   when: "{{clean_orientdb}}"
-
+  ignore_errors: yes # This command may fail on new installs when orientdb doesn't exist
 - name: Delete Data
   file:
     state: absent
