@@ -1,0 +1,134 @@
+
+- name: Install certbot
+  package:
+    name: certbot
+    state: present
+
+# Certbot won't work on a fresh install without a port forward
+- name: Forward port (iptables)
+  shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
+  become: yes
+  become_method: sudo
+  when: "firewalld is not defined"
+- name: Forward port (firewallcmd)
+  shell: "firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443 && firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 && firewall-cmd --reload"
+  become: yes
+  become_method: sudo
+  when: "firewalld is defined"
+
+
+- name: Remove geoprism-certbot container if it exists
+  community.general.docker_container:
+    name: geoprism-certbot
+    state: absent
+    force_kill: yes
+  become: yes
+  become_method: sudo
+
+
+- name: Create directory
+  file:
+    path: "{{app_data}}/ssl/letsencrypt/hooks"
+    state: directory
+  become: yes
+  become_method: sudo
+- name: Create directory
+  file:
+    path: "{{app_data}}/ssl/letsencrypt/cert/live"
+    state: directory
+  become: yes
+  become_method: sudo
+- name: Create directory
+  file:
+    path: "{{app_data}}/ssl/letsencrypt/cert/archive"
+    state: directory
+  become: yes
+  become_method: sudo
+
+- name: Stage geoprism-certbot code
+  copy:
+    src: "cli.ini"
+    dest: "{{app_data}}/ssl/letsencrypt/cert/cli.ini"
+  become: yes
+  become_method: sudo
+  
+- name: Stage geoprism-certbot code
+  copy:
+    src: "post-hook.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+- name: Stage geoprism-certbot code
+  copy:
+    src: "pre-hook.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/pre-hook.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+
+- name: Symbolic link ssl live
+  file:
+    src: "{{app_data}}/ssl/letsencrypt/cert/live"
+    dest: /etc/letsencrypt/live
+- name: Symbolic link ssl archive
+  file:
+    src: "{{app_data}}/ssl/letsencrypt/cert/archive"
+    dest: /etc/letsencrypt/archive
+  
+- name: Replace in hook file
+  replace:
+    path: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
+    regexp: 'KEY_PASSWORD=.*'
+    replace: "KEY_PASSWORD={{ssl_keystore_password}}"
+- name: Replace in hook file
+  replace:
+    path: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
+    regexp: 'KEY_ALIAS=.*'
+    replace: 'KEY_ALIAS=geoprism'
+- name: Replace in hook file
+  replace:
+    path: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
+    regexp: 'DOMAIN_NAME=.*'
+    replace: "DOMAIN_NAME={{ssl_domain}}"
+  
+- name: Create an entry in cron for renewing our certificate
+  cron:
+    name: Certbot renew
+    minute: "0"
+    hour: "0"
+    user: root
+    job: "certbot renew -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
+  become: yes
+  become_method: sudo
+  
+- name: Start Certbot
+  command: "certbot certonly -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
+  become: yes
+  become_method: sudo
+  
+- name: Wait until the certificate is present before continuing (otherwise docker will create this file as a directory when the webserver spins up)
+  wait_for:
+    path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+  become: yes
+  become_method: sudo
+
+- name: Stop Tomcat
+  shell: docker stop geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: Delete any existing file or link
+  file:
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: absent
+- name: Symbolic link our certificate
+  file:
+    src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: link
+- name: Start Tomcat
+  shell: docker start geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
