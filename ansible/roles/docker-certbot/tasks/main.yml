@@ -83,4 +83,14 @@
     path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
   become: yes
   become_method: sudo
+
+- name: Delete any existing file or link
+  file:
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: absent
+- name: Symbolic link our certificate
+  file:
+    src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: link
   
