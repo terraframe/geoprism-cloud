@@ -1,8 +1,11 @@
 
-- name: Install certbot
-  package:
-    name: certbot
-    state: present
+- name: Install Certbot
+  get_url:
+    url: https://dl.eff.org/certbot-auto
+    dest: certbot-auto
+    mode: a+x
+- name: Install Certbot
+  shell: certbot-auto --debug
 
 # Certbot won't work on a fresh install without a port forward
 - name: Forward port (iptables)
