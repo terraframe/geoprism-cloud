@@ -84,6 +84,11 @@
   become: yes
   become_method: sudo
 
+- name: Stop Tomcat
+  shell: docker stop geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
 - name: Delete any existing file or link
   file:
     path: "{{app_data}}/ssl/keystore.jks"
@@ -93,4 +98,8 @@
     src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
     path: "{{app_data}}/ssl/keystore.jks"
     state: link
-  
+- name: Start Tomcat
+  shell: docker start geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
