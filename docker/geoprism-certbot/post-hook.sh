@@ -22,5 +22,8 @@ docker run --rm --name keytool-import --network host \
             -destkeystore /etc/letsencrypt/live/$DOMAIN_NAME/keystore.jks \
             -srckeystore /etc/letsencrypt/live/$DOMAIN_NAME/pkcs.p12 \
             -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt
+            
+[ -h /data/ssl/keystore.jks ] && unlink /data/ssl/keystore.jks
+ln -s /data/ssl/letsencrypt/cert/live/$DOMAIN_NAME/keystore.jks /data/ssl/keystore.jks
 
 docker restart geoprism
