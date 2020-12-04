@@ -6,6 +6,7 @@
     mode: a+x
 - name: Install Certbot
   shell: yes | ./certbot-auto.sh --debug
+  ignore_errors: yes # Even on a successful install this throws an error... grrrr
 
 # Certbot won't work on a fresh install without a port forward
 - name: Forward port (iptables)
