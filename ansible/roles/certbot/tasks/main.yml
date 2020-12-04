@@ -75,10 +75,12 @@
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/live"
     dest: /etc/letsencrypt/live
+    state: link
 - name: Symbolic link ssl archive
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/archive"
     dest: /etc/letsencrypt/archive
+    state: link
   
 - name: Replace in hook file
   replace:
