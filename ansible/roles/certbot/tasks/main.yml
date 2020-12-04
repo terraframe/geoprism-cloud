@@ -5,7 +5,7 @@
     dest: ./certbot-auto.sh
     mode: a+x
 - name: Install Certbot
-  shell: ./certbot-auto.sh --debug
+  shell: yes | ./certbot-auto.sh --debug
 
 # Certbot won't work on a fresh install without a port forward
 - name: Forward port (iptables)
