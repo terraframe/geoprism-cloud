@@ -2,7 +2,7 @@
 - name: Install Certbot
   get_url:
     url: https://dl.eff.org/certbot-auto
-    dest: ./certbot-auto.sh
+    dest: /data/ssl/letsencrypt/certbot-auto.sh
     mode: a+x
 - name: Install Certbot
   shell: ./certbot-auto.sh --debug
@@ -101,12 +101,12 @@
     minute: "0"
     hour: "0"
     user: root
-    job: "certbot renew -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
+    job: "/data/ssl/letsencrypt/certbot-auto.sh renew -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
   become: yes
   become_method: sudo
   
 - name: Start Certbot
-  command: "certbot certonly -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
+  command: "/data/ssl/letsencrypt/certbot-auto.sh certonly -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
   become: yes
   become_method: sudo
   
