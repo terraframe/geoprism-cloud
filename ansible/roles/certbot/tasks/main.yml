@@ -76,27 +76,37 @@
     src: "{{app_data}}/ssl/letsencrypt/cert/live"
     dest: /etc/letsencrypt/live
     state: link
+  become: yes
+  become_method: sudo
 - name: Symbolic link ssl archive
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/archive"
     dest: /etc/letsencrypt/archive
     state: link
+  become: yes
+  become_method: sudo
   
 - name: Replace in hook file
   replace:
     path: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
     regexp: 'KEY_PASSWORD=.*'
     replace: "KEY_PASSWORD={{ssl_keystore_password}}"
+  become: yes
+  become_method: sudo
 - name: Replace in hook file
   replace:
     path: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
     regexp: 'KEY_ALIAS=.*'
     replace: 'KEY_ALIAS=geoprism'
+  become: yes
+  become_method: sudo
 - name: Replace in hook file
   replace:
     path: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
     regexp: 'DOMAIN_NAME=.*'
     replace: "DOMAIN_NAME={{ssl_domain}}"
+  become: yes
+  become_method: sudo
   
 - name: Create an entry in cron for renewing our certificate
   cron:
@@ -128,11 +138,15 @@
   file:
     path: "{{app_data}}/ssl/keystore.jks"
     state: absent
+  become: yes
+  become_method: sudo
 - name: Symbolic link our certificate
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
     path: "{{app_data}}/ssl/keystore.jks"
     state: link
+  become: yes
+  become_method: sudo
 - name: Start Tomcat
   shell: docker start geoprism
   become: yes
