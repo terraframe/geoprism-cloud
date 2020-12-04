@@ -1,12 +1,17 @@
 
+- name: Create directory
+  file:
+    path: "{{app_data}}/ssl/letsencrypt"
+    state: directory
+  become: yes
+  become_method: sudo
 - name: Install Certbot
   get_url:
     url: https://dl.eff.org/certbot-auto
-    dest: /data/ssl/letsencrypt/certbot-auto.sh
+    dest: "{{app_data}}/ssl/letsencrypt/certbot-auto.sh"
     mode: a+x
-- name: Install Certbot
-  shell: yes | ./certbot-auto.sh --debug
-  ignore_errors: yes # Even on a successful install this throws an error... grrrr
+  become: yes
+  become_method: sudo
 
 # Certbot won't work on a fresh install without a port forward
 - name: Forward port (iptables)
