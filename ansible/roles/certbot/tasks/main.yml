@@ -130,7 +130,7 @@
   become_method: sudo
   
 - name: Start Certbot
-  command: "/data/ssl/letsencrypt/certbot-auto.sh certonly -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
+  command: "/data/ssl/letsencrypt/certbot-auto.sh certonly --debug -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
   become: yes
   become_method: sudo
   
