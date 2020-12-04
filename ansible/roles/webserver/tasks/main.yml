@@ -11,9 +11,16 @@
     recurse: yes
   become: yes
   become_method: sudo
+- name: Delete server.xml
+  file:
+    path: "{{app_data}}/ssl/server.xml"
+    state: absent
+  become: yes
+  become_method: sudo
 - name: Stage SSL certificates
-  copy: src="server.xml"
-        dest="{{app_data}}/ssl/server.xml"
+  copy:
+    src: "server.xml"
+    dest: "{{app_data}}/ssl/server.xml"
   become: yes
   become_method: sudo
 - name: Inject password into server.xml
