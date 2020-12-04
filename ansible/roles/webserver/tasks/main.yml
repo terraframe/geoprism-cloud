@@ -12,7 +12,7 @@
   become: yes
   become_method: sudo
 - name: Stage SSL certificates
-  copy: src="../docker/web-public/security/server.xml"
+  copy: src="server.xml"
         dest="{{app_data}}/ssl/server.xml"
   become: yes
   become_method: sudo
