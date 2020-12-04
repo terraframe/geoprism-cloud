@@ -57,7 +57,7 @@
 - name: Stage geoprism-certbot code
   copy:
     src: "cli.ini"
-    dest: "{{app_data}}/ssl/letsencrypt/cert/cli.ini"
+    dest: "/etc/letsencrypt/cli.ini"
   become: yes
   become_method: sudo
   
