@@ -53,6 +53,12 @@
     state: directory
   become: yes
   become_method: sudo
+- name: Create directory
+  file:
+    path: "/etc/letsencrypt"
+    state: directory
+  become: yes
+  become_method: sudo
 
 - name: Stage geoprism-certbot code
   copy:
