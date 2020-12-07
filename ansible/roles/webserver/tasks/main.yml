@@ -185,7 +185,7 @@
         - "{{app_data}}/tomcat/tmp:/usr/local/tomcat/temp"
         - "{{app_data}}/tomcat/webapps/.well-known:/usr/local/tomcat/webapps/.well-known"
         - "{{app_data}}/geoserver:/data/geoserver"
-        - "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
+        - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
         - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
   become: yes
   become_method: sudo
