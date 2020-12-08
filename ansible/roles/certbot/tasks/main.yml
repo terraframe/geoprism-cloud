@@ -1,4 +1,20 @@
 
+- name: Clean SSL
+  file:
+    path: "/etc/letsencrypt"
+    state: absent
+  when: "{{clean_ssl | default(false)}}"
+- name: Clean SSL
+  file:
+    path: "/data/ssl/letsencrypt"
+    state: absent
+  when: "{{clean_ssl | default(false)}}"
+- name: Clean SSL
+  file:
+    path: "/data/ssl/geoprism.ks"
+    state: absent
+  when: "{{clean_ssl | default(false)}}"
+
 - name: Create directory
   file:
     path: "{{app_data}}/ssl/letsencrypt"
