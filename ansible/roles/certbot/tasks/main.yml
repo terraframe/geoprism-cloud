@@ -3,16 +3,22 @@
   file:
     path: "/etc/letsencrypt"
     state: absent
+  become: yes
+  become_method: sudo
   when: "{{clean_ssl | default(false)}}"
 - name: Clean SSL
   file:
     path: "/data/ssl/letsencrypt"
     state: absent
+  become: yes
+  become_method: sudo
   when: "{{clean_ssl | default(false)}}"
 - name: Clean SSL
   file:
     path: "/data/ssl/geoprism.ks"
     state: absent
+  become: yes
+  become_method: sudo
   when: "{{clean_ssl | default(false)}}"
 
 - name: Create directory
