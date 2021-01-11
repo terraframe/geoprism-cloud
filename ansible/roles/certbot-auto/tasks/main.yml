@@ -28,8 +28,8 @@
   become: yes
   become_method: sudo
 - name: Install Certbot
-  get_url:
-    url: https://dl.eff.org/certbot-auto
+  copy:
+    src: "certbot-auto.sh"
     dest: "{{app_data}}/ssl/letsencrypt/certbot-auto.sh"
     mode: a+x
   become: yes
@@ -147,7 +147,7 @@
     minute: "0"
     hour: "0"
     user: root
-    job: "/data/ssl/letsencrypt/certbot-auto.sh renew -n --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
+    job: "/data/ssl/letsencrypt/certbot-auto.sh renew -n --no-self-upgrade --standalone -d {{ssl_domain}} --agree-tos --email {{ssl_admin_email}} --http-01-port 8080"
   become: yes
   become_method: sudo
   
