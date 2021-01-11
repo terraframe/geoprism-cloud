@@ -41,7 +41,7 @@
   
   roles:
     - yum
-    - certbot-auto
+    - docker-certbot
     - webserver
     - webserver-extension
     - solr
