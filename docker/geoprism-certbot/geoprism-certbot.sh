@@ -30,6 +30,7 @@ do
 done
 echo "Found Docker socket. num_sleep is $num_sleep"
 
+[ -h /var/run/docker.sock ] && unlink /var/run/docker.sock
 ln -s /var/run/parent/docker.sock /var/run/docker.sock
 
 
