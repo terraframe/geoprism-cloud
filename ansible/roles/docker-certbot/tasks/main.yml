@@ -93,11 +93,15 @@
   file:
     path: "{{app_data}}/ssl/keystore.jks"
     state: absent
+  become: yes
+  become_method: sudo
 - name: Symbolic link our certificate
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
     path: "{{app_data}}/ssl/keystore.jks"
     state: link
+  become: yes
+  become_method: sudo
 - name: Start Tomcat
   shell: docker start geoprism
   become: yes
