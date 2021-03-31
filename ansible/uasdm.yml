@@ -39,11 +39,27 @@
     - webserver
     - webserver-extension
     - solr
-
+    
+  tasks:
+    - name: Create Potree temp directory
+      file:
+        state: directory
+        path: "/tmp/potree"
+      become: yes
+      become_method: sudo
+    - name: Download and unzip Potree
+      ansible.builtin.unarchive:
+        src: https://github.com/potree/potree/releases/download/$POTREE_VERSION/Potree_1.8.zip
+        dest: "/tmp/potree"
+        remote_src: yes
+    - name: Copy Potree
+      shell: 'docker cp /tmp/potree/Potree_1.8/ "geoprism:{{catalina_home}}/webapps/ROOT/WEB-INF/gov/osmre/uasdm/potree/potree"'
+      become: yes
+      become_method: sudo
 - name: Graph Database Creator
   hosts: webservers
   tasks:
-    - name: Patch
+    - name: Graph Database Creator
       shell: >
         docker exec geoprism bash -c '
           java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*" com.runwaysdk.build.domain.GraphDatabaseCreator 2>&1 | tee $CATALINA_HOME/logs/graphdb-creator.log
@@ -51,6 +67,14 @@
       become: yes
       become_method: sudo
       
+
+# TODO This last patch step may actually not do anything. Worse yet, it may cause the deploy to fail in a legitimate
+# large-scale patching scenario because the server patches on boot and may already be in the process of patching.
+# The issue we have is that we're building the docker container while tomcat is running, and thus we can't trust that it
+# was built correctly before and so we need to force patch afterwards just in case it wasn't. But we have no idea whether
+# or not it really was. The ultimate fix to this problem is to actually build and manage real docker images and then
+# when we boot we'll know that all the source we need is there before tomcat boots.
+
 - name: Patch
   hosts: webservers
   vars:
