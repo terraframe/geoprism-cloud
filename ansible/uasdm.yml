@@ -52,6 +52,8 @@
         src: https://github.com/potree/potree/releases/download/1.8/Potree_1.8.zip
         dest: "/tmp/potree"
         remote_src: yes
+      become: yes
+      become_method: sudo
     - name: Copy Potree
       shell: 'docker cp /tmp/potree/Potree_1.8/ "geoprism:{{catalina_home}}/webapps/ROOT/WEB-INF/gov/osmre/uasdm/potree/potree"'
       become: yes
