@@ -25,6 +25,7 @@
   </Appenders>
  
   <Loggers>
+    <Logger name="com.runwaysdk.build.domain" level="info"></Logger>
     <Root level="error">
       <AppenderRef ref="rollingFile"/>
     </Root>
