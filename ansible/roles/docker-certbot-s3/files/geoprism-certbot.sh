@@ -37,6 +37,13 @@ echo "Found Docker socket. num_sleep is $num_sleep"
 ln -s /var/run/parent/docker.sock /var/run/docker.sock
 
 
+# Download the SSL data from S3
+docker run --rm --network host --name s3sync \
+     -e AWS_ACCESS_KEY_ID=$6 -e AWS_SECRET_ACCESS_KEY=$7 \
+     -v "/data/ssl/letsencrypt/cert:/data" \
+     amazon/aws-cli s3 cp s3://$5/$1 /data --recursive
+
+
 CERTBOT_CMD="certbot certonly -n --standalone -d $1 --agree-tos --email $2 --http-01-port 8080"
 
 sed -i -e "s/KEY_PASSWORD=.*/KEY_PASSWORD=$3/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
