@@ -27,9 +27,9 @@ docker run --rm --name keytool-import --network host \
             -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt
 
 # Upload the new SSL key to S3 for archiving purposes
-docker run -rm --name s3sync \
+docker run --rm --name s3sync \
      -e AWS_ACCESS_KEY_ID=$S3_KEY -e AWS_SECRET_ACCESS_KEY=$S3_SECRET \
      -v "/data/ssl/letsencrypt/cert:/data" \
-     amazon/aws-cli cp /data s3://$S3_BUCKET/$DOMAIN_NAME --recursive
+     amazon/aws-cli s3 cp /data s3://$S3_BUCKET/$DOMAIN_NAME --recursive
 
 docker restart geoprism
