@@ -67,7 +67,10 @@
     network_mode: host
     detach: yes
     cleanup: yes
-    command: "/data s3://geoprism-private-ssl/{{ssl_domain}}"
+    command: "/data s3://{{ssl_archive_s3_bucket}}/{{ssl_domain}}"
+    env:
+        - AWS_ACCESS_KEY_ID={{ssl_archive_s3_key}}
+        - AWS_SECRET_ACCESS_KEY={{ssl_archive_s3_secret}}
     volumes:
         - "{{app_data}}/ssl/letsencrypt/cert:/data"
   become: yes
