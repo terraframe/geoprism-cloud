@@ -1,0 +1,126 @@
+
+# Certbot won't work on a fresh install without a port forward
+- name: Forward port (iptables)
+  shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
+  become: yes
+  become_method: sudo
+  when: "firewalld is not defined"
+- name: Forward port (firewallcmd)
+  shell: "firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443 && firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 && firewall-cmd --reload"
+  become: yes
+  become_method: sudo
+  when: "firewalld is defined"
+
+
+
+- name: Create directory
+  file:
+    path: "{{app_data}}/ssl/letsencrypt/hooks"
+    state: directory
+  become: yes
+  become_method: sudo
+- name: Create directory
+  file:
+    path: "{{app_data}}/ssl/letsencrypt/cert"
+    state: directory
+  become: yes
+  become_method: sudo
+
+- name: Stage geoprism-certbot code
+  copy:
+    src: "../docker/geoprism-certbot/cli.ini"
+    dest: "{{app_data}}/ssl/letsencrypt/cert/cli.ini"
+  become: yes
+  become_method: sudo
+  
+- name: Stage geoprism-certbot code
+  copy:
+    src: "post-hook.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+- name: Stage geoprism-certbot code
+  copy:
+    src: "../docker/geoprism-certbot/pre-hook.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/pre-hook.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+
+- name: Stage geoprism-certbot code
+  copy:
+    src: "geoprism-certbot.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+
+- name: Download SSL Volume from S3
+  community.general.docker_container:
+    name: s3sync
+    image: elementar/s3-volume
+    state: started
+    recreate: yes
+    pull: yes
+    restart_policy: no
+    network_mode: host
+    detach: yes
+    cleanup: yes
+    command: "/data s3://geoprism-private-ssl/{{ssl_domain}}"
+    volumes:
+        - "{{app_data}}/ssl/letsencrypt/cert:/data"
+  become: yes
+  become_method: sudo
+
+- name: Start Geoprism Certbot Program
+  community.general.docker_container:
+    name: geoprism-certbot
+    image: docker:19
+    state: started
+    recreate: yes
+    pull: yes
+    restart_policy: always
+    entrypoint: /bin/sh
+    network_mode: host
+    command: "/var/lib/geoprism-certbot/geoprism-certbot.sh {{ssl_domain}} {{ssl_admin_email}} {{ssl_keystore_password}} geoprism {{ssl_archive_s3_bucket}} {{ssl_archive_s3_key}} {{ssl_archive_s3_secret}}"
+    volumes:
+        - "{{app_data}}/tomcat/webapps/.well-known:/data/tomcat/webapps/.well-known"
+        - "{{app_data}}/ssl/letsencrypt/cert:/etc/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/lib:/var/lib/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/log:/var/log/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/hooks:/var/lib/geoprism-certbot/hooks"
+        - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
+        - "/var/run:/var/run/parent"
+  become: yes
+  become_method: sudo
+  
+- name: Wait until the certificate is present before continuing (otherwise docker will create this file as a directory when the webserver spins up)
+  wait_for:
+    path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+  become: yes
+  become_method: sudo
+
+- name: Stop Tomcat
+  shell: docker stop geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: Delete any existing file or link
+  file:
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: absent
+  become: yes
+  become_method: sudo
+- name: Symbolic link our certificate
+  file:
+    src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: link
+  become: yes
+  become_method: sudo
+- name: Start Tomcat
+  shell: docker start geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
