@@ -59,15 +59,15 @@
 - name: Download SSL Volume from S3
   community.general.docker_container:
     name: s3sync
-    image: elementar/s3-volume
+    image: amazon/aws-cli
     state: started
     recreate: yes
     pull: yes
     restart_policy: no
     network_mode: host
-    detach: yes
+    detach: no
     cleanup: yes
-    command: "/data s3://{{ssl_archive_s3_bucket}}/{{ssl_domain}}"
+    command: "s3 cp s3://{{ssl_archive_s3_bucket}}/{{ssl_domain}} /data --recursive"
     env:
       AWS_ACCESS_KEY_ID: "{{ssl_archive_s3_key}}"
       AWS_SECRET_ACCESS_KEY: "{{ssl_archive_s3_secret}}"
