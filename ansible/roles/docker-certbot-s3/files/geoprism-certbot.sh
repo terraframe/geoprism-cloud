@@ -50,7 +50,7 @@ docker run --rm --network host --name s3sync \
 
 CERTBOT_CMD="certbot certonly -n --standalone -d $1 --agree-tos --email $2 --http-01-port 8080"
 
-sed -i -e "s/LETSENCRYPT_PATH=.*/LETSENCRYPT_PATH=$8/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s|LETSENCRYPT_PATH=.*|LETSENCRYPT_PATH=$8|g" /var/lib/geoprism-certbot/hooks/post-hook.sh
 sed -i -e "s/KEY_PASSWORD=.*/KEY_PASSWORD=$3/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
 sed -i -e "s/KEY_ALIAS=.*/KEY_ALIAS=$4/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
 sed -i -e "s/DOMAIN_NAME=.*/DOMAIN_NAME=$1/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
