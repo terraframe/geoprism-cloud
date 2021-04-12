@@ -38,6 +38,8 @@ echo "Found Docker socket. num_sleep is $num_sleep"
 [ -h /var/run/docker.sock ] && unlink /var/run/docker.sock
 ln -s /var/run/parent/docker.sock /var/run/docker.sock
 
+# Delete all existing SSL data
+yes | cp /etc/letsencrypt/cli.ini /etc/letsencrypt/../cli.ini && rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt/../cli.ini /etc/letsencrypt/cli.ini
 
 # Download the SSL data from S3
 docker run --rm --network host --name s3sync \
