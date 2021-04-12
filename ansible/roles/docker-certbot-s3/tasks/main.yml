@@ -80,6 +80,7 @@
         - "{{app_data}}/ssl/letsencrypt/log:/var/log/letsencrypt"
         - "{{app_data}}/ssl/letsencrypt/hooks:/var/lib/geoprism-certbot/hooks"
         - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
+        - "{{app_data}}/ssl/letsencrypt/rebuild_symlinks.sh:/var/lib/geoprism-certbot/rebuild_symlinks.sh"
         - "/var/run:/var/run/parent"
   become: yes
   become_method: sudo

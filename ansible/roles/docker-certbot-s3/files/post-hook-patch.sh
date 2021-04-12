@@ -5,19 +5,17 @@
 set -ex
 
 LETSENCRYPT_PATH=/data/ssl/letsencrypt
-DOMAIN_NAME=changeit
+DOMAIN_NAME=dev-georegistry.geoprism.net
 KEY_PASSWORD=changeit
 KEY_ALIAS=geoprism
-S3_BUCKET=XXX
-S3_KEY=XXX
-S3_SECRET=XXX
+S3_BUCKET=geoprism-private-ssl
+S3_KEY=AKIA575O47JSIYSGUKZO
+S3_SECRET=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
 
-INTERNAL_LETSENCRYPT_PATH=/etc/letsencrypt
-
-CERT=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "cert*.pem" -printf '%f\n' | sort -dr | head -1)
-CHAIN=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "chain*.pem" -printf '%f\n' | sort -dr | head -1)
-FULL_CHAIN=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "fullchain*.pem" -printf '%f\n' | sort -dr | head -1)
-PRIV_KEY=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "privkey*.pem" -printf '%f\n' | sort -dr | head -1)
+CERT=$(find $LETSENCRYPT_PATH/cert/archive -name "cert*.pem" -printf '%f\n' | sort -dr | head -1)
+CHAIN=$(find $LETSENCRYPT_PATH/cert/archive -name "chain*.pem" -printf '%f\n' | sort -dr | head -1)
+FULL_CHAIN=$(find $LETSENCRYPT_PATH/cert/archive -name "fullchain*.pem" -printf '%f\n' | sort -dr | head -1)
+PRIV_KEY=$(find $LETSENCRYPT_PATH/cert/archive -name "privkey*.pem" -printf '%f\n' | sort -dr | head -1)
 
 REGEX="cert([0-9]+)\.pem"
 [[ $CERT =~ $REGEX ]]
@@ -34,16 +32,15 @@ docker run --rm --name openssl-pkcs --network host \
 
 # Create a keystore from the PKCS12 file
 docker run --rm --name keytool-import --network host \
-			-v "$LETSENCRYPT_PATH/cert:/etc/letsencrypt" \
-			openjdk:8-jdk-buster \
+      -v "$LETSENCRYPT_PATH/cert:/etc/letsencrypt" \
+      openjdk:8-jdk-buster \
             keytool -importkeystore -deststorepass $KEY_PASSWORD -destkeypass $KEY_PASSWORD \
             -destkeystore /etc/letsencrypt/archive/$DOMAIN_NAME/keystore$KEY_NUM.jks \
             -srckeystore /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
             -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt
 
-[ -L $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks ] && unlink $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks
-[ -f $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks ] && rm $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks
-ln -s ../../archive/$DOMAIN_NAME/keystore$KEY_NUM.jks $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks
+[ -s $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks ] && unlink $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks
+ln -s $LETSENCRYPT_PATH/cert/archive/$DOMAIN_NAME/keystore$KEY_NUM.jks $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks
 
 # Upload the new SSL key to S3 for archiving purposes
 docker run --rm --network host --name s3sync \
@@ -51,4 +48,4 @@ docker run --rm --network host --name s3sync \
      -v "$LETSENCRYPT_PATH/cert:/data" \
      amazon/aws-cli s3 cp /data s3://$S3_BUCKET/$DOMAIN_NAME --recursive
 
-docker restart geoprism
+#docker restart geoprism

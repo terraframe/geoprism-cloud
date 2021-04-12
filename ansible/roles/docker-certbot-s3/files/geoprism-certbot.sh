@@ -44,7 +44,7 @@ docker run --rm --network host --name s3sync \
      -v "$8/cert:/data" \
      amazon/aws-cli s3 cp s3://$5/$1 /data --recursive
 
-$8/rebuild_symlinks.sh "$8/cert" "$1"
+/var/lib/geoprism-certbot/rebuild_symlinks.sh "/etc/letsencrypt" "$1"
 
 
 CERTBOT_CMD="certbot certonly -n --standalone -d $1 --agree-tos --email $2 --http-01-port 8080"
