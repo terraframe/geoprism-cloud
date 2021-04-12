@@ -39,7 +39,8 @@ docker run --rm --name keytool-import --network host \
             -srckeystore /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
             -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt
 
-[ -s $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks ] && unlink $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks
+[ -L $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks ] && unlink $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks
+[ -f $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks ] && rm $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks
 ln -s $LETSENCRYPT_PATH/cert/archive/$DOMAIN_NAME/keystore$KEY_NUM.jks $LETSENCRYPT_PATH/cert/live/$DOMAIN_NAME/keystore.jks
 
 # Upload the new SSL key to S3 for archiving purposes

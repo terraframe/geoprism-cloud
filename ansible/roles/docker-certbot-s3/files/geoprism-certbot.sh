@@ -44,16 +44,6 @@ docker run --rm --network host --name s3sync \
      -v "$8/cert:/data" \
      amazon/aws-cli s3 cp s3://$5/$1 /data --recursive
 
-# TODO :
-# https://github.com/certbot/certbot/issues/4750
-# https://certbot.eff.org/docs/using.html#modifying-the-renewal-configuration-file
-#sudo docker run --rm --name certbot-symlinks \
-#  -v "$8/cert:/etc/letsencrypt" \
-#  -v "$8/lib:/var/lib/letsencrypt" \
-#  -v "$8/log:/var/log/letsencrypt" \
-#  -v "$8/hooks:/var/lib/geoprism-certbot/hooks" \
-#  certbot/certbot update_symlinks --update-symlinks
-
 $8/rebuild_symlinks.sh "$8/cert" "$1"
 
 

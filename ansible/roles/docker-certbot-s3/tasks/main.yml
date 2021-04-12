@@ -47,11 +47,17 @@
     mode: a+x
   become: yes
   become_method: sudo
-
 - name: Stage geoprism-certbot code
   copy:
     src: "geoprism-certbot.sh"
     dest: "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+- name: Stage geoprism-certbot code
+  copy:
+    src: "rebuild_symlinks.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/rebuild_symlinks.sh"
     mode: a+x
   become: yes
   become_method: sudo
