@@ -10,16 +10,14 @@ S3_BUCKET=XXX
 S3_KEY=XXX
 S3_SECRET=XXX
 
-INTERNAL_LETSENCRYPT_PATH=/etc/letsencrypt
+INTERNAL_LE_PATH=/etc/letsencrypt
 
-CERT=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "cert*.pem" -printf '%f\n' | sort -dr | head -1)
-CHAIN=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "chain*.pem" -printf '%f\n' | sort -dr | head -1)
-FULL_CHAIN=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "fullchain*.pem" -printf '%f\n' | sort -dr | head -1)
-PRIV_KEY=$(find $INTERNAL_LETSENCRYPT_PATH/archive -name "privkey*.pem" -printf '%f\n' | sort -dr | head -1)
+CERT=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "cert*.pem" -printf '%f\n' | sort -dr | head -1)
+CHAIN=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "chain*.pem" -printf '%f\n' | sort -dr | head -1)
+FULL_CHAIN=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "fullchain*.pem" -printf '%f\n' | sort -dr | head -1)
+PRIV_KEY=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "privkey*.pem" -printf '%f\n' | sort -dr | head -1)
 
-REGEX="cert([0-9]+)\.pem"
-[[ $CERT =~ $REGEX ]]
-KEY_NUM="${BASH_REMATCH[1]}"
+KEY_NUM=$(echo -e "$CERT" | sed 's/cert//g' | sed 's/\.pem//g')
 
 # Convert the PEM key to a PKCS12 file containing full chain and private key
 docker run --rm --name openssl-pkcs --network host \
@@ -39,9 +37,9 @@ docker run --rm --name keytool-import --network host \
             -srckeystore /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
             -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt
 
-[ -L $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks ] && unlink $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks
-[ -f $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks ] && rm $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks
-ln -s ../../archive/$DOMAIN_NAME/keystore$KEY_NUM.jks $INTERNAL_LETSENCRYPT_PATH/live/$DOMAIN_NAME/keystore.jks
+[ -L $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks ] && unlink $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks
+[ -f $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks ] && rm $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks
+ln -s ../../archive/$DOMAIN_NAME/keystore$KEY_NUM.jks $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks
 
 # Upload the new SSL key to S3 for archiving purposes
 docker run --rm --network host --name s3sync \
