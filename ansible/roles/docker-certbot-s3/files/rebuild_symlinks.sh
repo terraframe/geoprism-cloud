@@ -7,7 +7,7 @@ set -ex
 
 [ -d $1/live ] && rm -r $1/live
 
-[ ! -d $1/archive/$2 ] && echo "Exiting because the archive directory does not contain our domain" && exit 0
+[ ! -d $1/archive/$2 ] && echo "Deleting SSL data because the archive directory does not contain our domain" && yes | cp $1/cli.ini $1/../cli.ini && rm -rf $1/* && mv $1/../cli.ini $1/cli.ini && exit 0
 
 mkdir -p $1/live/$2
 
