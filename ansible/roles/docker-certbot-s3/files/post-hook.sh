@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # https://maximilian-boehm.com/en-gb/blog/create-a-java-keystore-jks-from-lets-encrypt-certificates-1884000/
 
 set -ex
