@@ -16,6 +16,7 @@ set -e
 
 /sbin/apk update
 /sbin/apk add certbot
+/sbin/apk add findutils
 
 # Wait until the mounted docker sock exists and we will symlink it for use in our container
 num_sleep=0
