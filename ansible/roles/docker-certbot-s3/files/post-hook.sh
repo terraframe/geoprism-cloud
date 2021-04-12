@@ -12,6 +12,8 @@ S3_SECRET=XXX
 
 INTERNAL_LE_PATH=/etc/letsencrypt
 
+[ ! -d $INTERNAL_LE_PATH/archive/$DOMAIN_NAME ] && echo "Exiting because the archive directory does not contain our domain" && exit 0
+
 CERT=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "cert*.pem" -printf '%f\n' | sort -dr | head -1)
 CHAIN=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "chain*.pem" -printf '%f\n' | sort -dr | head -1)
 FULL_CHAIN=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "fullchain*.pem" -printf '%f\n' | sort -dr | head -1)
