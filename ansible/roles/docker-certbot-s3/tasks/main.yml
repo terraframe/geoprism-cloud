@@ -1,4 +1,11 @@
 
+- name: Stop Tomcat
+  shell: docker stop geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
+
 # Certbot won't work on a fresh install without a port forward
 - name: Forward port (iptables)
   shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
@@ -91,17 +98,16 @@
   become: yes
   become_method: sudo
 
-- name: Stop Tomcat
-  shell: docker stop geoprism
-  become: yes
-  become_method: sudo
-  ignore_errors: yes
 - name: Delete any existing file or link
   file:
     path: "{{app_data}}/ssl/keystore.jks"
     state: absent
   become: yes
   become_method: sudo
+  
+- name: Pause for a little bit to make sure our file exists.
+  pause:
+    seconds: "10"
 - name: Symbolic link our certificate
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
@@ -109,6 +115,8 @@
     state: link
   become: yes
   become_method: sudo
+  
+  
 - name: Start Tomcat
   shell: docker start geoprism
   become: yes
