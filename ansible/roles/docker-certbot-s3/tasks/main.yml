@@ -107,7 +107,7 @@
   
 - name: Pause for a little bit to make sure our file exists.
   pause:
-    seconds: "10"
+    seconds: "3"
 - name: Symbolic link our certificate
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
