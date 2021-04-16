@@ -52,13 +52,13 @@ docker run --rm --network host --name s3sync \
 
 CERTBOT_CMD="certbot certonly -n --standalone -d $1 --agree-tos --email $2 --http-01-port 8080"
 
-sed -i -e "s|LETSENCRYPT_PATH=.*|LETSENCRYPT_PATH=$8|g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s/KEY_PASSWORD=.*/KEY_PASSWORD=$3/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s/KEY_ALIAS=.*/KEY_ALIAS=$4/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s/DOMAIN_NAME=.*/DOMAIN_NAME=$1/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s/S3_BUCKET=.*/S3_BUCKET=$5/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s/S3_KEY=.*/S3_KEY=$6/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s/S3_SECRET=.*/S3_SECRET=$7/g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~LETSENCRYPT_PATH=.*~LETSENCRYPT_PATH=$8~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~KEY_PASSWORD=.*~KEY_PASSWORD=$3~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~KEY_ALIAS=.*~KEY_ALIAS=$4~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~DOMAIN_NAME=.*~DOMAIN_NAME=$1~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~S3_BUCKET=.*~S3_BUCKET=$5~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~S3_KEY=.*~S3_KEY=$6~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~S3_SECRET=.*~S3_SECRET=$7~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
 
 eval "$CERTBOT_CMD" || echo "Critical failure getting SSL certificate! Sleeping so as to avoid fetching more certs and hitting a rate limit." && while true; do sleep 86400; done
 
