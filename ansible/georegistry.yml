@@ -40,7 +40,7 @@
     apps: '["ROOT"]'
   
   roles:
-    - yum
+    #- yum # Webserver and database are the same server so no need to do yum again
     - docker-certbot-s3
     - webserver
     - webserver-extension
