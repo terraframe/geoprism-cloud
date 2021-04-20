@@ -92,6 +92,12 @@
   become: yes
   become_method: sudo
   
+- name: Wait until our program has deleted the file
+  wait_for:
+    path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+    state: "absent"
+  become: yes
+  become_method: sudo
 - name: Wait until the certificate is present before continuing (otherwise docker will create this file as a directory when the webserver spins up)
   wait_for:
     path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
@@ -105,9 +111,6 @@
   become: yes
   become_method: sudo
   
-- name: Pause for a little bit to make sure our file exists.
-  pause:
-    seconds: "3"
 - name: Symbolic link our certificate
   file:
     src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
