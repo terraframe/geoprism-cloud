@@ -50,7 +50,7 @@
     - name: Download logs
       ansible.builtin.fetch:
         src: "/tmp/staging/logs/logs.tgz"
-        dest: "{{LOG_DIR}}"
+        dest: "{{LOG_DIR}}/logs.tgz"
         flat: yes
       become: yes
       become_method: sudo
