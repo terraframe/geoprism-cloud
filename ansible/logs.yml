@@ -2,10 +2,12 @@
 # TODO : stack dump : /usr/lib/jvm/java-8-oracle/bin/jcmd 1 Thread.print > stack2.out
 
 - hosts: localhost
+  vars:
+    LOCAL_LOGS: ../target/logs
   tasks:
     - name: Create log directory
       file:
-        path: ../target/logs
+        path: "LOCAL_LOGS"
         state: directory
 
 - name: Download Logs
@@ -24,11 +26,11 @@
     - name: Make staging
       file: 
         state: directory
-        path: /tmp/staging
+        path: /tmp/staging/logs
       become: yes
       become_method: sudo
     - name: Stage logs
-      command: docker cp "geoprism:{{CATALINA_HOME}}/logs" /tmp/staging/logs
+      command: docker cp "geoprism:{{CATALINA_HOME}}/logs" /tmp/staging/logs/target
       become: yes
       become_method: sudo
       ignore_errors: yes
@@ -41,10 +43,14 @@
         recurse: yes
       become: yes
       become_method: sudo
+    - archive:
+        path: /tmp/staging/logs/target
+        dest: /tmp/staging/logs/logs.tgz
     - debug: msg="Downloading logs to {{LOG_DIR}}"
     - name: Download logs
-      synchronize:
-        src: "/tmp/staging/logs"
+      ansible.builtin.fetch:
+        src: "/tmp/staging/logs/logs.tgz"
         dest: "{{LOG_DIR}}"
-        recursive: yes
-        mode: pull
+        flat: yes
+      become: yes
+      become_method: sudo
