@@ -29,11 +29,27 @@
         path: /tmp/staging/logs
       become: yes
       become_method: sudo
+    - name: Produce thread dump
+      shell: docker exec geoprism bash -c 'jstack 1 > logs/jstack.out'
+      become: yes
+      become_method: sudo
     - name: Stage logs
       command: docker cp "geoprism:{{CATALINA_HOME}}/logs" /tmp/staging/logs/target
       become: yes
       become_method: sudo
       ignore_errors: yes
+    - name: Add Geoprism container logs
+      shell: docker logs geoprism --since 96h &> /tmp/staging/logs/docker-geoprism.log
+      become: yes
+      become_method: sudo
+    - name: Add Postgres container logs
+      shell: docker logs postgres --since 96h &> /tmp/staging/logs/docker-postgres.log
+      become: yes
+      become_method: sudo
+    - name: Add Orientdb container logs
+      shell: docker logs orientdb --since 96h &> /tmp/staging/logs/docker-orientdb.log
+      become: yes
+      become_method: sudo
     - name: Log staging permissions
       file: 
         state: directory
