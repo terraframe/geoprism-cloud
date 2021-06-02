@@ -32,11 +32,6 @@
   vars:
     catalina_home: /usr/local/tomcat
     
-    # Solr pathing information    
-    document_core: /opt/solr/server/solr/demo
-    geo_core: /opt/solr/server/solr/geo
-    solr_server: /opt/solr/server
-    
     apps: '["ROOT"]'
   
   roles:
@@ -44,7 +39,6 @@
     - docker-certbot-s3
     - webserver
     - webserver-extension
-    - solr
     - patch
     - boot
 

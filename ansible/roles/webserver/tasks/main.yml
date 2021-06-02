@@ -31,28 +31,10 @@
   become: yes
   become_method: sudo
   
-  
-  
-# Move existing geoprism data over to /data/geoprism
-- name: Does the new docker volume exist already?
-  stat: "path={{app_data}}/geoprism"
-  register: new_volume_exists
-  become: yes
-  become_method: sudo
-- name: Does the old docker volume exist?
-  stat: "path=/opt/geoprism"
-  register: old_volume_exists
-  become: yes
-  become_method: sudo
 - name: Create docker volume directory
   file:
     state: directory
     path: "{{app_data}}/geoprism"
-  become: yes
-  become_method: sudo
-- name: Copy volume to docker volume vault
-  shell: "cp -a /opt/geoprism/. {{app_data}}/geoprism/"
-  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists"
   become: yes
   become_method: sudo
 
