@@ -50,7 +50,7 @@
       Connector on port 8080 -->
     <Connector protocol="org.apache.coyote.http11.Http11Protocol"
       SSLEnabled="true" 
-      URIEncoding="ISO-8859-1"
+      URIEncoding="UTF-8"
       clientAuth="false"
       connectionTimeout="20000"
       emptySessionPath="true"
