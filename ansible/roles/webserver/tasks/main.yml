@@ -51,6 +51,7 @@
     image: "{{webserver_docker_image}}"
     state: started
     recreate: yes
+    force_kill: yes
     pull: yes
     restart_policy: always
     env: >
@@ -99,6 +100,7 @@
     image: "{{webserver_docker_image}}"
     state: started
     recreate: yes
+    force_kill: yes
     pull: yes
     restart_policy: always
     env: >
