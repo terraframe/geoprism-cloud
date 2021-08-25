@@ -4,7 +4,7 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-
+  
 
 # Certbot won't work on a fresh install without a port forward
 - name: Forward port (iptables)
@@ -68,6 +68,21 @@
     mode: a+x
   become: yes
   become_method: sudo
+  
+- name: Delete any existing symlink
+  file:
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: absent
+  become: yes
+  become_method: sudo
+  
+- name: Symbolic link our certificate
+  file:
+    src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
+    path: "{{app_data}}/ssl/keystore.jks"
+    state: link
+  become: yes
+  become_method: sudo
 
 - name: Start Geoprism Certbot Program
   community.general.docker_container:
@@ -103,25 +118,3 @@
     path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
   become: yes
   become_method: sudo
-
-- name: Delete any existing file or link
-  file:
-    path: "{{app_data}}/ssl/keystore.jks"
-    state: absent
-  become: yes
-  become_method: sudo
-  
-- name: Symbolic link our certificate
-  file:
-    src: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/keystore.jks"
-    path: "{{app_data}}/ssl/keystore.jks"
-    state: link
-  become: yes
-  become_method: sudo
-  
-  
-- name: Start Tomcat
-  shell: docker start geoprism
-  become: yes
-  become_method: sudo
-  ignore_errors: yes
