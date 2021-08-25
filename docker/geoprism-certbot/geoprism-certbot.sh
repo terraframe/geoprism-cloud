@@ -42,6 +42,8 @@ sed -i -e "s/DOMAIN_NAME=.*/DOMAIN_NAME=$1/g" /var/lib/geoprism-certbot/hooks/po
 
 eval "$CERTBOT_CMD" || (echo "Critical failure getting SSL certificate! Sleeping so as to avoid fetching more certs and hitting a rate limit." && while true; do sleep 86400; done)
 
+(docker top geoprism && echo "Rebooting geoprism to update certificate" && docker restart geoprism) || echo "Did not reboot geoprism. Maybe it doesnt exist or isnt running?"
+
 echo "00    00       *       *       *       $CERTBOT_CMD" >> /etc/crontabs/root
 
 crond -f

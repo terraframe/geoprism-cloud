@@ -62,7 +62,7 @@ sed -i -e "s~S3_SECRET=.*~S3_SECRET=$7~g" /var/lib/geoprism-certbot/hooks/post-h
 
 eval "$CERTBOT_CMD" || (echo "Critical failure getting SSL certificate! Sleeping so as to avoid fetching more certs and hitting a rate limit." && while true; do sleep 86400; done)
 
-(echo "Rebooting geoprism to update certificate" && docker top geoprism && docker restart geoprism) || echo "Error rebooting geoprism. Maybe it doesnt exist yet?"
+(docker top geoprism && echo "Rebooting geoprism to update certificate" && docker restart geoprism) || echo "Did not reboot geoprism. Maybe it doesnt exist or isnt running?"
 
 echo "00    00       *       *       *       $CERTBOT_CMD" >> /etc/crontabs/root
 
