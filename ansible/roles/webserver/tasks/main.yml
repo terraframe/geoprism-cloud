@@ -2,6 +2,12 @@
 - name: Ensure the webserver can connect to the database
   wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
 
+- name: Stop Tomcat
+  shell: docker stop geoprism
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
 - name: Stage SSL certificates
   file:
     path: "{{app_data}}/ssl"
