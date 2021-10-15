@@ -1,7 +1,7 @@
 FROM centos:8
 
 RUN dnf makecache \
-    && dnf install -y unzip which zip python3 wget git curl
+    && dnf install -y unzip which zip python3 wget git curl gzip
 
 # Install SDKMan
 RUN curl -s "https://get.sdkman.io" | bash
