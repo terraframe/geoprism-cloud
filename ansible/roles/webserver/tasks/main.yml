@@ -3,11 +3,20 @@
   wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
 
 - name: Stop Tomcat
-  shell: docker stop geoprism
+  shell: "docker stop geoprism"
   become: yes
   become_method: sudo
   ignore_errors: yes
 
+## Appcfg ##
+- name: Stage appcfg
+  copy: src="{{appcfg}}/"
+        dest="{{app_data}}/tomcat/appcfg/"
+  become: yes
+  become_method: sudo
+  when: appcfg is defined
+  
+## SSL ##
 - name: Stage SSL certificates
   file:
     path: "{{app_data}}/ssl"
@@ -36,151 +45,70 @@
     replace: "keystorePass=\"{{ssl_keystore_password}}\""
   become: yes
   become_method: sudo
-  
-- name: Create docker volume directory
-  file:
-    state: directory
-    path: "{{app_data}}/geoprism"
+
+## Configure log4j2.xml ##
+- name: Stage log4j2.xml
+  copy: src="log4j2.xml"
+        dest="{{app_data}}/tomcat/log4j2.xml"
   become: yes
   become_method: sudo
+- name: Set log level based on ansible config
+  ansible.builtin.replace:
+    path: "{{app_data}}/tomcat/log4j2.xml"
+    regexp: '<Root level="{{log_level | default("error")}}">'
+    replace: '<Root level="error">'
 
-# Delete temp files
+# TODO : CORS ? #
+
+- name: Does the geoserver data directory exist already?
+  stat: "path={{app_data}}/geoserver/gwc"
+  register: geoserver_data_exists
+  become: yes
+  become_method: sudo
+- name: Copy default geoserver data to geoserver data directory
+  shell: "{{item}}"
+  with_items:
+    - wget -nv -O {{app_data}}/geoserver-tmp/geoserver.war "http://nexus.terraframe.com/service/local/repositories/allrepos/content/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"
+    - mkdir -p {{app_data}}/geoserver-tmp/unzipped && cd {{app_data}}/geoserver-tmp/unzipped && unzip {{app_data}}/geoserver-tmp/geoserver.war && mv data {{app_data}}/geoserver
+  become: yes
+  become_method: sudo
+  when: "not geoserver_data_exists.stat.exists"
+
+# Fetch and Load Docker Image ##
+- name: Fetch and Load Docker Image (Only when deploying latest)
+  file:
+    path: "{{app_data}}/dimg"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+  when: "{{webserver_docker_image_tagname}} == 'latest'"
+- name: Fetch and Load Docker Image (Only when deploying latest)
+  copy:
+    src: "{{docker_image_path}}"
+    dest: "{{app_data}}/dimg/georegistry.dimg.gz"
+  become: yes
+  become_method: sudo
+  when: "{{webserver_docker_image_tagname}} == 'latest'"
+- name: Fetch and Load Docker Image (Only when deploying latest)
+  community.docker.docker_image:
+    state: present
+    source: load
+    load_path: "{{app_data}}/dimg/georegistry.dimg.gz"
+    name: "{{webserver_docker_image}}:{{webserver_docker_image_tagname}}"
+  become: yes
+  become_method: sudo
+  when: "{{webserver_docker_image_tagname}} == 'latest'"
+
+## Delete temp files ##
 - name: Delete Tomcat Temp Files
   shell: "rm -rf {{app_data}}/tomcat/tmp/*"
   become: yes
   become_method: sudo
   
-# Start the Geoprism Docker container
-- name: Start Tomcat Webserver
-  community.general.docker_container:
-    name: geoprism
-    image: "{{webserver_docker_image}}"
-    state: started
-    recreate: yes
-    force_kill: yes
-    pull: yes
-    restart_policy: always
-    env: >
-        JAVA_OPTS="
-        -Xms512M
-        -Xmx{{tomcat_memory}}
-        -Djava.rmi.server.hostname={{ remote_endpoint_ip }}
-        -Ddatabase.hostURL={{webserver_database}}
-        -server
-        -Dappcfg={{catalina_home}}/appcfg
-        -Dproject.basedir={{catalina_home}}
-        -Dtomcat.home={{catalina_home}}
-        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
-        -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
-        -Dbirt-server=true
-        -DFile.encoding=UTF-8      
-        -Ddatabase.user={{db_user}}
-        -Ddatabase.password={{db_pass}}
-        -Ddatabase.port=5432
-        -Demail.username={{ email_user | default('x') }}
-        -Demail.password={{ email_pass | default('x') }}
-        -Dbucket.name={{bucket_name | default('x')}}
-        -Dsolr.enabled={{solr_enabled | default('false')}}
-        -Dgeoprism.volume=/data/geoprism/misc
-        -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
-        -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
-        -DGEOSERVER_DATA_DIR=/data/geoserver/data
-        {{tomcat_java_opts | default('')}}
-        "
-    network_mode: host
-    volumes:
-        - "{{app_data}}/geoprism:/data/geoprism"
-        - "{{app_data}}/tomcat/logs:/usr/local/tomcat/logs"
-        - "{{app_data}}/tomcat/tmp:/usr/local/tomcat/temp"
-        - "{{app_data}}/tomcat/webapps/.well-known:/usr/local/tomcat/webapps/.well-known"
-        - "{{app_data}}/geoserver:/data/geoserver"
-        - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
-        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
-  become: yes
-  become_method: sudo
-  when: "not {{debug | default('false')}}"
-  
-- name: Start Geoprism Webserver (Debug)
-  community.general.docker_container:
-    name: geoprism
-    image: "{{webserver_docker_image}}"
-    state: started
-    recreate: yes
-    force_kill: yes
-    pull: yes
-    restart_policy: always
-    env: >
-        JAVA_OPTS="
-        -Xms512M
-        -Xmx{{tomcat_memory}}
-        -Djava.rmi.server.hostname={{ remote_endpoint_ip }}
-        -Ddatabase.hostURL={{webserver_database}}
-        -Dappcfg={{catalina_home}}/appcfg
-        -Dproject.basedir={{catalina_home}}
-        -Dtomcat.home={{catalina_home}}
-        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
-        -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
-        -Dbirt-server=true
-        -DFile.encoding=UTF-8      
-        -Ddatabase.user={{db_user}}
-        -Ddatabase.password={{db_pass}}
-        -Ddatabase.port=5432
-        -Demail.username={{ email_user | default('x') }}
-        -Demail.password={{ email_pass | default('x') }}
-        -Dbucket.name={{bucket_name | default('x')}}
-        -Dsolr.enabled={{solr_enabled | default('false')}}
-        -Dgeoprism.volume=/opt/geoprism/misc
-        -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
-        -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
-        -Dcom.sun.management.jmxremote
-        -Dcom.sun.management.jmxremote.port=9010
-        -Dcom.sun.management.jmxremote.rmi.port=9010
-        -Dcom.sun.management.jmxremote.local.only=false
-        -Dcom.sun.management.jmxremote.authenticate=false
-        -Dcom.sun.management.jmxremote.ssl=false
-        -Xdebug
-        -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000
-        -DGEOSERVER_DATA_DIR=/data/geoserver/data
-        {{tomcat_java_opts | default('')}}
-        "
-        JAVA_OPTS_NO_DEBUG="
-        -Xms512M
-        -Xmx{{tomcat_memory}}
-        -Djava.rmi.server.hostname={{ remote_endpoint_ip }}
-        -Ddatabase.hostURL={{webserver_database}}
-        -Dappcfg={{catalina_home}}/appcfg
-        -Dproject.basedir={{catalina_home}}
-        -Dtomcat.home={{catalina_home}}
-        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
-        -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
-        -Dbirt-server=true
-        -DFile.encoding=UTF-8      
-        -Ddatabase.user={{db_user}}
-        -Ddatabase.password={{db_pass}}
-        -Ddatabase.port=5432
-        -Demail.username={{ email_user | default('x') }}
-        -Demail.password={{ email_pass | default('x') }}
-        -Dbucket.name={{bucket_name | default('x')}}
-        -Dsolr.enabled={{solr_enabled | default('false')}}
-        -Dgeoprism.volume=/data/geoprism/misc
-        -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
-        -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
-        -DGEOSERVER_DATA_DIR=/data/geoserver/data
-        {{tomcat_java_opts | default('')}}
-        "
-    network_mode: host
-    volumes:
-        - "{{app_data}}/geoprism:/data/geoprism"
-        - "{{app_data}}/tomcat/logs:/usr/local/tomcat/logs"
-        - "{{app_data}}/tomcat/tmp:/usr/local/tomcat/temp"
-        - "{{app_data}}/tomcat/webapps/.well-known:/usr/local/tomcat/webapps/.well-known"
-        - "{{app_data}}/geoserver:/data/geoserver"
-        - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
-        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
-  become: yes
-  become_method: sudo
-  when: "{{debug | default('false')}}"
-  
+# Port redirects
 - name: Forward port (iptables)
   shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
   become: yes
@@ -191,4 +119,65 @@
   become: yes
   become_method: sudo
   when: "firewalld is defined"
+  
+- name: Figure out which JAVA_OPTS to use
+  ansible.builtin.set_fact:
+    java_opts: "{{java_opts_prod}}"
+  when: "not {{debug | default('false')}}"
+- name: Figure out which JAVA_OPTS to use
+  ansible.builtin.set_fact:
+    java_opts: "{{java_opts_debug}}"
+  when: "{{debug | default('false')}}"
+
+## Patch ##
+- name: Patch
+  community.general.docker_container:
+    name: geoprism
+    image: "{{webserver_docker_image}}:{{webserver_docker_image_tagname}}"
+    state: started
+    recreate: yes
+    force_kill: yes
+    pull: yes
+    restart_policy: always
+    env: 'JAVA_OPTS="{{java_opts}}"'
+    network_mode: host
+    command: "java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*" net.geoprism.build.GeoprismDatabaseBuilder $CATALINA_HOME/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} 2>&1 | tee $CATALINA_HOME/logs/database-builder.log"
+    volumes:
+        - "{{app_data}}/geoprism:/data/geoprism"
+        - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs"
+        - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp"
+        - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known"
+        - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg"
+        - "{{app_data}}/tomcat/log4j2.xml:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/log4j2.xml"
+        - "{{app_data}}/geoserver:/data/geoserver"
+        - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
+        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
+  become: yes
+  become_method: sudo
+  when: "not {{clean_db}}"
+
+## Start the Geoprism Docker container ##
+- name: Start Tomcat Webserver
+  community.general.docker_container:
+    name: geoprism
+    image: "{{webserver_docker_image}}:{{webserver_docker_image_tagname}}"
+    state: started
+    recreate: yes
+    force_kill: yes
+    pull: yes
+    restart_policy: always
+    env: 'JAVA_OPTS="{{java_opts}}"'
+    network_mode: host
+    volumes:
+        - "{{app_data}}/geoprism:/data/geoprism"
+        - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs"
+        - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp"
+        - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known"
+        - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg"
+        - "{{app_data}}/tomcat/log4j2.xml:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/log4j2.xml"
+        - "{{app_data}}/geoserver:/data/geoserver"
+        - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
+        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
+  become: yes
+  become_method: sudo
   

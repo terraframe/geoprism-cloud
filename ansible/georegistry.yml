@@ -38,9 +38,6 @@
     #- yum # Webserver and database are the same server so no need to do yum again
     - docker-certbot-s3
     - webserver
-    - webserver-extension
-    - patch
-    - boot
 
 
 # This part entirely optional. It is included to test the email architecture and make sure emails can be sent properly.
