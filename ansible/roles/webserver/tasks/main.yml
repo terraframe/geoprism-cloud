@@ -144,7 +144,7 @@
     state: started
     recreate: yes
     force_kill: yes
-    pull: should_pull
+    pull: "{{should_pull}}"
     restart_policy: always
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
@@ -171,7 +171,7 @@
     state: started
     recreate: yes
     force_kill: yes
-    pull: should_pull
+    pull: "{{should_pull}}"
     restart_policy: always
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
