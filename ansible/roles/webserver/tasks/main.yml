@@ -142,10 +142,10 @@
     name: geoprism
     image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
     state: started
-    recreate: yes
-    force_kill: yes
     pull: "{{should_pull}}"
-    restart_policy: always
+    restart_policy: 'no'
+    auto_remove: yes
+    detach: no
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
     command: 'java $JAVA_OPTS -cp "$CATALINA_HOME/webapps/ROOT/WEB-INF/classes:$CATALINA_HOME/webapps/ROOT/WEB-INF/lib/*" net.geoprism.build.GeoprismDatabaseBuilder $CATALINA_HOME/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} 2>&1 | tee $CATALINA_HOME/logs/database-builder.log'
