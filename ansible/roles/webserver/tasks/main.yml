@@ -137,7 +137,7 @@
     state: started
     recreate: yes
     force_kill: yes
-    pull: yes
+    pull: webserver_docker_image_tag != "latest"
     restart_policy: always
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
@@ -164,7 +164,7 @@
     state: started
     recreate: yes
     force_kill: yes
-    pull: yes
+    pull: webserver_docker_image_tag != "latest"
     restart_policy: always
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
