@@ -84,14 +84,14 @@
     recurse: yes
   become: yes
   become_method: sudo
-  when: "{{webserver_docker_image_tag}} == 'latest'"
+  when: webserver_docker_image_tag == "latest"
 - name: Fetch and Load Docker Image (Only when deploying latest)
   copy:
     src: "{{docker_image_path}}"
     dest: "{{app_data}}/dimg/georegistry.dimg.gz"
   become: yes
   become_method: sudo
-  when: "{{webserver_docker_image_tag}} == 'latest'"
+  when: webserver_docker_image_tag == "latest"
 - name: Fetch and Load Docker Image (Only when deploying latest)
   community.docker.docker_image:
     state: present
@@ -100,7 +100,7 @@
     name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
   become: yes
   become_method: sudo
-  when: "{{webserver_docker_image_tag}} == 'latest'"
+  when: webserver_docker_image_tag == "latest"
 
 ## Delete temp files ##
 - name: Delete Tomcat Temp Files
