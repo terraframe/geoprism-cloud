@@ -130,7 +130,11 @@
   when: "{{debug | default('false')}}"
 
 - ansible.builtin.set_fact:
-    should_pull: webserver_docker_image_tag != "latest"
+    should_pull: true
+  when: webserver_docker_image_tag != "latest"
+- ansible.builtin.set_fact:
+    should_pull: false
+  when: webserver_docker_image_tag == "latest"
 
 ## Patch ##
 - name: Patch
