@@ -129,6 +129,9 @@
     java_opts: "{{java_opts_debug}}"
   when: "{{debug | default('false')}}"
 
+- ansible.builtin.set_fact:
+    should_pull: webserver_docker_image_tag != "latest"
+
 ## Patch ##
 - name: Patch
   community.general.docker_container:
@@ -137,7 +140,7 @@
     state: started
     recreate: yes
     force_kill: yes
-    pull: webserver_docker_image_tag != "latest"
+    pull: should_pull
     restart_policy: always
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
@@ -164,7 +167,7 @@
     state: started
     recreate: yes
     force_kill: yes
-    pull: webserver_docker_image_tag != "latest"
+    pull: should_pull
     restart_policy: always
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
