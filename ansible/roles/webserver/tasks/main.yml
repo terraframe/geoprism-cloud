@@ -84,23 +84,23 @@
     recurse: yes
   become: yes
   become_method: sudo
-  when: "{{webserver_docker_image_tagname}} == 'latest'"
+  when: "{{webserver_docker_image_tag}} == 'latest'"
 - name: Fetch and Load Docker Image (Only when deploying latest)
   copy:
     src: "{{docker_image_path}}"
     dest: "{{app_data}}/dimg/georegistry.dimg.gz"
   become: yes
   become_method: sudo
-  when: "{{webserver_docker_image_tagname}} == 'latest'"
+  when: "{{webserver_docker_image_tag}} == 'latest'"
 - name: Fetch and Load Docker Image (Only when deploying latest)
   community.docker.docker_image:
     state: present
     source: load
     load_path: "{{app_data}}/dimg/georegistry.dimg.gz"
-    name: "{{webserver_docker_image}}:{{webserver_docker_image_tagname}}"
+    name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
   become: yes
   become_method: sudo
-  when: "{{webserver_docker_image_tagname}} == 'latest'"
+  when: "{{webserver_docker_image_tag}} == 'latest'"
 
 ## Delete temp files ##
 - name: Delete Tomcat Temp Files
@@ -133,7 +133,7 @@
 - name: Patch
   community.general.docker_container:
     name: geoprism
-    image: "{{webserver_docker_image}}:{{webserver_docker_image_tagname}}"
+    image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
     state: started
     recreate: yes
     force_kill: yes
@@ -160,7 +160,7 @@
 - name: Start Tomcat Webserver
   community.general.docker_container:
     name: geoprism
-    image: "{{webserver_docker_image}}:{{webserver_docker_image_tagname}}"
+    image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
     state: started
     recreate: yes
     force_kill: yes
