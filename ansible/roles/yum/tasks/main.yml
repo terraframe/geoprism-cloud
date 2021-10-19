@@ -46,12 +46,12 @@
 
 # Docker-py
 - name: Uninstall docker-py
-  command: pip uninstall docker-py
+  command: pip uninstall docker-py -y
   become: yes
   become_method: sudo
   ignore_errors: yes
 - name: Install docker-py
-  command: pip install docker
+  command: pip install docker -y
   become: yes
   become_method: sudo
 
