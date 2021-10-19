@@ -122,11 +122,11 @@
   
 - name: Figure out which JAVA_OPTS to use
   ansible.builtin.set_fact:
-    java_opts: "{{java_opts_prod}}"
+    java_opts: "{{java_opts_prod | trim}}"
   when: "not {{debug | default('false')}}"
 - name: Figure out which JAVA_OPTS to use
   ansible.builtin.set_fact:
-    java_opts: "{{java_opts_debug}}"
+    java_opts: "{{java_opts_debug | trim}}"
   when: "{{debug | default('false')}}"
 
 - ansible.builtin.set_fact:
@@ -136,8 +136,8 @@
     should_pull: false
   when: webserver_docker_image_tag == "latest"
 
-## Patch ##
-- name: Patch
+## Build Database ##
+- name: Build Database
   community.general.docker_container:
     name: geoprism
     image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
@@ -161,7 +161,6 @@
         - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
   become: yes
   become_method: sudo
-  when: "not {{clean_db}}"
 
 ## Start the Geoprism Docker container ##
 - name: Start Tomcat Webserver
