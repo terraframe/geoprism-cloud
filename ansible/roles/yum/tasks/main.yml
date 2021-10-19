@@ -45,8 +45,13 @@
   become_method: sudo
 
 # Docker-py
+- name: Uninstall docker-py
+  command: pip uninstall docker-py
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
 - name: Install docker-py
-  command: pip install 'docker-py==1.9.0' # We're using pip verison 1.9 because there's an ansible bug that thinks version 1.10 is less than 1.7
+  command: pip install docker
   become: yes
   become_method: sudo
 
