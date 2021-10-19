@@ -144,7 +144,7 @@
     state: started
     pull: "{{should_pull}}"
     restart_policy: 'no'
-    auto_remove: yes
+    auto_remove: no
     detach: no
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
