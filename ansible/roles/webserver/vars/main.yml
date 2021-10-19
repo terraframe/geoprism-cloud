@@ -2,7 +2,7 @@
 
 catalina_home: /usr/local/tomcat
 
-java_opts_base: >
+java_opts_base: >-
         -Xms512M
         -Xmx{{tomcat_memory}}
         -Djava.rmi.server.hostname={{ remote_endpoint_ip }}
@@ -26,12 +26,12 @@ java_opts_base: >
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
         -DGEOSERVER_DATA_DIR=/data/geoserver/data
 
-java_opts_prod: >
+java_opts_prod: >-
         {{java_opts_base}}
         -server
         {{tomcat_java_opts | default('')}}
 
-java_opts_debug: >
+java_opts_debug: >-
         {{java_opts_base}}
         -Dcom.sun.management.jmxremote
         -Dcom.sun.management.jmxremote.port=9010
