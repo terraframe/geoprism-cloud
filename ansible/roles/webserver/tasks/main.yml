@@ -74,8 +74,8 @@
   become_method: sudo
   when: "not geoserver_data_exists.stat.exists"
 
-# Fetch and Load Docker Image ##
-- name: Fetch and Load Docker Image (Only when deploying latest)
+# Fetch and Load Docker Image (As Zip From Jenkins) ##
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
   file:
     path: "{{app_data}}/dimg"
     state: directory
@@ -85,14 +85,14 @@
   become: yes
   become_method: sudo
   when: webserver_docker_image_tag == "latest"
-- name: Fetch and Load Docker Image (Only when deploying latest)
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
   copy:
     src: "{{docker_image_path}}"
     dest: "{{app_data}}/dimg/georegistry.dimg.gz"
   become: yes
   become_method: sudo
   when: webserver_docker_image_tag == "latest"
-- name: Fetch and Load Docker Image (Only when deploying latest)
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
   community.docker.docker_image:
     state: present
     source: load
