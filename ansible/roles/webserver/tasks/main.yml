@@ -61,7 +61,7 @@
 # TODO : CORS ? #
 
 - name: Does the geoserver data directory exist already?
-  stat: "path={{app_data}}/geoserver/gwc"
+  stat: "path={{app_data}}/geoserver/data/gwc"
   register: geoserver_data_exists
   become: yes
   become_method: sudo
