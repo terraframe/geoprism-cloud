@@ -58,8 +58,6 @@
     regexp: '<Root level="{{log_level | default("error")}}">'
     replace: '<Root level="error">'
 
-# TODO : CORS ? #
-
 - name: Does the geoserver data directory exist already?
   stat: "path={{app_data}}/geoserver/data/gwc"
   register: geoserver_data_exists
