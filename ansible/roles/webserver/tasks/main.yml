@@ -127,12 +127,12 @@
     java_opts: "{{java_opts_debug | trim}}"
   when: "{{debug | default('false')}}"
 
-- ansible.builtin.set_fact:
-    should_pull: true
-  when: webserver_docker_image_tag != "latest"
+#- ansible.builtin.set_fact:
+#    should_pull: true
+#  when: webserver_docker_image_tag != "latest"
 - ansible.builtin.set_fact:
     should_pull: false
-  when: webserver_docker_image_tag == "latest"
+  #when: webserver_docker_image_tag == "latest"
 
 ## Build Database ##
 - name: Build Database
