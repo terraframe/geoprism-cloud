@@ -73,6 +73,12 @@
   when: "not geoserver_data_exists.stat.exists"
 
 # Fetch and Load Docker Image (As Zip From Jenkins) ##
+- name: Delete existing docker image since the load command won't overwrite it
+  community.docker.docker_image:
+    state: absent
+    name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+  become: yes
+  become_method: sudo
 - name: Fetch and Load Docker Image (As Zip From Jenkins)
   file:
     path: "{{app_data}}/dimg"
