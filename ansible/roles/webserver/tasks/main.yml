@@ -77,6 +77,7 @@
   community.docker.docker_image:
     state: absent
     name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    force_absent: true
   become: yes
   become_method: sudo
 - name: Fetch and Load Docker Image (As Zip From Jenkins)
