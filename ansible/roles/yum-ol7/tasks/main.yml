@@ -27,7 +27,7 @@
   become_method: sudo
   ignore_errors: yes
 - name: Install docker-py
-  command: pip install docker
+  command: pip install 'docker==4.4.4' # We're using verison 4.4.4 because its the last version that supports python version 2.7 (which is what deployed servers are using)
   become: yes
   become_method: sudo
 
