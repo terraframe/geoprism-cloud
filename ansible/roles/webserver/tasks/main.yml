@@ -57,6 +57,8 @@
     path: "{{app_data}}/tomcat/log4j2.xml"
     regexp: '<Root level="{{log_level | default("error")}}">'
     replace: '<Root level="error">'
+  become: yes
+  become_method: sudo
 
 - name: Does the geoserver data directory exist already?
   stat: "path={{app_data}}/geoserver/data/gwc"
