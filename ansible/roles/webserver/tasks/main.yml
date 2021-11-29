@@ -103,6 +103,8 @@
   community.docker.docker_image:
     state: present
     source: load
+    http_timeout: 120
+    timeout: 120
     load_path: "{{app_data}}/dimg/georegistry.dimg.gz"
     name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
   become: yes
