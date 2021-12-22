@@ -68,7 +68,7 @@
 - name: Copy default geoserver data to geoserver data directory
   shell: "{{item}}"
   with_items:
-    - wget -nv -O {{app_data}}/geoserver-tmp/geoserver.war "http://nexus.terraframe.com/service/local/repositories/allrepos/content/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"
+    - wget -nv -O {{app_data}}/geoserver-tmp/geoserver.war "https://dl.cloudsmith.io/public/terraframe/public/maven/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"
     - mkdir -p {{app_data}}/geoserver-tmp/unzipped && cd {{app_data}}/geoserver-tmp/unzipped && unzip {{app_data}}/geoserver-tmp/geoserver.war && mv data {{app_data}}/geoserver
   become: yes
   become_method: sudo
