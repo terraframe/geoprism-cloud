@@ -41,6 +41,9 @@ ln -s /var/run/parent/docker.sock /var/run/docker.sock
 # Delete all existing SSL data
 yes | cp /etc/letsencrypt/cli.ini /etc/letsencrypt/../cli.ini && rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt/../cli.ini /etc/letsencrypt/cli.ini
 
+# Sleep for a little bit because our ansible script is waiting for the file to be deleted and we want to make sure they detect it here.
+sleep 8
+
 # Download the SSL data from S3
 docker run --rm --network host --name s3sync \
      -e AWS_ACCESS_KEY_ID=$6 -e AWS_SECRET_ACCESS_KEY=$7 \
