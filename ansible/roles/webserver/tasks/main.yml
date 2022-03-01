@@ -73,6 +73,15 @@
   become: yes
   become_method: sudo
   when: "not geoserver_data_exists.stat.exists"
+- name: Set the Geoserver admin password
+  community.general.xml:
+    path: "{{app_data}}/geoserver/data/security/usergroup/default/users.xml"
+    xpath: /userRegistry/users/user[@name='admin']
+    attribute: password
+    value: "{{geoserver_encrypted_admin_password}}"
+  become: yes
+  become_method: sudo
+  when: geoserver_encrypted_admin_password is defined
 
 # Fetch and Load Docker Image (As Zip From Jenkins) ##
 - name: Delete existing docker image since the load command won't overwrite it
