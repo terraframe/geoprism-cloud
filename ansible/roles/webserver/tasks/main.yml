@@ -78,7 +78,7 @@
     path: "{{app_data}}/geoserver/data/security/usergroup/default/users.xml"
     namespaces:
       geo: http://www.geoserver.org/security/users
-    xpath: /geo:userRegistry/users/user[@name='admin']
+    xpath: /geo:userRegistry/geo:users/geo:user[@name='admin']
     attribute: password
     value: "{{geoserver_encrypted_admin_password}}"
   become: yes
