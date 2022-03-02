@@ -31,6 +31,17 @@
   become: yes
   become_method: sudo
 
+# lxml
+- name: Uninstall lxml
+  command: pip uninstall -y lxml
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: Install lxml
+  command: pip install lxml
+  become: yes
+  become_method: sudo
+
 # Ensure valid server time (ecs pull fails if time is wrong)
 - name: Update server time
   shell: ntpdate -u ntp.ubuntu.com
