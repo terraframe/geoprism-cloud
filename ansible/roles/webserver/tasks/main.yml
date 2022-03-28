@@ -158,10 +158,10 @@
 - ansible.builtin.get_url:
     url: "{{geoprism_lib_extension}}"
     dest: "{{app_data}}/tomcat/extensions/geoprism-extension.jar"
-  when: geoprism_lib_extension is defined
+  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 - ansible.builtin.set_fact:
     geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/tomcat/extensions/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
-  when: geoprism_lib_extension is defined
+  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 
 ## Build Database ##
 - name: Build Database
