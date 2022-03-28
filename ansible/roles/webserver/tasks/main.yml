@@ -155,6 +155,14 @@
     should_pull: false
   #when: webserver_docker_image_tag == "latest"
 
+- ansible.builtin.get_url:
+    url: "{{geoprism_lib_extension}}"
+    dest: "{{app_data}}/tomcat/extensions/geoprism-extension.jar"
+  when: geoprism_lib_extension is defined
+- ansible.builtin.set_fact:
+    geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/tomcat/extensions/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
+  when: geoprism_lib_extension is defined
+
 ## Build Database ##
 - name: Build Database
   community.general.docker_container:
@@ -168,16 +176,7 @@
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
     command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
-    volumes:
-        - "{{app_data}}/geoprism:/data/geoprism"
-        - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs"
-        - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp"
-        - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known"
-        - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg"
-        - "{{app_data}}/tomcat/log4j2.xml:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/log4j2.xml"
-        - "{{app_data}}/geoserver:/data/geoserver"
-        - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
-        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
+    volumes: "{{geoprism_app_volumes}}"
   become: yes
   become_method: sudo
 
@@ -193,16 +192,7 @@
     restart_policy: always
     env: 'JAVA_OPTS="{{java_opts}}"'
     network_mode: host
-    volumes:
-        - "{{app_data}}/geoprism:/data/geoprism"
-        - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs"
-        - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp"
-        - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known"
-        - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg"
-        - "{{app_data}}/tomcat/log4j2.xml:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/log4j2.xml"
-        - "{{app_data}}/geoserver:/data/geoserver"
-        - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
-        - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
+    volumes: "{{geoprism_app_volumes}}"
   become: yes
   become_method: sudo
   
