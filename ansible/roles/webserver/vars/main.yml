@@ -12,6 +12,7 @@ geoprism_app_volumes:
   - "{{app_data}}/geoserver:/data/geoserver"
   - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
   - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
+  - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml"
   
 java_opts_base: >-
         -Xms512M

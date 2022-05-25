@@ -32,7 +32,7 @@
     state: absent
   become: yes
   become_method: sudo
-- name: Stage SSL certificates
+- name: Copy server.xml
   copy:
     src: "server.xml"
     dest: "{{app_data}}/ssl/server.xml"
@@ -43,6 +43,12 @@
     path: "{{app_data}}/ssl/server.xml"
     regexp: "keystorePass=\"changeit\""
     replace: "keystorePass=\"{{ssl_keystore_password}}\""
+  become: yes
+  become_method: sudo
+- name: Copy web.xml
+  copy:
+    src: "web.xml"
+    dest: "{{app_data}}/ssl/web.xml"
   become: yes
   become_method: sudo
 
