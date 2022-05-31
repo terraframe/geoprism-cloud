@@ -195,7 +195,7 @@
       become: yes
       become_method: sudo
   rescue:
-    - command: cat app.log chdir=/data/tomcat/logs
+    - command: cat /data/tomcat/logs/app.log
       register: command_output
     - debug:
         msg: "{{command_output.stdout}}"
