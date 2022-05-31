@@ -181,17 +181,17 @@
 - name: Build Database
   block:
     - community.general.docker_container:
-      name: geoprism
-      image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
-      state: started
-      pull: "{{should_pull}}"
-      restart_policy: 'no'
-      auto_remove: no
-      detach: no
-      env: 'JAVA_OPTS="{{java_opts}}"'
-      network_mode: host
-      command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
-      volumes: "{{geoprism_app_volumes}}"
+        name: geoprism
+        image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+        state: started
+        pull: "{{should_pull}}"
+        restart_policy: 'no'
+        auto_remove: no
+        detach: no
+        env: 'JAVA_OPTS="{{java_opts}}"'
+        network_mode: host
+        command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
+        volumes: "{{geoprism_app_volumes}}"
       become: yes
       become_method: sudo
   rescue:
