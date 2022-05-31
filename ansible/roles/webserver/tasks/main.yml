@@ -173,21 +173,33 @@
   when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 
 ## Build Database ##
+# export JAVA_OPTS="-Xms512M -Xmx8000M -Ddatabase.hostURL=127.0.0.1 -Dappcfg=/usr/local/tomcat/appcfg -Dproject.basedir=/usr/local/tomcat -Dtomcat.home=/usr/local/tomcat -Ddatabase.user=georegistry -Ddatabase.password=519xvLBDIG -Ddatabase.port=5432 -Dorientdb.root.password=e3SptZ38a6s -Dorientdb.admin.password=wo4oXM01a"
+# dev server clean install with extension:
+# sudo -E docker run --rm --name geoprism-database-builder -e JAVA_OPTS="$JAVA_OPTS" --network=host -v "/data/tomcat/geoprism-extension.jar:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar" -v "/data/tomcat/logs:/usr/local/tomcat/logs" -v "/data/tomcat/appcfg:/usr/local/tomcat/appcfg:ro" -v "/data/tomcat/log4j2.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro" terraframe/geoprism-registry:latest java $JAVA_OPTS -cp /usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/metadata --rootUser=postgres --rootPass=yk6ID7jkh --templateDb=postgres --install=true --clean=true 2>&1
+# Dev server patch no extension
+# sudo -E docker run --rm --name geoprism-database-builder -e JAVA_OPTS="$JAVA_OPTS" --network=host -v "/data/tomcat/logs:/usr/local/tomcat/logs" -v "/data/tomcat/appcfg:/usr/local/tomcat/appcfg:ro" -v "/data/tomcat/log4j2.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro" terraframe/geoprism-registry:latest java $JAVA_OPTS -cp /usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/metadata --rootUser=postgres --rootPass=yk6ID7jkh --templateDb=postgres --install=false --clean=false 2>&1
 - name: Build Database
-  community.general.docker_container:
-    name: geoprism
-    image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
-    state: started
-    pull: "{{should_pull}}"
-    restart_policy: 'no'
-    auto_remove: no
-    detach: no
-    env: 'JAVA_OPTS="{{java_opts}}"'
-    network_mode: host
-    command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
-    volumes: "{{geoprism_app_volumes}}"
-  become: yes
-  become_method: sudo
+  block:
+    - community.general.docker_container:
+      name: geoprism
+      image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+      state: started
+      pull: "{{should_pull}}"
+      restart_policy: 'no'
+      auto_remove: no
+      detach: no
+      env: 'JAVA_OPTS="{{java_opts}}"'
+      network_mode: host
+      command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
+      volumes: "{{geoprism_app_volumes}}"
+      become: yes
+      become_method: sudo
+  rescue:
+    - command: cat app.log chdir=/data/tomcat/logs
+      register: command_output
+    - debug:
+        msg: "{{command_output.stdout}}"
+    - ansible.builtin.command: /bin/false
 
 ## Start the Geoprism Docker container ##
 - name: Start Tomcat Webserver
