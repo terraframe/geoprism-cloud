@@ -2,17 +2,19 @@
 
 catalina_home: /usr/local/tomcat
 
-geoprism_app_volumes:
-  - "{{app_data}}/geoprism:/data/geoprism"
-  - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs"
-  - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp"
-  - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known"
-  - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg"
-  - "{{app_data}}/tomcat/log4j2.xml:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/log4j2.xml"
-  - "{{app_data}}/geoserver:/data/geoserver"
-  - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks"
-  - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml"
-  - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml"
+geoprism_volumes_base:
+  - "{{app_data}}/geoprism:/data/geoprism:rw"
+  - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs:rw"
+  - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp:rw"
+  - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
+  - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg:ro"
+  - "{{app_data}}/geoserver:/data/geoserver:rw"
+  - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
+  - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+  - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
+
+geoprism_app_volumes: "{{ geoprism_volumes_base + [app_data + '/tomcat/log4j2.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
+geoprism_dbbuilder_volumes: "{{ geoprism_volumes_base + [app_data + '/tomcat/log4j2-dbbuilder.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
 
 java_opts_base: >-
         -Xms512M
