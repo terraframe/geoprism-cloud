@@ -106,6 +106,15 @@
   register: geoserver_data_exists
   become: yes
   become_method: sudo
+- name: Create geoserver-tmp directory
+  file:
+    path: "{{app_data}}/geoserver-tmp"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
 - name: Copy default geoserver data to geoserver data directory
   shell: "{{item}}"
   with_items:
