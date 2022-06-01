@@ -23,10 +23,17 @@
   become: yes
   become_method: sudo
   when: "{{clean_db | default(false)}}"
-- name: If cleaning, delete geoserver temp
+- name: If cleaning, delete geoserver data
   file:
     state: absent
     path: "{{app_data}}/geoserver"
+  become: yes
+  become_method: sudo
+  when: "{{clean_db | default(false)}}"
+- name: If cleaning, delete geoserver temp
+  file:
+    state: absent
+    path: "{{app_data}}/geoserver-tmp"
   become: yes
   become_method: sudo
   when: "{{clean_db | default(false)}}"
