@@ -119,7 +119,7 @@
   shell: "{{item}}"
   with_items:
     - wget -nv -O {{app_data}}/geoserver-tmp/geoserver.war "https://dl.cloudsmith.io/public/terraframe/public/maven/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"
-    - mkdir -p {{app_data}}/geoserver-tmp/unzipped && cd {{app_data}}/geoserver-tmp/unzipped && unzip {{app_data}}/geoserver-tmp/geoserver.war && mv data {{app_data}}/geoserver
+    - mkdir -p {{app_data}}/geoserver-tmp/unzipped && cd {{app_data}}/geoserver-tmp/unzipped && unzip {{app_data}}/geoserver-tmp/geoserver.war && mkdir -p {{app_data}}/geoserver && mv data {{app_data}}/geoserver
   become: yes
   become_method: sudo
   when: "not geoserver_data_exists.stat.exists"
