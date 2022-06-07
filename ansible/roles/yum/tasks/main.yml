@@ -12,10 +12,11 @@
   yum: name="*" state=latest
   become: yes
   become_method: sudo
-- name: Yum install epel-release
+- name: Yum install epel-release # This package is only required for aws linux 1 but not aws linux 2 thus we are ignoring errors.
   yum: name="epel-release" state=latest
   become: yes
   become_method: sudo
+  ignore_errors: yes
 - name: Yum install ntp
   yum: name="ntp" state=latest
   become: yes
