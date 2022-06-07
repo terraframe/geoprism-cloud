@@ -1,4 +1,18 @@
 
+##### Fresh Install ####
+#
+## Aws linux 2 ##
+# These steps were done manually on the usace-alpha server to facilitate this script working on AWS Linux 2 OS
+# 
+# Requires that iptables is installed / enabled first
+# https://serverfault.com/questions/1020536/save-iptables-firewall-rules-on-amazon-linux-2
+# 
+# The pip install docker-py command failed for me. I had to add the --ignore-installed command
+# https://stackoverflow.com/questions/53807511/pip-cannot-uninstall-package-it-is-a-distutils-installed-project
+#########################
+
+
+
 # Stop Docker Service
 # You would think 'yum update' would be smart enough to stop before updating but... https://github.com/moby/moby/issues/33688
 - name: Stop Docker service
