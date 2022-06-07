@@ -239,7 +239,7 @@
         detach: no
         env: 'JAVA_OPTS="{{java_opts}}"'
         network_mode: host
-        command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} --patch={{not clean_db}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
+        command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} --patch={{not (clean_db | bool)}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
         volumes: "{{geoprism_dbbuilder_volumes}}"
       become: yes
       become_method: sudo
