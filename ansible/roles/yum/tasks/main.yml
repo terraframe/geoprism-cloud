@@ -6,11 +6,14 @@
 # 
 # Requires that iptables is installed / enabled first
 # https://serverfault.com/questions/1020536/save-iptables-firewall-rules-on-amazon-linux-2
-# 
+#
+# Important! I also found that I had to manually open ports 443, 8443, 8080, and 80 on iptables (i'm guessing the defualt iptables config doesn't have the ports open?)
+## sudo sh -c "iptables -I INPUT -p tcp -m tcp --dport 80 -j ACCEPT && iptables -I INPUT -p tcp -m tcp --dport 443 -j ACCEPT && iptables -I INPUT -p tcp -m tcp --dport 8080 -j ACCEPT && iptables -I INPUT -p tcp -m tcp --dport 8443 -j ACCEPT && service iptables save"
+## sudo sh -c "iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && service iptables save"
+#
 # The pip install docker-py command failed for me. I had to add the --ignore-installed command
 # https://stackoverflow.com/questions/53807511/pip-cannot-uninstall-package-it-is-a-distutils-installed-project
 #########################
-
 
 
 # Stop Docker Service
