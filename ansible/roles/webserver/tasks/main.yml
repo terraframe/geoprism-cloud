@@ -230,7 +230,7 @@
   block:
     - name: Build Database
       community.general.docker_container:
-        name: geoprism
+        name: geoprism-dbbuilder
         image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
         state: started
         pull: "{{should_pull}}"
