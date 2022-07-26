@@ -37,7 +37,7 @@
   roles:
     - docker-certbot
     - webserver
-    - solr
+    - elasticsearch
     
   tasks:
     - name: Create Potree temp directory

@@ -1,0 +1,59 @@
+
+# Clean Existing Data
+- name: Delete Existing Data
+  file:
+    state: absent
+    path: "{{app_data}}/elasticsearch"
+  become: yes
+  become_method: sudo
+  when: "{{elasticsearch.enabled | default(false)}} and {{elasticsearch.clean | default(false)}}"
+
+# Configure vm.max_map_count in sysctl
+- ansible.posix.sysctl:
+  name: vm.max_map_count
+  value: '262144'
+  state: present
+  when: "{{elasticsearch.enabled | default(false)}} and {{elasticsearch.clean | default(false)}}"
+- name: vm.max_map_count
+  shell: "sysctl -w vm.max_map_count=262144"
+  become: yes
+  become_method: sudo
+  when: "{{elasticsearch.enabled | default(false)}} and {{elasticsearch.clean | default(false)}}"
+
+# Docker container
+- name: Kill Existing Docker Container
+  shell: docker kill elasticsearch
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+  when: "{{elasticsearch.enabled | default(false)}} and {{elasticsearch.clean | default(false)}}"
+- name: Start Docker Container
+  community.general.docker_container:
+    name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
+    state: started
+    recreate: "{{elasticsearch.clean}}"
+    pull: yes
+    restart_policy: always
+    network_mode: host
+    ulimits:
+      - nofile:65535:65535
+    env:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      ELASTIC_PASSWORD: "{{ elasticsearch.password }}"
+      xpack.security.enabled: false
+      discovery.type: single-node
+    volumes:
+      - "{{app_data}}/elasticsearch/data:/usr/share/elasticsearch/data:rw"
+  become: yes
+  become_method: sudo
+  when: "{{elasticsearch.enabled | default(false)}} and {{elasticsearch.clean | default(false)}}"
+  
+- pause:
+    seconds: 30
+  when: "{{elasticsearch.enabled | default(false)}} and ({{elasticsearch.clean | default(false)}}"
+  
+- name: Wait for ElasticSearch to be up
+  wait_for: host="127.0.0.1" port=9200 delay=5 timeout=60 state=started
+  when: "{{elasticsearch.enabled | default(false)}}"
+  
