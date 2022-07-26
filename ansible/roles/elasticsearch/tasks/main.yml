@@ -7,6 +7,26 @@
   become: yes
   become_method: sudo
   when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+- name: Create Data Directory
+  file:
+    state: directory
+    path: "{{app_data}}/elasticsearch/data"
+    owner: 1000
+    group: 0
+    mode: g+rwx
+  become: yes
+  become_method: sudo
+  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+- name: Create Log Directory
+  file:
+    state: directory
+    path: "{{app_data}}/elasticsearch/logs"
+    owner: 1000
+    group: 0
+    mode: g+rwx
+  become: yes
+  become_method: sudo
+  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
 
 # Configure vm.max_map_count in sysctl
 - name: vm.max_map_count
@@ -48,6 +68,7 @@
       discovery.type: "single-node"
     volumes:
       - "{{app_data}}/elasticsearch/data:/usr/share/elasticsearch/data:rw"
+      - "{{app_data}}/elasticsearch/logs:/usr/share/elasticsearch/logs:rw"
   become: yes
   become_method: sudo
   when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
