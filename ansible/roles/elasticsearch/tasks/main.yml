@@ -14,6 +14,8 @@
     name: vm.max_map_count
     value: '262144'
     state: present
+  become: yes
+  become_method: sudo
   when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
 - name: vm.max_map_count
   shell: "sysctl -w vm.max_map_count=262144"
