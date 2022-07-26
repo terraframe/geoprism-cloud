@@ -52,7 +52,7 @@
   
 - pause:
     seconds: 30
-  when: "{{elasticsearch.enabled | default(false)}} and ({{elasticsearch.clean | default(false)}}"
+  when: "{{elasticsearch.enabled | default(false)}} and {{elasticsearch.clean | default(false)}}"
   
 - name: Wait for ElasticSearch to be up
   wait_for: host="127.0.0.1" port=9200 delay=5 timeout=60 state=started
