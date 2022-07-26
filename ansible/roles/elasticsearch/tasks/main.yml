@@ -43,7 +43,7 @@
       - nofile:65535:65535
     env:
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-      ELASTIC_PASSWORD: "{{ elasticsearch.password }}"
+      ELASTIC_PASSWORD: "{{ elasticsearch_password }}"
       xpack.security.enabled: false
       discovery.type: single-node
     volumes:
