@@ -44,8 +44,8 @@
     env:
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
       ELASTIC_PASSWORD: "{{ elasticsearch_password }}"
-      xpack.security.enabled: false
-      discovery.type: single-node
+      xpack.security.enabled: "false"
+      discovery.type: "single-node"
     volumes:
       - "{{app_data}}/elasticsearch/data:/usr/share/elasticsearch/data:rw"
   become: yes
