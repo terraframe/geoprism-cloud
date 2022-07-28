@@ -9,8 +9,8 @@
   <Appenders>
     <RollingFile
       name="rollingFile"
-      fileName="${logdir}/app.log"
-      filePattern="${logdir}/app.%d{dd-MMM}.log.gz"
+      fileName="${logdir}/dbbuilder.log"
+      filePattern="${logdir}/dbbuilder.%d{dd-MMM}.log.gz"
       ignoreExceptions="false">
       <PatternLayout>
           <Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %m%n</Pattern>
