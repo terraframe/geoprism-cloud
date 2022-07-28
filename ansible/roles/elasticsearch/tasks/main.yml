@@ -74,7 +74,7 @@
   when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
   
 - pause:
-    seconds: 300
+    seconds: 90
   when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
   
 - name: Wait for ElasticSearch to be up
