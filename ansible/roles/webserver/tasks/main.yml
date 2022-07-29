@@ -244,7 +244,7 @@
       become: yes
       become_method: sudo
   rescue:
-    - command: cat {{app_data}}/tomcat/logs/app.log
+    - command: cat {{app_data}}/tomcat/logs/dbbuilder.log
       register: command_output
     - debug:
         msg: "{{command_output.stdout}}"
