@@ -96,7 +96,7 @@
   become: yes
   become_method: sudo
 - name: Stage log4j2-dbbuilder.xml
-  copy: src="log4j2.xml"
+  copy: src="log4j2-dbbuilder.xml"
         dest="{{app_data}}/tomcat/log4j2-dbbuilder.xml"
   become: yes
   become_method: sudo
