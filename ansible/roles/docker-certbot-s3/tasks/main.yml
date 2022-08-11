@@ -119,6 +119,10 @@
   become: yes
   become_method: sudo
   
+- name: Sleep for 10 seconds because our program will start tomcat (and it breaks stuff in later stages if we don't)
+  ansible.builtin.wait_for:
+    timeout: 10
+  delegate_to: localhost
   
 - name: Start Tomcat
   shell: docker start geoprism

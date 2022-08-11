@@ -243,13 +243,6 @@
         volumes: "{{geoprism_dbbuilder_volumes}}"
       become: yes
       become_method: sudo
-  rescue:
-    - command: cat {{app_data}}/tomcat/logs/dbbuilder.log
-      register: command_output
-    - debug:
-        msg: "{{command_output.stdout}}"
-    - shell: "docker logs geoprism"
-    - ansible.builtin.command: /bin/false
 
 ## Start the Geoprism Docker container ##
 - name: Start Tomcat Webserver
