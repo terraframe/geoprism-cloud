@@ -11,11 +11,11 @@ set -ex
 
 mkdir -p $1/live/$2
 
-CERT=$(find $1/archive/$2 -name "cert*.pem" -printf '%f\n' | sort -dr | head -1)
-CHAIN=$(find $1/archive/$2 -name "chain*.pem" -printf '%f\n' | sort -dr | head -1)
-FULL_CHAIN=$(find $1/archive/$2 -name "fullchain*.pem" -printf '%f\n' | sort -dr | head -1)
-PRIV_KEY=$(find $1/archive/$2 -name "privkey*.pem" -printf '%f\n' | sort -dr | head -1)
-KEYSTORE=$(find $1/archive/$2 -name "keystore*.jks" -printf '%f\n' | sort -dr | head -1)
+CERT=$(find $1/archive/$2 -name "cert*.pem" -printf '%f\n' | sort -Vr | head -1)
+CHAIN=$(find $1/archive/$2 -name "chain*.pem" -printf '%f\n' | sort -Vr | head -1)
+FULL_CHAIN=$(find $1/archive/$2 -name "fullchain*.pem" -printf '%f\n' | sort -Vr | head -1)
+PRIV_KEY=$(find $1/archive/$2 -name "privkey*.pem" -printf '%f\n' | sort -Vr | head -1)
+KEYSTORE=$(find $1/archive/$2 -name "keystore*.jks" -printf '%f\n' | sort -Vr | head -1)
 
 ln -s ../../archive/$2/$CERT $1/live/$2/cert.pem
 ln -s ../../archive/$2/$CHAIN $1/live/$2/chain.pem
