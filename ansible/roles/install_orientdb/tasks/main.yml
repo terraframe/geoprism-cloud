@@ -59,7 +59,7 @@
     name: orientdb
     image: "{{ orientdb_image | default('orientdb:3.0') }}"
     state: started
-    recreate: true
+    recreate: "{{clean_orientdb}}"
     pull: true
     ulimits:
       - nofile:500000:500000

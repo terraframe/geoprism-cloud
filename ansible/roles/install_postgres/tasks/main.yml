@@ -63,7 +63,7 @@
     name: postgres
     image: "{{ db_image | default('mdillon/postgis:9.5') }}"
     state: started
-    recreate: true
+    recreate: "{{clean_db}}"
     pull: true
     env:
       POSTGRES_PASSWORD: "{{rootdb_pass}}"

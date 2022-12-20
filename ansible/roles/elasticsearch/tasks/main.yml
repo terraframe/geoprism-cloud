@@ -71,7 +71,6 @@
       - "{{app_data}}/elasticsearch/logs:/usr/share/elasticsearch/logs:rw"
   become: yes
   become_method: sudo
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
   
 - pause:
     seconds: 90
