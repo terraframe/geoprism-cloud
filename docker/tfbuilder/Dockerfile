@@ -1,4 +1,4 @@
-FROM centos:8
+FROM quay.io/centos/centos:stream8
 
 # Install Docker  https://docs.docker.com/engine/install/centos/
 RUN yum install -y yum-utils
@@ -15,7 +15,7 @@ ENV SDKMAN_DIR=/root/.sdkman
 
 RUN source "/root/.sdkman/bin/sdkman-init.sh" \
     && yes | sdk update \
-    && yes | sdk install java 11.0.17-open \
+    && yes | sdk install java 11.0.12-open \
     && yes | sdk install gradle 5.4.1 \
     && yes | sdk install maven
 
