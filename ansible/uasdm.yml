@@ -24,7 +24,6 @@
     - yum-ol7
     - install_postgres
     - install_orientdb
-    - deploy_postgres
 
 
 - name: Deploy Webserver
