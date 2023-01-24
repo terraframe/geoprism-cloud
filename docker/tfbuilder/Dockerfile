@@ -1,5 +1,13 @@
 FROM quay.io/centos/centos:stream8
 
+# upgrade packages
+RUN dnf upgrade --setopt=install_weak_deps=False -y && \
+    dnf clean all && \
+    rm -rf /tmp/* && \
+    rm -rf /var/cache/yum && \
+    rm -rf /var/cache/dnf && \
+    find /var/log -type f -name '*.log' -delete
+
 # Install Docker  https://docs.docker.com/engine/install/centos/
 RUN yum install -y yum-utils
 RUN yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
