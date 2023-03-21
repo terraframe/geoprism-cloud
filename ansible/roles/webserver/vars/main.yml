@@ -31,8 +31,8 @@ java_opts_base: >-
         -Ddatabase.user={{db_user}}
         -Ddatabase.password={{db_pass}}
         -Ddatabase.port=5432
-        -Demail.username={{ email_user | default('x') }}
-        -Demail.password={{ email_pass | default('x') }}
+        -Dgeoprism.email.username={{ email_user | default('x') }}
+        -Dgeoprism.email.password={{ email_pass | default('x') }}
         -Dbucket.name={{bucket_name | default('x')}}
         -Dsolr.enabled={{solr_enabled | default('false')}}
         -Dsearch.enabled={{elasticsearch_enabled | default('false')}}
