@@ -33,6 +33,7 @@
       shell: docker exec geoprism bash -c 'jstack 1 > logs/jstack.out'
       become: yes
       become_method: sudo
+      ignore_errors: yes      
     - name: Stage logs
       command: docker cp "geoprism:{{CATALINA_HOME}}/logs" /tmp/staging/logs/target
       become: yes
