@@ -55,34 +55,22 @@
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools
   shell: pip install awscli
-  become: yes
-  become_method: sudo
 - name: Install Boto (for pulling data from s3)
   shell: pip install boto
-  become: yes
-  become_method: sudo
 
 # Docker-py
 - name: Uninstall docker-py
   command: pip uninstall -y docker-py
-  become: yes
-  become_method: sudo
   ignore_errors: yes
 - name: Install docker-py
   command: pip install docker
-  become: yes
-  become_method: sudo
 
 # lxml
 - name: Uninstall lxml
   command: pip uninstall -y lxml
-  become: yes
-  become_method: sudo
   ignore_errors: yes
 - name: Install lxml
   command: pip install lxml
-  become: yes
-  become_method: sudo
 
 # Ensure valid server time (ecs pull fails if time is wrong)
 - name: Update server time
