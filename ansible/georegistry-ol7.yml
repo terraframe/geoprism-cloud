@@ -1,0 +1,50 @@
+
+# This is the master deployment script for a DSEDP application (a geoprism extension project)
+
+# Heads up!!
+# Before running you must:
+# 1.
+# Export these environment variables:
+# export ANSIBLE_HOST_KEY_CHECKING=false
+# 2.
+# pip install boto
+# 3.
+# cd ~/git/geoprism-platform/ansible
+# sudo chmod 400 ../security/permissions/geoprism-dev.pem
+# 4.
+# The inventory file says what server you want to make into a demo server. This example here deploys to dev.
+# ansible-playbook dsedp.yml -i inventory/dsedp/dev.ini
+
+- name: Set Up Database
+  hosts: databases
+  vars:
+    # We will create a database and a user for each of these.
+    apps: '["georegistry"]'
+    
+  roles:
+    - yum-ol7
+    - install_postgres
+    - install_orientdb
+    
+
+- name: Deploy Webserver
+  hosts: webservers
+  vars:
+    catalina_home: /usr/local/tomcat
+    
+    apps: '["ROOT"]'
+  
+  roles:
+    #- yum # Webserver and database are the same server so no need to do yum again
+    - docker-certbot-s3
+    - webserver
+
+
+# This part entirely optional. It is included to test the email architecture and make sure emails can be sent properly.
+#- name: Test Send Email
+#  hosts: webservers
+#  vars:
+#    apps: '["ROOT"]'
+#    emailToAddr: rrowlands@terraframe.com
+#  roles:
+#    - send-email
