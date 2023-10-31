@@ -41,14 +41,13 @@
 
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools
-	ansible.builtin.pip:
+  ansible.builtin.pip:
     name: awscli
 - name: Install Boto (for pulling data from s3)
   ansible.builtin.pip:
     name: boto
 
 # Docker python bindings
-  ignore_errors: yes
 - name: Install docker python bindings
   ansible.builtin.pip:
     name: docker
