@@ -29,19 +29,6 @@
   ansible.builtin.dnf: name="*" state=latest
   become: yes
   become_method: sudo
-- name: Yum install epel-release # This package is only required for aws linux 1 but not aws linux 2 thus we are ignoring errors.
-  ansible.builtin.dnf: name="epel-release" state=latest
-  become: yes
-  become_method: sudo
-  ignore_errors: yes
-- name: Yum install ntp
-  ansible.builtin.dnf: name="ntp" state=latest
-  become: yes
-  become_method: sudo
-- name: Yum install rsync
-  ansible.builtin.dnf: name="rsync" state=latest
-  become: yes
-  become_method: sudo
 - name: Yum install docker
   ansible.builtin.dnf: name="docker" state=latest
   become: yes
@@ -72,12 +59,7 @@
 - name: Install lxml
   command: pip install lxml
 
-# Ensure valid server time (ecs pull fails if time is wrong)
-- name: Update server time
-  shell: ntpdate -u ntp.ubuntu.com
-  become: yes
-  become_method: sudo
-  ignore_errors: yes
+# Time is automatically synced with aws service chronyd (installed by default)
 
 # Start Docker Service
 # You would think this logic is covered from 'yum install docker' but you would be wrong.
