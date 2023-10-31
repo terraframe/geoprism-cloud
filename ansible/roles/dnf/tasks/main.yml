@@ -41,23 +41,25 @@
 
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools
-  shell: pip install awscli
+	ansible.builtin.pip:
+    name: awscli
 - name: Install Boto (for pulling data from s3)
-  shell: pip install boto
+  ansible.builtin.pip:
+    name: boto
 
-# Docker-py
-- name: Uninstall docker-py
-  command: pip uninstall -y docker-py
+# Docker python bindings
   ignore_errors: yes
-- name: Install docker-py
-  command: pip install docker
+- name: Install docker python bindings
+  ansible.builtin.pip:
+    name: docker
 
 # lxml
 - name: Uninstall lxml
   command: pip uninstall -y lxml
   ignore_errors: yes
 - name: Install lxml
-  command: pip install lxml
+  ansible.builtin.pip:
+    name: docker
 
 # Time is automatically synced with aws service chronyd (installed by default)
 
