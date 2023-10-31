@@ -79,14 +79,5 @@
   become: yes
   become_method: sudo
   
-
-# Test to see if we can run docker without sudo (since the sudo python doesn't have a docker module anymore)
-- name: Stop Postgres Docker
-  community.docker.docker_container:
-    name: postgres
-    state: stopped
-  become: yes
-  become_method: sudo
-  
   
   
