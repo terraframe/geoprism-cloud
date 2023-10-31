@@ -43,22 +43,32 @@
 - name: Install AWS CLI tools
   ansible.builtin.pip:
     name: awscli
+  become: yes
+  become_method: sudo
 - name: Install Boto (for pulling data from s3)
   ansible.builtin.pip:
     name: boto
+  become: yes
+  become_method: sudo
 
 # Docker python bindings
 - name: Install docker python bindings
   ansible.builtin.pip:
     name: docker==5.0.3
+  become: yes
+  become_method: sudo
 
 # lxml
 - name: Uninstall lxml
   command: pip uninstall -y lxml
   ignore_errors: yes
+  become: yes
+  become_method: sudo
 - name: Install lxml
   ansible.builtin.pip:
     name: docker
+  become: yes
+  become_method: sudo
 
 # Time is automatically synced with aws service chronyd (installed by default)
 
@@ -75,6 +85,8 @@
   community.docker.docker_container:
     name: postgres
     state: stopped
+  become: yes
+  become_method: sudo
   
   
   
