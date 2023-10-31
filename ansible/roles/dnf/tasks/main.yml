@@ -50,7 +50,7 @@
 # Docker python bindings
 - name: Install docker python bindings
   ansible.builtin.pip:
-    name: docker
+    name: docker==5.0.3
 
 # lxml
 - name: Uninstall lxml
