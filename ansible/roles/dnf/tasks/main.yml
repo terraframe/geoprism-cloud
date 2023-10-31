@@ -69,7 +69,7 @@
   become_method: sudo
 - name: Install lxml
   ansible.builtin.pip:
-    name: docker
+    name: lxml
   become: yes
   become_method: sudo
 
