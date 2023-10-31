@@ -26,6 +26,13 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
+
+# docker-py depends on
+### requests (last supported py2.7 is 2.28) https://github.com/psf/requests/issues/6023
+### which depends on certifi (last supported py2.7 is 2020.4.5.1) https://stackoverflow.com/questions/72392747/trying-to-get-python-pip-and-requests-all-up-and-running-and-failing-to-do-so
+### which depends on websocket-client. This worked: pip install 'websocket-client==0.57.0'
+### Install all this shit manually and maybe you'll be fine
+### If you bork your python installation and get (def where() -> str: SyntaxError: invalid syntax)) on every command, I ran : sudo rm -rf /usr/lib/python2.7/site-packages/certifi
 - name: Install docker-py
   command: pip install 'docker==4.4.4' # We're using verison 4.4.4 because its the last version that supports python version 2.7 (which is what deployed servers are using)
   become: yes
