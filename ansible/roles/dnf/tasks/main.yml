@@ -37,7 +37,10 @@
   ansible.builtin.dnf: name="python-pip" state=latest
   become: yes
   become_method: sudo
-
+- name: Install iptables-services
+  ansible.builtin.dnf: name="iptables-services" state=latest
+  become: yes
+  become_method: sudo
 
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools
