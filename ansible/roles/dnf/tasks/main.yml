@@ -41,6 +41,11 @@
   ansible.builtin.dnf: name="iptables-services" state=latest
   become: yes
   become_method: sudo
+- name: Iptables start on boot
+  shell: "systemctl enable iptables"
+  become: yes
+  become_method: sudo
+
 
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools
