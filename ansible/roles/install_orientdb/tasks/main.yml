@@ -65,7 +65,7 @@
       - nofile:500000:500000
     env:
       ORIENTDB_ROOT_PASSWORD: "{{orientdb_root_pass}}"
-      ORIENTDB_OPTS_MEMORY: "-Xms512M -Xmx{{ orientdb_memory | default('2G') }} -Dnetwork.binary.maxLength={{ orientdb_binary_length | default('16384') }}"
+      ORIENTDB_OPTS_MEMORY: "-Xms512M -Xmx{{ orientdb_memory | default('2G') }} -Dnetwork.maxConcurrentSessions={{ orientdb_max_sessions | default('1000') }} -Dnetwork.binary.maxLength={{ orientdb_binary_length | default('16384') }}"
     exposed_ports:
       - 2424
       - 2480
