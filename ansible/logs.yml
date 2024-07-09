@@ -39,10 +39,6 @@
       become: yes
       become_method: sudo
       ignore_errors: yes
-    - name: Add Geoprism container logs
-      shell: docker logs geoprism --since 336h &> /tmp/staging/logs/target/docker-geoprism.log
-      become: yes
-      become_method: sudo
     - name: Add Postgres container logs
       shell: docker logs postgres --since 336h &> /tmp/staging/logs/target/docker-postgres.log
       become: yes
