@@ -40,19 +40,19 @@
       become_method: sudo
       ignore_errors: yes
     - name: Add Geoprism container logs
-      shell: docker logs geoprism --since 96h &> /tmp/staging/logs/target/docker-geoprism.log
+      shell: docker logs geoprism --since 336h &> /tmp/staging/logs/target/docker-geoprism.log
       become: yes
       become_method: sudo
     - name: Add Postgres container logs
-      shell: docker logs postgres --since 96h &> /tmp/staging/logs/target/docker-postgres.log
+      shell: docker logs postgres --since 336h &> /tmp/staging/logs/target/docker-postgres.log
       become: yes
       become_method: sudo
     - name: Add Orientdb container logs
-      shell: docker logs orientdb --since 96h &> /tmp/staging/logs/target/docker-orientdb.log
+      shell: docker logs orientdb --since 336h &> /tmp/staging/logs/target/docker-orientdb.log
       become: yes
       become_method: sudo
     - name: Add ElasticSearch container logs
-      shell: docker logs elasticsearch --since 96h &> /tmp/staging/logs/target/elasticsearch.log
+      shell: docker logs elasticsearch --since 336h &> /tmp/staging/logs/target/elasticsearch.log
       become: yes
       become_method: sudo
       ignore_errors: yes
