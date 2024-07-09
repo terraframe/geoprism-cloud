@@ -51,6 +51,11 @@
       shell: docker logs orientdb --since 96h &> /tmp/staging/logs/target/docker-orientdb.log
       become: yes
       become_method: sudo
+    - name: Add ElasticSearch container logs
+      shell: docker logs elasticsearch --since 96h &> /tmp/staging/logs/target/elasticsearch.log
+      become: yes
+      become_method: sudo
+      ignore_errors: yes
     - name: Log staging permissions
       file: 
         state: directory
