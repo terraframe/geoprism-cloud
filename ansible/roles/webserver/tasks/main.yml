@@ -46,6 +46,15 @@
 
 ## Start Maintenance Webserver ##
 - name: Copy over maintenance html file
+  file:
+    path: "{{app_data}}/maintenance"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Copy over maintenance html file
   copy: src="index.html"
         dest="{{app_data}}/maintenance/index.html"
   become: yes
