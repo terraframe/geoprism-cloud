@@ -63,7 +63,7 @@
     volumes:
       - "{{app_data}}/maintenance/index.html:{{catalina_home}}/webapps/ROOT/index.html"
       - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
-  	  - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+      - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
   become: yes
   become_method: sudo
 
