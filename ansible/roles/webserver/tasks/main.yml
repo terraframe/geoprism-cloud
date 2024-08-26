@@ -2,11 +2,71 @@
 - name: Ensure the webserver can connect to the database
   wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
 
-- name: Stop Tomcat
+- name: Stop Geoprism Container
   shell: "docker stop geoprism"
   become: yes
   become_method: sudo
   ignore_errors: yes
+  
+## SSL ##
+- name: Stage SSL certificates
+  file:
+    path: "{{app_data}}/ssl"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Delete server.xml
+  file:
+    path: "{{app_data}}/ssl/server.xml"
+    state: absent
+  become: yes
+  become_method: sudo
+- name: Copy server.xml
+  copy:
+    src: "server.xml"
+    dest: "{{app_data}}/ssl/server.xml"
+  become: yes
+  become_method: sudo
+- name: Inject password into server.xml
+  ansible.builtin.replace:
+    path: "{{app_data}}/ssl/server.xml"
+    regexp: "keystorePass=\"changeit\""
+    replace: "keystorePass=\"{{ssl_keystore_password}}\""
+  become: yes
+  become_method: sudo
+- name: Copy web.xml
+  copy:
+    src: "web.xml"
+    dest: "{{app_data}}/ssl/web.xml"
+  become: yes
+  become_method: sudo
+
+## Start Maintenance Webserver ##
+- name: Copy over maintenance html file
+  copy: src="index.html"
+        dest="{{app_data}}/maintenance/index.html"
+  become: yes
+  become_method: sudo
+# sudo docker run --name maint -v ./index.html:/usr/local/tomcat/webapps/ROOT/index.html --rm -p 8888:8080 tomcat
+- name: Start Maintenance Web Server
+  community.docker.docker_container:
+    name: maint
+    image: tomcat
+    state: started
+    recreate: yes
+    force_kill: yes
+    restart_policy: never
+    network_mode: host
+    volumes:
+      - "{{app_data}}/maintenance/index.html:{{catalina_home}}/webapps/ROOT/index.html"
+      - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
+  	  - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+  become: yes
+  become_method: sudo
+
   
 # Clean existing data
 - name: If cleaning, delete geoprism app data
@@ -52,42 +112,6 @@
   become: yes
   become_method: sudo
   when: appcfg is defined
-  
-## SSL ##
-- name: Stage SSL certificates
-  file:
-    path: "{{app_data}}/ssl"
-    state: directory
-    mode: 0700
-    owner: "{{ansible_user}}"
-    recurse: yes
-  become: yes
-  become_method: sudo
-- name: Delete server.xml
-  file:
-    path: "{{app_data}}/ssl/server.xml"
-    state: absent
-  become: yes
-  become_method: sudo
-- name: Copy server.xml
-  copy:
-    src: "server.xml"
-    dest: "{{app_data}}/ssl/server.xml"
-  become: yes
-  become_method: sudo
-- name: Inject password into server.xml
-  ansible.builtin.replace:
-    path: "{{app_data}}/ssl/server.xml"
-    regexp: "keystorePass=\"changeit\""
-    replace: "keystorePass=\"{{ssl_keystore_password}}\""
-  become: yes
-  become_method: sudo
-- name: Copy web.xml
-  copy:
-    src: "web.xml"
-    dest: "{{app_data}}/ssl/web.xml"
-  become: yes
-  become_method: sudo
 
 ## Configure log4j2.xml ##
 - name: Stage log4j2.xml
@@ -224,12 +248,12 @@
   when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 
 ## Build Database ##
-# export JAVA_OPTS="-Xms512M -Xmx8000M -Ddatabase.hostURL=127.0.0.1 -Dappcfg=/usr/local/tomcat/appcfg -Dproject.basedir=/usr/local/tomcat -Dtomcat.home=/usr/local/tomcat -Ddatabase.user=georegistry -Ddatabase.password=georegistry -Ddatabase.port=5442 -Dorientdb.root.password=root -Dorientdb.admin.password=admin"
-# sudo -E docker run --rm --name geoprism-database-builder -e JAVA_OPTS="$JAVA_OPTS" --network=host -v "/data/tomcat/geoprism-extension.jar:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar" -v "/data/tomcat/logs:/usr/local/tomcat/logs" -v "/data/tomcat/appcfg:/usr/local/tomcat/appcfg:ro" -v "/data/tomcat/log4j2.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro" terraframe/geoprism-registry:latest java $JAVA_OPTS -cp /usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/metadata --rootUser=postgres --rootPass=postgres --templateDb=postgres --install=true --clean=true 2>&1
+# export JAVA_OPTS="-Xms512M -Xmx8000M -Ddatabase.hostURL=127.0.0.1 -Dappcfg=/usr/local/tomcat/appcfg -Dproject.basedir=/usr/local/tomcat -Dtomcat.home=/usr/local/tomcat -Ddatabase.user=georegistry -Ddatabase.password=519xvLBDIG -Ddatabase.port=5432 -Dorientdb.root.password=e3SptZ38a6s -Dorientdb.admin.password=wo4oXM01a"
+# sudo -E docker run --rm --name geoprism-database-builder -e JAVA_OPTS="$JAVA_OPTS" --network=host -v "/data/tomcat/geoprism-extension.jar:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar" -v "/data/tomcat/logs:/usr/local/tomcat/logs" -v "/data/tomcat/appcfg:/usr/local/tomcat/appcfg:ro" -v "/data/tomcat/log4j2.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro" terraframe/geoprism-registry:latest java $JAVA_OPTS -cp /usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/metadata --rootUser=postgres --rootPass=yk6ID7jkh --templateDb=postgres --install=true --clean=true 2>&1
 - name: Build Database
   block:
     - name: Build Database
-      community.general.docker_container:
+      community.docker.docker_container:
         name: geoprism-dbbuilder
         image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
         state: started
@@ -244,9 +268,16 @@
       become: yes
       become_method: sudo
 
+## Stop Maintenance Webserver ##
+- name: Stop Maintenance Container
+  shell: "docker stop maint"
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
 ## Start the Geoprism Docker container ##
 - name: Start Tomcat Webserver
-  community.general.docker_container:
+  community.docker.docker_container:
     name: geoprism
     image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
     state: started
