@@ -67,7 +67,7 @@
     state: started
     recreate: yes
     force_kill: yes
-    restart_policy: never
+    restart_policy: no
     network_mode: host
     volumes:
       - "{{app_data}}/maintenance/index.html:{{catalina_home}}/webapps/ROOT/index.html"
