@@ -52,7 +52,6 @@
     mode: 0700
     owner: "{{ansible_user}}"
     recurse: yes
-    network_mode: host
   become: yes
   become_method: sudo
 - name: Copy over maintenance html file
@@ -60,11 +59,11 @@
         dest="{{app_data}}/maintenance/index.html"
   become: yes
   become_method: sudo
-# sudo docker run --name maint -v ./index.html:/usr/local/tomcat/webapps/ROOT/index.html --rm -p 8888:8080 tomcat
+# sudo docker run --name maint -v /data/maintenance/index.html:/usr/local/tomcat/webapps/ROOT/index.html -v /data/ssl/keystore.jks:/usr/local/tomcat/conf/geoprism.ks:ro -v /data/ssl/server.xml:/usr/local/tomcat/conf/server.xml:ro --rm --network=host tomcat:8
 - name: Start Maintenance Web Server
   community.docker.docker_container:
     name: maint
-    image: tomcat
+    image: tomcat:8 # Was caught core dumping on newer versions on IDM. Not sure why
     state: started
     recreate: yes
     force_kill: yes
