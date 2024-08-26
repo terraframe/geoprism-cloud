@@ -52,6 +52,7 @@
     mode: 0700
     owner: "{{ansible_user}}"
     recurse: yes
+    network_mode: host
   become: yes
   become_method: sudo
 - name: Copy over maintenance html file
