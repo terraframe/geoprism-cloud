@@ -204,7 +204,7 @@
   community.docker.docker_image:
     state: present
     source: load
-    timeout: 120
+    timeout: 300
     load_path: "{{app_data}}/dimg/geoprism.dimg.gz"
     name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
   become: yes
