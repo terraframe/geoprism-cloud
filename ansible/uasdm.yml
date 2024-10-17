@@ -39,6 +39,12 @@
     - webserver
     
   tasks:
+    - name: Delete existing Potree temp directory
+      file:
+        state: absent
+        path: "/tmp/potree"
+      become: yes
+      become_method: sudo
     - name: Create Potree temp directory
       file:
         state: directory
@@ -47,7 +53,7 @@
       become_method: sudo
     - name: Download and unzip Potree
       ansible.builtin.unarchive:
-        src: https://github.com/potree/potree/releases/download/1.8/Potree_1.8.zip
+        src: https://github.com/potree/potree/releases/download/1.8.2/Potree_1.8.2.zip
         dest: "/tmp/potree"
         remote_src: yes
       become: yes
