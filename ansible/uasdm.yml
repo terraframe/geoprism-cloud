@@ -59,7 +59,7 @@
       become: yes
       become_method: sudo
     - name: Copy Potree
-      shell: 'docker cp /tmp/potree/Potree_1.8/ "geoprism:{{catalina_home}}/webapps/ROOT/WEB-INF/gov/osmre/uasdm/potree/potree"'
+      shell: 'docker cp /tmp/potree/Potree_1.8.2/ "geoprism:{{catalina_home}}/webapps/ROOT/WEB-INF/gov/osmre/uasdm/potree/potree"'
       become: yes
       become_method: sudo
       
