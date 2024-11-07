@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:stream8
+FROM quay.io/centos/centos:stream9
 
 # upgrade packages
 RUN dnf upgrade --setopt=install_weak_deps=False -y && \
@@ -14,7 +14,7 @@ RUN yum-config-manager --add-repo https://download.docker.com/linux/centos/docke
 RUN yum install -y docker-ce docker-ce-cli containerd.io
 
 RUN dnf makecache \
-    && dnf install -y unzip which zip python3 wget git curl gzip
+    && dnf install -y unzip which zip python3 python3-pip wget git gzip
 
 # Install SDKMan
 RUN curl -s "https://get.sdkman.io" | bash
