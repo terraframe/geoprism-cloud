@@ -75,8 +75,8 @@ RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 RUN mkdir -p /root/.ssh && ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
 
 # Add the osgeo ssl cert
-echo | openssl s_client -connect repo.osgeo.org:443 -servername repo.osgeo.org | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > osgeo.crt
-yes | keytool -importcert -file osgeo.crt -alias osgeo -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit
+RUN echo | openssl s_client -connect repo.osgeo.org:443 -servername repo.osgeo.org | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > osgeo.crt
+RUN yes | keytool -importcert -file osgeo.crt -alias osgeo -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit
 
 
 CMD ["bash"]
