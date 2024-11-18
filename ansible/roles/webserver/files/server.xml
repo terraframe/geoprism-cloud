@@ -26,8 +26,6 @@
   <!-- Security listener. Documentation at /docs/config/listeners.html
   <Listener className="org.apache.catalina.security.SecurityListener" />
   -->
-  <!--APR library loader. Documentation at /docs/apr.html -->
-  <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
   <!-- Prevent memory leaks due to use of particular java/javax APIs-->
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
   <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
@@ -43,12 +41,12 @@
   <Service name="Catalina">
 
     <!-- Redirects -->
-    <Connector port="8080" protocol="HTTP/1.1" enableLookups="false" redirectPort="443" />
-    <Connector port="80" protocol="HTTP/1.1" enableLookups="false" redirectPort="443" />
+    <Connector port="8080" protocol="HTTP/1.1" enableLookups="false" redirectPort="8443" />
+    <Connector port="80" protocol="HTTP/1.1" enableLookups="false" redirectPort="8443" />
     
     <!-- A "Connector" represents an endpoint by which requests are received and responses are returned. Documentation at : Java HTTP Connector: /docs/config/http.html (blocking & non-blocking) Java AJP Connector: /docs/config/ajp.html APR (HTTP/AJP) Connector: /docs/apr.html Define a non-SSL HTTP/1.1 
       Connector on port 8080 -->
-    <Connector protocol="org.apache.coyote.http11.Http11Protocol"
+    <Connector protocol="org.apache.coyote.http11.Http11NioProtocol"
       SSLEnabled="true" 
       URIEncoding="UTF-8"
       clientAuth="false"
