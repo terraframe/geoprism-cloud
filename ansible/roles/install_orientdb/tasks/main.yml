@@ -1,4 +1,13 @@
 
+# First - make sure OrientDB is cleanly stopped (otherwise issues can arise).
+- name: Stop OrientDB
+  community.general.docker_container:
+    name: orientdb
+    state: stopped
+  become: yes
+  become_method: sudo
+  when: "not {{clean_orientdb}}"
+# If we're cleaning, just kill it and wipe the data.
 - name: Kill OrientDB
   community.general.docker_container:
     name: orientdb
@@ -28,13 +37,6 @@
   register: old_volume_exists
   become: yes
   become_method: sudo
-- name: Stop OrientDB
-  community.general.docker_container:
-    name: orientdb
-    state: stopped
-  become: yes
-  become_method: sudo
-  when: "not new_volume_exists.stat.exists and old_volume_exists.stat.exists and not {{clean_orientdb}}"
 - name: Create docker volume directory
   file:
     state: directory
