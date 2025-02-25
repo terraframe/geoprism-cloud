@@ -55,3 +55,10 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
+  
+# Without regular container cleanup, the server will run out of disk space
+- name: Docker System Prune (disk clean up)
+  shell: docker system prune -a -f
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
