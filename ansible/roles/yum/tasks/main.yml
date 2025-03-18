@@ -55,11 +55,13 @@
   yum: name="firewalld" state=latest
   become: yes
   become_method: sudo
+  when: "firewalld is defined"
 
 - name: Boot firewalld
   shell: systemctl enable firewalld && systemctl start firewalld
   become: yes
   become_method: sudo
+  when: "firewalld is defined"
 
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools

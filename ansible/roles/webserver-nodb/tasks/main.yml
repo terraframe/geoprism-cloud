@@ -189,7 +189,7 @@
 - name: Start Tomcat Webserver
   community.docker.docker_container:
     name: geoprism
-    image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    image: "{{webserver_docker_image}}" # TODO : Including the tag name wasn't working I don't know why
     state: started
     recreate: yes
     force_kill: yes
