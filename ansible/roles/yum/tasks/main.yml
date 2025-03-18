@@ -38,6 +38,7 @@
   yum: name="ntp" state=latest
   become: yes
   become_method: sudo
+  ignore_errors: yes
 - name: Yum install rsync
   yum: name="rsync" state=latest
   become: yes
