@@ -23,7 +23,7 @@ ENV SDKMAN_DIR=/root/.sdkman
 
 RUN source "/root/.sdkman/bin/sdkman-init.sh" \
     && yes | sdk update \
-    && yes | sdk install java 11.0.26-ms \
+    && yes | sdk install java 17.0.14-ms \
     && yes | sdk install gradle 5.4.1 \
     && yes | sdk install maven
 
