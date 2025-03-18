@@ -177,33 +177,6 @@
   become: yes
   become_method: sudo
   when: "firewalld is defined"
-  
-- name: Figure out which JAVA_OPTS to use
-  ansible.builtin.set_fact:
-    java_opts: "{{java_opts_prod | trim}}"
-  when: "not {{debug | default('false')}}"
-- name: Figure out which JAVA_OPTS to use
-  ansible.builtin.set_fact:
-    java_opts: "{{java_opts_debug | trim}}"
-  when: "{{debug | default('false')}}"
-
-#- ansible.builtin.set_fact:
-#    should_pull: true
-#  when: webserver_docker_image_tag != "latest"
-- ansible.builtin.set_fact:
-    should_pull: false
-  #when: webserver_docker_image_tag == "latest"
-
-- name: Fetch and Load Docker Image (As Zip From Jenkins)
-  ansible.builtin.copy:
-    src: "{{geoprism_lib_extension}}"
-    dest: "{{app_data}}/tomcat/geoprism-extension.jar"
-  become: yes
-  become_method: sudo
-  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
-- ansible.builtin.set_fact:
-    geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/tomcat/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
-  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 
 ## Stop Maintenance Webserver ##
 - name: Stop Maintenance Container
@@ -220,11 +193,18 @@
     state: started
     recreate: yes
     force_kill: yes
-    pull: "{{should_pull}}"
     restart_policy: always
-    env: 'JAVA_OPTS="{{java_opts}}"'
+    env: 'JAVA_OPTS="-Xms512M -Xmx{{tomcat_memory}} -Dproject.basedir={{catalina_home}} -Dtomcat.home={{catalina_home}} -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}"'
     network_mode: host
-    volumes: "{{geoprism_app_volumes}}"
+    volumes:
+      - "{{app_data}}/geoprism:/data/geoprism:rw"
+      - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs:rw"
+      - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp:rw"
+      - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
+      - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
+      - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+      - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
+      - "{{app_data}}/tomcat/log4j2.xml:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro"
   become: yes
   become_method: sudo
   
