@@ -7,6 +7,12 @@
 
 
 # Certbot won't work on a fresh install without a port forward
+# TODO : This iptables command doesn't work out of the box on AL2. 
+# You need to install firewalld:
+# sudo yum install -y firewalld
+# sudo systemctl enable firewalld
+# sudo systemctl start firewalld
+# verify with # sudo systemctl status firewalld
 - name: Forward port (iptables)
   shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/iptables-save > /etc/sysconfig/iptables && systemctl restart iptables"
   become: yes
