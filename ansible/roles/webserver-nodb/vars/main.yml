@@ -1,0 +1,60 @@
+---
+
+catalina_home: /usr/local/tomcat
+
+geoprism_volumes_base:
+  - "{{app_data}}/geoprism:/data/geoprism:rw"
+  - "{{app_data}}/tomcat/logs:{{catalina_home}}/logs:rw"
+  - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp:rw"
+  - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
+  - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg:ro"
+  - "{{app_data}}/geoserver:/data/geoserver:rw"
+  - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
+  - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+  - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
+
+geoprism_app_volumes: "{{ geoprism_volumes_base + [app_data + '/tomcat/log4j2.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
+geoprism_dbbuilder_volumes: "{{ geoprism_volumes_base + [app_data + '/tomcat/log4j2-dbbuilder.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
+
+java_opts_base: >-
+        -Xms512M
+        -Xmx{{tomcat_memory}}
+        -Djava.rmi.server.hostname={{ remote_endpoint_ip }}
+        -Ddatabase.hostURL={{webserver_database}}
+        -Dappcfg={{catalina_home}}/appcfg
+        -Dproject.basedir={{catalina_home}}
+        -Dtomcat.home={{catalina_home}}
+        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
+        -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
+        -Dbirt-server=true
+        -DFile.encoding=UTF-8      
+        -Ddatabase.user={{db_user}}
+        -Ddatabase.password={{db_pass}}
+        -Ddatabase.port=5432
+        -Dgeoprism.email.username={{ email_user | default('x') }}
+        -Dgeoprism.email.password={{ email_pass | default('x') }}
+        -Dbucket.name={{bucket_name | default('x')}}
+        -Dsolr.enabled={{solr_enabled | default('false')}}
+        -Dsearch.enabled={{elasticsearch_enabled | default('false')}}
+        -Delasticsearch.password={{elasticsearch_password | default('false')}}
+        -Dgeoprism.volume=/data/geoprism/misc
+        -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
+        -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
+        -DGEOSERVER_DATA_DIR=/data/geoserver/data
+
+java_opts_prod: >-
+        {{java_opts_base}}
+        -server
+        {{tomcat_java_opts | default('')}}
+
+java_opts_debug: >-
+        {{java_opts_base}}
+        -Dcom.sun.management.jmxremote
+        -Dcom.sun.management.jmxremote.port=9010
+        -Dcom.sun.management.jmxremote.rmi.port=9010
+        -Dcom.sun.management.jmxremote.local.only=false
+        -Dcom.sun.management.jmxremote.authenticate=false
+        -Dcom.sun.management.jmxremote.ssl=false
+        -Xdebug
+        -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:8000
+        {{tomcat_java_opts | default('')}}

@@ -1,0 +1,230 @@
+
+- name: Stop Geoprism Container
+  shell: "docker stop geoprism"
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+  
+## SSL ##
+- name: Stage SSL certificates
+  file:
+    path: "{{app_data}}/ssl"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Delete server.xml
+  file:
+    path: "{{app_data}}/ssl/server.xml"
+    state: absent
+  become: yes
+  become_method: sudo
+- name: Copy server.xml
+  copy:
+    src: "server.xml"
+    dest: "{{app_data}}/ssl/server.xml"
+  become: yes
+  become_method: sudo
+- name: Inject password into server.xml
+  ansible.builtin.replace:
+    path: "{{app_data}}/ssl/server.xml"
+    regexp: "keystorePass=\"changeit\""
+    replace: "keystorePass=\"{{ssl_keystore_password}}\""
+  become: yes
+  become_method: sudo
+- name: Copy web.xml
+  copy:
+    src: "web.xml"
+    dest: "{{app_data}}/ssl/web.xml"
+  become: yes
+  become_method: sudo
+
+## Start Maintenance Webserver ##
+- name: Copy over maintenance html file
+  file:
+    path: "{{app_data}}/maintenance"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Copy over maintenance html file
+  copy: src="index.html"
+        dest="{{app_data}}/maintenance/index.html"
+  become: yes
+  become_method: sudo
+# sudo docker run --name maint -v /data/maintenance/index.html:/usr/local/tomcat/webapps/ROOT/index.html -v /data/ssl/keystore.jks:/usr/local/tomcat/conf/geoprism.ks:ro -v /data/ssl/server.xml:/usr/local/tomcat/conf/server.xml:ro --rm --network=host tomcat:8
+- name: Start Maintenance Web Server
+  community.docker.docker_container:
+    name: maint
+    image: tomcat:8
+    state: started
+    recreate: yes
+    force_kill: yes
+    restart_policy: no
+    network_mode: host
+    volumes:
+      - "{{app_data}}/maintenance/index.html:{{catalina_home}}/webapps/ROOT/index.html"
+      - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
+      - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+  become: yes
+  become_method: sudo
+
+  
+# Clean existing data
+- name: If cleaning, delete geoprism app data
+  file:
+    state: absent
+    path: "{{app_data}}/geoprism"
+  become: yes
+  become_method: sudo
+  when: "{{clean_db | default(false)}}"
+- name: If cleaning, delete tomcat logs
+  file:
+    state: absent
+    path: "{{app_data}}/tomcat/logs"
+  become: yes
+  become_method: sudo
+  when: "{{clean_db | default(false)}}"
+- name: If cleaning, delete appcfg
+  file:
+    state: absent
+    path: "{{app_data}}/tomcat/appcfg"
+  become: yes
+  become_method: sudo
+  when: "{{clean_db | default(false)}}"
+
+## Appcfg ##
+- name: Stage appcfg
+  copy: src="{{appcfg}}/"
+        dest="{{app_data}}/tomcat/appcfg/"
+  become: yes
+  become_method: sudo
+  when: appcfg is defined
+
+## Configure log4j2.xml ##
+- name: Stage log4j2.xml
+  copy: src="log4j2.xml"
+        dest="{{app_data}}/tomcat/log4j2.xml"
+  become: yes
+  become_method: sudo
+- name: Stage log4j2-dbbuilder.xml
+  copy: src="log4j2-dbbuilder.xml"
+        dest="{{app_data}}/tomcat/log4j2-dbbuilder.xml"
+  become: yes
+  become_method: sudo
+- name: Set log level based on ansible config
+  ansible.builtin.replace:
+    path: "{{app_data}}/tomcat/log4j2.xml"
+    regexp: '<Root level="{{log_level | default("error")}}">'
+    replace: '<Root level="error">'
+  become: yes
+  become_method: sudo
+
+# Fetch and Load Docker Image (As Zip From Jenkins) ##
+- name: Delete existing docker image since the load command won't overwrite it
+  community.docker.docker_image:
+    state: absent
+    name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    force_absent: true
+  become: yes
+  become_method: sudo
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  file:
+    path: "{{app_data}}/dimg"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+  #when: webserver_docker_image_tag == "latest"
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  ansible.builtin.copy:
+    src: "{{docker_image_path}}"
+    dest: "{{app_data}}/dimg/geoprism.dimg.gz"
+  become: yes
+  become_method: sudo
+  #when: webserver_docker_image_tag == "latest"
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  community.docker.docker_image:
+    state: present
+    source: load
+    timeout: 300
+    load_path: "{{app_data}}/dimg/geoprism.dimg.gz"
+    name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+  become: yes
+  become_method: sudo
+  #when: webserver_docker_image_tag == "latest"
+
+## Delete temp files ##
+- name: Delete Tomcat Temp Files
+  shell: "rm -rf {{app_data}}/tomcat/tmp/*"
+  become: yes
+  become_method: sudo
+  
+# Port redirects
+- name: Forward port (iptables)
+  shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
+  become: yes
+  become_method: sudo
+  when: "firewalld is not defined"
+- name: Forward port (firewallcmd)
+  shell: "firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443 && firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 && firewall-cmd --reload"
+  become: yes
+  become_method: sudo
+  when: "firewalld is defined"
+  
+- name: Figure out which JAVA_OPTS to use
+  ansible.builtin.set_fact:
+    java_opts: "{{java_opts_prod | trim}}"
+  when: "not {{debug | default('false')}}"
+- name: Figure out which JAVA_OPTS to use
+  ansible.builtin.set_fact:
+    java_opts: "{{java_opts_debug | trim}}"
+  when: "{{debug | default('false')}}"
+
+#- ansible.builtin.set_fact:
+#    should_pull: true
+#  when: webserver_docker_image_tag != "latest"
+- ansible.builtin.set_fact:
+    should_pull: false
+  #when: webserver_docker_image_tag == "latest"
+
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  ansible.builtin.copy:
+    src: "{{geoprism_lib_extension}}"
+    dest: "{{app_data}}/tomcat/geoprism-extension.jar"
+  become: yes
+  become_method: sudo
+  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
+- ansible.builtin.set_fact:
+    geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/tomcat/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
+  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
+
+## Stop Maintenance Webserver ##
+- name: Stop Maintenance Container
+  shell: "docker stop maint"
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
+## Start the Geoprism Docker container ##
+- name: Start Tomcat Webserver
+  community.docker.docker_container:
+    name: geoprism
+    image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    state: started
+    recreate: yes
+    force_kill: yes
+    pull: "{{should_pull}}"
+    restart_policy: always
+    env: 'JAVA_OPTS="{{java_opts}}"'
+    network_mode: host
+    volumes: "{{geoprism_app_volumes}}"
+  become: yes
+  become_method: sudo
+  

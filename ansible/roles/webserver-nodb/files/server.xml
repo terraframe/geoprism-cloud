@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--
+
+    Copyright (c) 2015 TerraFrame, Inc. All rights reserved.
+
+    This file is part of Runway SDK(tm).
+
+    Runway SDK(tm) is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    Runway SDK(tm) is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with Runway SDK(tm).  If not, see <http://www.gnu.org/licenses/>.
+
+-->
+
+<Server port="8205" shutdown="SHUTDOWN">
+
+  <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+  <!-- Security listener. Documentation at /docs/config/listeners.html
+  <Listener className="org.apache.catalina.security.SecurityListener" />
+  -->
+  <!-- Prevent memory leaks due to use of particular java/javax APIs-->
+  <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+  <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+  <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+  <!-- Global JNDI resources Documentation at /docs/jndi-resources-howto.html -->
+  <GlobalNamingResources>
+    <!-- Editable user database that can also be used by UserDatabaseRealm to authenticate users -->
+    <Resource auth="Container" description="User database that can be updated and saved" factory="org.apache.catalina.users.MemoryUserDatabaseFactory" name="UserDatabase" pathname="conf/tomcat-users.xml" type="org.apache.catalina.UserDatabase" />
+  </GlobalNamingResources>
+
+  <!-- A "Service" is a collection of one or more "Connectors" that share a single "Container" Note: A "Service" is not itself a "Container", so you may not define subcomponents such as "Valves" at this level. Documentation at /docs/config/service.html -->
+  <Service name="Catalina">
+
+    <!-- Redirects -->
+    <Connector port="8080" protocol="HTTP/1.1" enableLookups="false" redirectPort="8443" />
+    <Connector port="80" protocol="HTTP/1.1" enableLookups="false" redirectPort="8443" />
+    
+    <!-- A "Connector" represents an endpoint by which requests are received and responses are returned. Documentation at : Java HTTP Connector: /docs/config/http.html (blocking & non-blocking) Java AJP Connector: /docs/config/ajp.html APR (HTTP/AJP) Connector: /docs/apr.html Define a non-SSL HTTP/1.1 
+      Connector on port 8080 -->
+    <Connector protocol="org.apache.coyote.http11.Http11NioProtocol"
+      SSLEnabled="true" 
+      URIEncoding="UTF-8"
+      clientAuth="false"
+      connectionTimeout="20000"
+      emptySessionPath="true"
+      keystoreFile="conf/geoprism.ks"
+      keystorePass="changeit"
+      keyAlias="geoprism"
+      port="8443"
+      redirectPort="8443" 
+      scheme="https"
+      secure="true"
+      sslProtocol="TLS"
+      
+      maxThreads="400"
+      compression="on"
+      compressableMimeType="text/html,text/xml,text/plain"
+       />
+    
+    <!-- An Engine represents the entry point (within Catalina) that processes every request. The Engine implementation for Tomcat stand alone analyzes the HTTP headers included with the request, and passes them on to the appropriate Host (virtual host). Documentation at /docs/config/engine.html -->
+
+    <!-- You should set jvmRoute to support load-balancing via AJP ie : <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1"> -->
+    <Engine defaultHost="localhost" name="Catalina">
+
+      <!--For clustering, please take a look at documentation at: /docs/cluster-howto.html (simple how to) /docs/config/cluster.html (reference documentation) -->
+      <!-- <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"/> -->
+
+      <!-- The request dumper valve dumps useful debugging information about the request and response data received and sent by Tomcat. Documentation at: /docs/config/valve.html -->
+      <!-- <Valve className="org.apache.catalina.valves.RequestDumperValve"/> -->
+
+      <!-- Use the LockOutRealm to prevent attempts to guess user passwords
+           via a brute-force attack -->
+      <Realm className="org.apache.catalina.realm.LockOutRealm">
+        <!-- This Realm uses the UserDatabase configured in the global JNDI
+             resources under the key "UserDatabase".  Any edits
+             that are performed against this UserDatabase are immediately
+             available for use by the Realm.  -->
+        <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+               resourceName="UserDatabase"/>
+      </Realm>
+
+      <!-- Define the default virtual host Note: XML Schema validation will not work with Xerces 2.2. -->
+      <Host appBase="webapps" autoDeploy="false" name="localhost" unpackWARs="true" xmlNamespaceAware="false" xmlValidation="false">
+
+        <!-- SingleSignOn valve, share authentication between web applications Documentation at: /docs/config/valve.html -->
+        <!-- <Valve className="org.apache.catalina.authenticator.SingleSignOn" /> -->
+
+        <!-- Access log processes all example. Documentation at: /docs/config/valve.html -->
+        <!-- <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="localhost_access_log." suffix=".txt" pattern="common" resolveHosts="false"/> -->
+
+
+        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" pattern="%h %l %u %t &quot;%r&quot; %s %b" prefix="localhost_access_log." resolveHosts="false" suffix=".txt" />
+      </Host>
+    </Engine>
+  </Service>
+</Server>
