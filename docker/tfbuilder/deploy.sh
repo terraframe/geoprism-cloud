@@ -5,7 +5,7 @@ set -e
 
 docker build -t tfbuilder:$1 .
 
-docker tag tfbuilder:$1 961902606948.dkr.ecr.us-west-2.amazonaws.com/tfbuilder:latest
+docker tag tfbuilder:$1 961902606948.dkr.ecr.us-west-2.amazonaws.com/tfbuilder:$1
 
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 961902606948.dkr.ecr.us-west-2.amazonaws.com
 
