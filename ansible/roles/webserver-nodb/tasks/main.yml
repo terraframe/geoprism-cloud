@@ -194,7 +194,7 @@
     recreate: yes
     force_kill: yes
     restart_policy: always
-    env: 'JAVA_OPTS="-Xms512M -Xmx{{tomcat_memory}} -Dproject.basedir={{catalina_home}} -Dtomcat.home={{catalina_home}} -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}"'
+    env: 'JAVA_OPTS="-Xms256M -Xmx{{tomcat_memory}} -Dproject.basedir={{catalina_home}} -Dtomcat.home={{catalina_home}} -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}"'
     network_mode: host
     volumes:
       - "{{app_data}}/geoprism:/data/geoprism:rw"
