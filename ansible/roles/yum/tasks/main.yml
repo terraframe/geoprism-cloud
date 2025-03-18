@@ -56,6 +56,10 @@
   become: yes
   become_method: sudo
 
+- name: Boot firewalld
+  shell: systemctl enable firewalld && systemctl start firewalld
+  become: yes
+  become_method: sudo
 
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools
