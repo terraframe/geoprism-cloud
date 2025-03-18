@@ -46,25 +46,19 @@
     
     <!-- A "Connector" represents an endpoint by which requests are received and responses are returned. Documentation at : Java HTTP Connector: /docs/config/http.html (blocking & non-blocking) Java AJP Connector: /docs/config/ajp.html APR (HTTP/AJP) Connector: /docs/apr.html Define a non-SSL HTTP/1.1 
       Connector on port 8080 -->
-    <Connector protocol="org.apache.coyote.http11.Http11NioProtocol"
-      SSLEnabled="true" 
-      URIEncoding="UTF-8"
-      clientAuth="false"
-      connectionTimeout="20000"
-      emptySessionPath="true"
-      keystoreFile="conf/geoprism.ks"
-      keystorePass="changeit"
-      keyAlias="geoprism"
-      port="8443"
-      redirectPort="8443" 
-      scheme="https"
-      secure="true"
-      sslProtocol="TLS"
-      
-      maxThreads="400"
-      compression="on"
-      compressableMimeType="text/html,text/xml,text/plain"
-       />
+   <Connector
+    protocol="org.apache.coyote.http11.Http11NioProtocol"
+    port="8443"
+    maxThreads="150"
+    SSLEnabled="true">
+	  <SSLHostConfig>
+	    <Certificate
+	      certificateKeystoreFile="conf/geoprism.ks"
+	      certificateKeystorePassword="changeit"
+	      type="RSA"
+	      />
+	    </SSLHostConfig>
+	</Connector>
     
     <!-- An Engine represents the entry point (within Catalina) that processes every request. The Engine implementation for Tomcat stand alone analyzes the HTTP headers included with the request, and passes them on to the appropriate Host (virtual host). Documentation at /docs/config/engine.html -->
 
