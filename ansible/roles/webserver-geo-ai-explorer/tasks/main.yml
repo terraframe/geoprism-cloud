@@ -97,13 +97,12 @@
   become_method: sudo
   when: "{{clean_db | default(false)}}"
 
-## Appcfg ##
-- name: Stage appcfg
-  copy: src="{{appcfg}}/"
-        dest="{{app_data}}/tomcat/appcfg/"
+## Copy over application.properties ##
+- name: Copy over application.properties
+  copy: src="inventory/usace/application.properties"
+        dest="{{app_data}}/usace/application.properties"
   become: yes
   become_method: sudo
-  when: appcfg is defined
 
 ## Configure log4j2.xml ##
 - name: Stage log4j2.xml
@@ -183,7 +182,7 @@
   shell: "docker stop maint"
   become: yes
   become_method: sudo
-  ignore_errors: yes
+  ignore_errors: yes  
 
 ## Start the Geoprism Docker container ##
 - name: Start Tomcat Webserver
@@ -205,6 +204,7 @@
       - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
       - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
       - "{{app_data}}/tomcat/log4j2.xml:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro"
+      - "{{app_data}}/usace/application.properties:{{catalina_home}}/webapps/ROOT/WEB-INF/classes/application.properties:ro"
   become: yes
   become_method: sudo
   
