@@ -98,6 +98,15 @@
   when: "{{clean_db | default(false)}}"
 
 ## Copy over application.properties ##
+- name: Stage SSL certificates
+  file:
+    path: "{{app_data}}/usace"
+    state: directory
+    mode: 0700
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
 - name: Copy over application.properties
   copy: src="inventory/usace/application.properties"
         dest="{{app_data}}/usace/application.properties"
