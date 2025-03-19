@@ -55,6 +55,7 @@
 	    <Certificate
 	      certificateKeystoreFile="conf/geoprism.ks"
 	      certificateKeystorePassword="changeit"
+	      certificateKeyAlias="geoprism"
 	      type="RSA"
 	      />
 	    </SSLHostConfig>
