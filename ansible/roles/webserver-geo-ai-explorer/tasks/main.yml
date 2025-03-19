@@ -136,7 +136,7 @@
 - name: Delete existing docker image since the load command won't overwrite it
   community.docker.docker_image:
     state: absent
-    name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    name: "{{webserver_docker_image}}" # TODO : Including the tag name wasn't working I don't know why
     force_absent: true
   become: yes
   become_method: sudo
