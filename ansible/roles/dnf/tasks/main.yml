@@ -73,6 +73,7 @@
     name: lxml
   become: yes
   become_method: sudo
+  ignore_errors: yes
 
 # Time is automatically synced with aws service chronyd (installed by default)
 

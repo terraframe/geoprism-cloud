@@ -80,6 +80,7 @@
   ignore_errors: yes
 - name: Install lxml
   command: pip install lxml
+  ignore_errors: yes
 
 # Ensure valid server time (ecs pull fails if time is wrong)
 - name: Update server time
