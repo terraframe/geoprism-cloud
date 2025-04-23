@@ -25,6 +25,10 @@
   ignore_errors: yes
 
 # Install software. I tried to make this into a list (for readability) but because ordering is important I don't think we can do that.
+- name: Refresh YUM metadata cache (should make subsequent tasks faster)
+  yum:
+    update_cache: yes
+  become: yes
 - name: Yum update
   ansible.builtin.dnf: name="*" state=latest
   become: yes
