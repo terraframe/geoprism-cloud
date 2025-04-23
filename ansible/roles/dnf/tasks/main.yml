@@ -25,31 +25,23 @@
   ignore_errors: yes
 
 # Install software. I tried to make this into a list (for readability) but because ordering is important I don't think we can do that.
-- name: Refresh YUM metadata cache (should make subsequent tasks faster)
-  yum:
-    update_cache: yes
-  become: yes
 - name: Yum update
   ansible.builtin.dnf: name="*" state=latest
   become: yes
   become_method: sudo
-- name: Yum install docker
-  ansible.builtin.dnf: name="docker" state=latest
-  become: yes
-  become_method: sudo
-- name: Yum install python-pip
-  ansible.builtin.dnf: name="python-pip" state=latest
-  become: yes
-  become_method: sudo
-- name: Install iptables-services
-  ansible.builtin.dnf: name="iptables-services" state=latest
+- name: Install required packages
+  ansible.builtin.dnf:
+    name:
+      - docker
+      - python-pip
+      - iptables-services
+    state: latest
   become: yes
   become_method: sudo
 - name: Iptables start on boot
   shell: "systemctl enable iptables"
   become: yes
   become_method: sudo
-
 
 # AWS CLI tools (for pulling docker images from ecs)
 - name: Install AWS CLI tools

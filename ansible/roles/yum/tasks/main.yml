@@ -25,14 +25,11 @@
   ignore_errors: yes
 
 # Install software. I tried to make this into a list (for readability) but because ordering is important I don't think we can do that.
-- name: Refresh YUM metadata cache (should make subsequent tasks faster)
-  yum:
-    update_cache: yes
-  become: yes
 - name: Yum update
   yum: name="*" state=latest
   become: yes
   become_method: sudo
+  
 - name: Yum install epel-release # This package is only required for aws linux 1 but not aws linux 2 thus we are ignoring errors.
   yum: name="epel-release" state=latest
   become: yes
@@ -43,24 +40,21 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-- name: Yum install rsync
-  yum: name="rsync" state=latest
+- name: Install required packages
+  yum:
+    name:
+      - rsync
+      - docker
+      - python-pip
+    state: latest
   become: yes
   become_method: sudo
-- name: Yum install docker
-  yum: name="docker" state=latest
-  become: yes
-  become_method: sudo
-- name: Yum install python-pip
-  yum: name="python-pip" state=latest
-  become: yes
-  become_method: sudo
+  
 - name: Yum install firewalld
   yum: name="firewalld" state=latest
   become: yes
   become_method: sudo
   when: "firewalld is defined"
-
 - name: Boot firewalld
   shell: systemctl enable firewalld && systemctl start firewalld
   become: yes
