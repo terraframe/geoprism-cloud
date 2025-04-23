@@ -155,14 +155,34 @@
     recurse: yes
   become: yes
   become_method: sudo
-- name: Copy default geoserver data to geoserver data directory
-  shell: "{{item}}"
-  with_items:
-    - wget -nv -O {{app_data}}/geoserver-tmp/geoserver.war "https://dl.cloudsmith.io/public/terraframe/public/maven/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"
-    - mkdir -p {{app_data}}/geoserver-tmp/unzipped && cd {{app_data}}/geoserver-tmp/unzipped && unzip {{app_data}}/geoserver-tmp/geoserver.war && mkdir -p {{app_data}}/geoserver && mv data {{app_data}}/geoserver
+
+- name: Copy default geoserver data to geoserver data directory - Download WAR
+  shell: wget -nv -O {{app_data}}/geoserver-tmp/geoserver.war "https://dl.cloudsmith.io/public/terraframe/public/maven/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"
   become: yes
   become_method: sudo
-  when: "not geoserver_data_exists.stat.exists"
+  when: not geoserver_data_exists.stat.exists
+- name: Copy default geoserver data to geoserver data directory - Create unzip directory
+  shell: mkdir -p {{app_data}}/geoserver-tmp/unzipped
+  become: yes
+  become_method: sudo
+  when: not geoserver_data_exists.stat.exists
+- name: Copy default geoserver data to geoserver data directory - Unzip WAR
+  shell: unzip {{app_data}}/geoserver-tmp/geoserver.war -d {{app_data}}/geoserver-tmp/unzipped
+  become: yes
+  become_method: sudo
+  when: not geoserver_data_exists.stat.exists
+- name: Copy default geoserver data to geoserver data directory - Create data directory
+  shell: mkdir -p {{app_data}}/geoserver
+  become: yes
+  become_method: sudo
+  when: not geoserver_data_exists.stat.exists
+- name: Copy default geoserver data to geoserver data directory - Move data
+  shell: mv {{app_data}}/geoserver-tmp/unzipped/data {{app_data}}/geoserver
+  become: yes
+  become_method: sudo
+  when: not geoserver_data_exists.stat.exists
+
+
 - name: Set the Geoserver admin password
   community.general.xml:
     path: "{{app_data}}/geoserver/data/security/usergroup/default/users.xml"
