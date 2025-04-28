@@ -92,20 +92,6 @@
   become: yes
   become_method: sudo
   when: "{{clean_db | default(false)}}"
-- name: If cleaning, delete geoserver data
-  file:
-    state: absent
-    path: "{{app_data}}/geoserver"
-  become: yes
-  become_method: sudo
-  when: "{{clean_db | default(false)}}"
-- name: If cleaning, delete geoserver temp
-  file:
-    state: absent
-    path: "{{app_data}}/geoserver-tmp"
-  become: yes
-  become_method: sudo
-  when: "{{clean_db | default(false)}}"
 - name: If cleaning, delete appcfg
   file:
     state: absent
@@ -140,60 +126,6 @@
     replace: '<Root level="error">'
   become: yes
   become_method: sudo
-
-- name: Does the geoserver data directory exist already?
-  stat: "path={{app_data}}/geoserver/data/gwc"
-  register: geoserver_data_exists
-  become: yes
-  become_method: sudo
-- name: Create geoserver-tmp directory
-  file:
-    path: "{{app_data}}/geoserver-tmp"
-    state: directory
-    mode: 0700
-    owner: "{{ansible_user}}"
-    recurse: yes
-  become: yes
-  become_method: sudo
-
-- name: Copy default geoserver data to geoserver data directory - Download WAR
-  shell: wget -nv -O {{app_data}}/geoserver-tmp/geoserver.war "https://dl.cloudsmith.io/public/terraframe/public/maven/org/geoserver/geoserver/{{geoserver_version}}/geoserver-{{geoserver_version}}.war"
-  become: yes
-  become_method: sudo
-  when: not geoserver_data_exists.stat.exists
-- name: Copy default geoserver data to geoserver data directory - Create unzip directory
-  shell: mkdir -p {{app_data}}/geoserver-tmp/unzipped
-  become: yes
-  become_method: sudo
-  when: not geoserver_data_exists.stat.exists
-- name: Copy default geoserver data to geoserver data directory - Unzip WAR
-  shell: unzip {{app_data}}/geoserver-tmp/geoserver.war -d {{app_data}}/geoserver-tmp/unzipped
-  become: yes
-  become_method: sudo
-  when: not geoserver_data_exists.stat.exists
-- name: Copy default geoserver data to geoserver data directory - Create data directory
-  shell: mkdir -p {{app_data}}/geoserver
-  become: yes
-  become_method: sudo
-  when: not geoserver_data_exists.stat.exists
-- name: Copy default geoserver data to geoserver data directory - Move data
-  shell: mv {{app_data}}/geoserver-tmp/unzipped/data {{app_data}}/geoserver
-  become: yes
-  become_method: sudo
-  when: not geoserver_data_exists.stat.exists
-
-
-- name: Set the Geoserver admin password
-  community.general.xml:
-    path: "{{app_data}}/geoserver/data/security/usergroup/default/users.xml"
-    namespaces:
-      geo: http://www.geoserver.org/security/users
-    xpath: /geo:userRegistry/geo:users/geo:user[@name='admin']
-    attribute: password
-    value: "{{geoserver_encrypted_admin_password}}"
-  become: yes
-  become_method: sudo
-  when: geoserver_encrypted_admin_password is defined
 
 # Fetch and Load Docker Image (As Zip From Jenkins) ##
 - name: Delete existing docker image since the load command won't overwrite it
