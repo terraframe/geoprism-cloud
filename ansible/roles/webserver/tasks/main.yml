@@ -33,8 +33,8 @@
 - name: Inject password into server.xml
   ansible.builtin.replace:
     path: "{{app_data}}/ssl/server.xml"
-    regexp: "keystorePass=\"changeit\""
-    replace: "keystorePass=\"{{ssl_keystore_password}}\""
+    regexp: "certificateKeystorePassword=\"changeit\""
+    replace: "certificateKeystorePassword=\"{{ssl_keystore_password}}\""
   become: yes
   become_method: sudo
 - name: Copy web.xml
