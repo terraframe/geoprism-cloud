@@ -35,6 +35,13 @@
   
 - name: Stage geoprism-certbot code
   copy:
+    src: "../docker/geoprism-certbot/error-notify.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/error-notify.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+- name: Stage geoprism-certbot code
+  copy:
     src: "../docker/geoprism-certbot/post-hook.sh"
     dest: "{{app_data}}/ssl/letsencrypt/hooks/post-hook.sh"
     mode: a+x
@@ -75,6 +82,13 @@
         - "{{app_data}}/ssl/letsencrypt/hooks:/var/lib/geoprism-certbot/hooks"
         - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
         - "/var/run:/var/run/parent"
+    environment:
+	  SERVICE_NAME: "geoprism-certbot"
+	  ALERT_TO: "devops@terraframe.com"
+	  ALERT_FROM: "noreply@geoprism.net"
+	  SES_REGION: "us-west-2"
+	  SES_USER: "{{email_user}}"
+	  SES_PASS: "{{email_pass}}"
   become: yes
   become_method: sudo
   
