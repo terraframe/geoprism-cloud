@@ -1,3 +1,4 @@
+#!/bin/sh
 
 # Params (in order) for running this script are:
 # $1 = CERT_PATH
