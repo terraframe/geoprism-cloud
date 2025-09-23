@@ -102,7 +102,7 @@
         - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
         - "{{app_data}}/ssl/letsencrypt/rebuild_symlinks.sh:/var/lib/geoprism-certbot/rebuild_symlinks.sh"
         - "/var/run:/var/run/parent"
-    environment:
+    env:
       SERVICE_NAME: "geoprism-certbot"
       ALERT_TO: "devops@terraframe.com"
       ALERT_FROM: "noreply@geoprism.net"
