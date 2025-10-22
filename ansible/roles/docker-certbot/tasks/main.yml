@@ -83,12 +83,12 @@
         - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
         - "/var/run:/var/run/parent"
     environment:
-	  SERVICE_NAME: "geoprism-certbot"
-	  ALERT_TO: "devops@terraframe.com"
-	  ALERT_FROM: "noreply@geoprism.net"
-	  SES_REGION: "us-west-2"
-	  SES_USER: "{{email_user}}"
-	  SES_PASS: "{{email_pass}}"
+      SERVICE_NAME: "geoprism-certbot"
+      ALERT_TO: "devops@terraframe.com"
+      ALERT_FROM: "noreply@geoprism.net"
+      SES_REGION: "us-west-2"
+      SES_USER: "{{email_user}}"
+      SES_PASS: "{{email_pass}}"
   become: yes
   become_method: sudo
   
