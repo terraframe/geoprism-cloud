@@ -82,7 +82,7 @@
         - "{{app_data}}/ssl/letsencrypt/hooks:/var/lib/geoprism-certbot/hooks"
         - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
         - "/var/run:/var/run/parent"
-    environment:
+    env:
       SERVICE_NAME: "geoprism-certbot"
       ALERT_TO: "devops@terraframe.com"
       ALERT_FROM: "noreply@geoprism.net"
