@@ -30,7 +30,7 @@ docker run --rm --name openssl-pkcs --network host \
             /etc/letsencrypt/archive/$DOMAIN_NAME/$FULL_CHAIN \
             -inkey /etc/letsencrypt/archive/$DOMAIN_NAME/$PRIV_KEY \
             -out /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
-            -name $KEY_ALIAS -password pass:$KEY_PASSWORD
+            -name $KEY_ALIAS -password pass:$KEY_PASSWORD \
             || /var/lib/geoprism-certbot/hooks/error-notify.sh "post-hook failed: openssl pkcs12 for $DOMAIN_NAME"
 
 # Create a keystore from the PKCS12 file
@@ -40,7 +40,7 @@ docker run --rm --name keytool-import --network host \
             keytool -importkeystore -deststorepass $KEY_PASSWORD -destkeypass $KEY_PASSWORD \
             -destkeystore /etc/letsencrypt/archive/$DOMAIN_NAME/keystore$KEY_NUM.jks \
             -srckeystore /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
-            -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt
+            -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt \
             || /var/lib/geoprism-certbot/hooks/error-notify.sh "post-hook failed: keytool import for $DOMAIN_NAME"
 
 [ -L $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks ] && unlink $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks
@@ -51,7 +51,7 @@ ln -s ../../archive/$DOMAIN_NAME/keystore$KEY_NUM.jks $INTERNAL_LE_PATH/live/$DO
 docker run --rm --network host --name s3sync \
      -e AWS_ACCESS_KEY_ID=$S3_KEY -e AWS_SECRET_ACCESS_KEY=$S3_SECRET \
      -v "$LETSENCRYPT_PATH/cert:/data" \
-     amazon/aws-cli s3 cp /data s3://$S3_BUCKET/$DOMAIN_NAME --recursive
+     amazon/aws-cli s3 cp /data s3://$S3_BUCKET/$DOMAIN_NAME --recursive \
      || /var/lib/geoprism-certbot/hooks/error-notify.sh "post-hook failed: s3 archive for $DOMAIN_NAME"
 
 docker restart geoprism || /var/lib/geoprism-certbot/hooks/error-notify.sh "post-hook failed: restart geoprism for $DOMAIN_NAME"
