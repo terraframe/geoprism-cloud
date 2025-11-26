@@ -62,6 +62,13 @@
   become_method: sudo
 - name: Stage geoprism-certbot code
   copy:
+    src: "post-deploy.sh"
+    dest: "{{app_data}}/ssl/letsencrypt/hooks/post-deploy.sh"
+    mode: a+x
+  become: yes
+  become_method: sudo
+- name: Stage geoprism-certbot code
+  copy:
     src: "pre-hook.sh"
     dest: "{{app_data}}/ssl/letsencrypt/hooks/pre-hook.sh"
     mode: a+x
@@ -85,7 +92,7 @@
 - name: Start Geoprism Certbot Program
   community.general.docker_container:
     name: geoprism-certbot
-    image: docker:19
+    image: docker:29
     state: started
     recreate: yes
     pull: yes

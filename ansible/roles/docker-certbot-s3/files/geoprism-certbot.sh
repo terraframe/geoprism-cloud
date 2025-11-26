@@ -89,19 +89,21 @@ docker run --rm --network host --name s3sync \
 /var/lib/geoprism-certbot/rebuild_symlinks.sh "/etc/letsencrypt" "$1" || notify "Failure rebuilding symlinks on domain $DOMAIN" "Failure rebuilding symlinks on domain $DOMAIN"
 
 
-CERTBOT_CMD="certbot certonly -n --standalone -d $1 --agree-tos --email $2 --http-01-port 8080"
+CERTBOT_ISSUE_CMD="certbot certonly -n --standalone -d $1 --agree-tos --email $2 --http-01-port 8080"
+CERTBOT_RENEW_CMD="certbot renew -n --standalone --http-01-port 8080"
+
 
 # --- Wire hooks with runtime params ---
-sed -i -e "s~LETSENCRYPT_PATH=.*~LETSENCRYPT_PATH=$8~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s~KEY_PASSWORD=.*~KEY_PASSWORD=$3~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s~KEY_ALIAS=.*~KEY_ALIAS=$4~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s~DOMAIN_NAME=.*~DOMAIN_NAME=$1~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s~S3_BUCKET=.*~S3_BUCKET=$5~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s~S3_KEY=.*~S3_KEY=$6~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
-sed -i -e "s~S3_SECRET=.*~S3_SECRET=$7~g" /var/lib/geoprism-certbot/hooks/post-hook.sh
+sed -i -e "s~LETSENCRYPT_PATH=.*~LETSENCRYPT_PATH=$8~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
+sed -i -e "s~KEY_PASSWORD=.*~KEY_PASSWORD=$3~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
+sed -i -e "s~KEY_ALIAS=.*~KEY_ALIAS=$4~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
+sed -i -e "s~DOMAIN_NAME=.*~DOMAIN_NAME=$1~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
+sed -i -e "s~S3_BUCKET=.*~S3_BUCKET=$5~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
+sed -i -e "s~S3_KEY=.*~S3_KEY=$6~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
+sed -i -e "s~S3_SECRET=.*~S3_SECRET=$7~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
 
 # --- First issuance (or forced renew) ---
-if ! eval "$CERTBOT_CMD" ; then
+if ! eval "$CERTBOT_ISSUE_CMD" ; then
   # Include last 200 lines of certbot log if available
   LOG_SNIPPET=""
   [ -f /var/log/letsencrypt/letsencrypt.log ] && LOG_SNIPPET="$(tail -n 200 /var/log/letsencrypt/letsencrypt.log)"
@@ -115,6 +117,11 @@ fi
   || echo "Did not restart geoprism" "Likely not running or missing."
 
 # --- Cron renew (daily at 00:00) ---
-echo "00    00       *       *       *       $CERTBOT_CMD || ( echo 'renew failed' && tail -n 200 /var/log/letsencrypt/letsencrypt.log | sed 's/^/LOG: /' | logger ; /bin/sh -c \"/var/lib/geoprism-certbot/hooks/error-notify.sh 'Renewal failed for $1'\" )" >> /etc/crontabs/root
+echo "0 0 * * * $CERTBOT_RENEW_CMD || ( rc=\$?; \
+  echo \"certbot renew failed with exit \$rc\"; \
+  tail -n 200 /var/log/letsencrypt/letsencrypt.log | sed 's/^/LOG: /' | logger; \
+  /bin/sh -c \"/var/lib/geoprism-certbot/hooks/error-notify.sh 'Renewal failed for $DOMAIN'\" )" \
+  >> /etc/crontabs/root
+
 
 crond -f || notify "crond exited unexpectedly for $DOMAIN" ""
