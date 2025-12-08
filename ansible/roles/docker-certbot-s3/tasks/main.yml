@@ -23,6 +23,25 @@
   become: yes
   become_method: sudo
   when: "firewalld is defined"
+- name: Deploy nftables NAT rules
+  become: yes
+  copy:
+    dest: /etc/nftables.conf
+    content: |
+      table ip nat {
+          chain prerouting {
+              type nat hook prerouting priority -100;
+              tcp dport 80 redirect to :8080
+              tcp dport 443 redirect to :8443
+          }
+      }
+  when: "nftables is defined"
+- name: Reload nftables
+  become: yes
+  systemd:
+    name: nftables
+    state: restarted
+  when: "nftables is defined"
 
 
 
