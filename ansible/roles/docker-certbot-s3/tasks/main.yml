@@ -17,7 +17,7 @@
   shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/iptables-save > /etc/sysconfig/iptables && systemctl restart iptables"
   become: yes
   become_method: sudo
-  when: "firewalld is not defined"
+  when: "firewalld is not defined and nftables is not defined"
 - name: Forward port (firewallcmd)
   shell: "firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443 && firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 && firewall-cmd --reload"
   become: yes
