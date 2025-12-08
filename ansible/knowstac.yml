@@ -1,0 +1,98 @@
+
+# This is the master deployment script for a DSEDP application (a geoprism extension project)
+
+# Heads up!!
+# Before running you must:
+# 1.
+# Export these environment variables:
+# export ANSIBLE_HOST_KEY_CHECKING=false
+# 2.
+# pip install boto
+# 3.
+# cd ~/git/geoprism-platform/ansible
+# sudo chmod 400 ../security/permissions/geoprism-dev.pem
+# 4.
+# The inventory file says what server you want to make into a demo server. This example here deploys to dev.
+# ansible-playbook dsedp.yml -i inventory/dsedp/dev.ini
+
+- name: Set Up Database
+  hosts: webserver
+  vars:
+    # We will create a database and a user for each of these.
+    apps: '["georegistry"]'
+    
+  roles:
+    - yum
+    - install_postgres
+    - install_orientdb
+    - elasticsearch
+    - titiler
+
+
+- name: Deploy Webserver
+  hosts: webservers
+  vars:
+    catalina_home: /usr/local/tomcat
+    
+    apps: '["ROOT"]'
+  
+  roles:
+    #- yum # Webserver and database are the same server so no need to do yum again
+    - docker-certbot-s3
+    - webserver
+  
+  # KnowStac has an additional "API" server which we need to boot
+  tasks:
+    - name: Delete existing docker image since the load command won't overwrite it
+      community.docker.docker_image:
+        state: absent
+        name: "{{webserver_docker_image2}}:{{webserver_docker_image_tag2}}"
+        force_absent: true
+      become: yes
+      become_method: sudo
+    - name: Fetch and Load Docker Image (As Zip From Jenkins)
+      file:
+        path: "{{app_data}}/dimg"
+        state: directory
+        mode: 0700
+        owner: "{{ansible_user}}"
+        recurse: yes
+      become: yes
+      become_method: sudo
+      #when: webserver_docker_image_tag == "latest"
+    - name: Fetch and Load Docker Image (As Zip From Jenkins)
+      ansible.builtin.copy:
+        src: "{{docker_image_path}}"
+        dest: "{{app_data}}/dimg/geoprism.dimg.gz"
+      become: yes
+      become_method: sudo
+      #when: webserver_docker_image_tag == "latest"
+    - name: Fetch and Load Docker Image (As Zip From Jenkins)
+      community.docker.docker_image:
+        state: present
+        source: load
+        timeout: 1440
+        load_path: "{{app_data}}/dimg/geoprism.dimg.gz"
+        name: "{{webserver_docker_image2}}:{{webserver_docker_image_tag2}}"
+      become: yes
+      become_method: sudo
+      #when: webserver_docker_image_tag == "latest"
+    
+    - name: Start Tomcat Webserver
+      community.docker.docker_container:
+        name: knowstac-api
+        image: "{{webserver_docker_image2}}:{{webserver_docker_image_tag2}}"
+        state: started
+        recreate: yes
+        force_kill: yes
+        pull: "{{should_pull}}"
+        restart_policy: always
+        env: 'JAVA_OPTS="{{java_opts}}"'
+        ports:
+          - "8081:8080"
+          - "8444:8443"
+          - "81:80"
+          - "444:443"
+        volumes: "{{geoprism_app_volumes}}"
+      become: yes
+      become_method: sudo

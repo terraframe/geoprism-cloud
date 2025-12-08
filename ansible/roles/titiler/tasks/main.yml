@@ -1,0 +1,12 @@
+
+- name: Ensure titiler container is running
+  community.docker.docker_container:
+    name: knowstac-titiler
+    image: "ghcr.io/developmentseed/titiler:latest"
+    state: started
+    restart_policy: always
+    env:
+      PORT: "8000"
+      WORKERS_PER_CORE: "1"
+    published_ports:
+      - "8000:8000"
