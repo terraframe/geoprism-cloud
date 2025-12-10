@@ -43,7 +43,6 @@
     name:
       - rsync
       - python3-pip
-      - awscli
       - python3-boto
       - python3-docker
       - python3-lxml
@@ -51,6 +50,33 @@
     update_cache: yes
   become: yes
   become_method: sudo
+  
+# ---------- AWS CLI v2 via bundled installer ----------
+
+- name: Download AWS CLI v2 installer
+  get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: '0644'
+  become: yes
+  become_method: sudo
+
+- name: Unpack AWS CLI v2 installer
+  unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp/
+    remote_src: yes
+  become: yes
+  become_method: sudo
+
+- name: Install AWS CLI v2
+  command: /tmp/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli
+  args:
+    creates: /usr/local/aws-cli/v2/current/bin/aws
+  become: yes
+  become_method: sudo
+
+# ---------- End AWS CLI section ----------
 
 # firewalld (optional, only if 'firewalld' var is defined)
 - name: Apt install firewalld
