@@ -8,7 +8,7 @@ KEY_ALIAS=geoprism
 # Convert PEM→PKCS12
 docker run --rm --name openssl-pkcs --network host \
   -v "/data/ssl/letsencrypt/cert:/etc/letsencrypt" \
-  openjdk:8-jdk-buster openssl pkcs12 -export -in \
+  eclipse-temurin:8-jdk openssl pkcs12 -export -in \
   /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem \
   -inkey /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem \
   -out /etc/letsencrypt/live/$DOMAIN_NAME/pkcs.p12 \
@@ -18,7 +18,7 @@ docker run --rm --name openssl-pkcs --network host \
 # Create keystore
 docker run --rm --name keytool-import --network host \
   -v "/data/ssl/letsencrypt/cert:/etc/letsencrypt" \
-  openjdk:8-jdk-buster \
+  eclipse-temurin:8-jdk \
   keytool -importkeystore -deststorepass $KEY_PASSWORD -destkeypass $KEY_PASSWORD \
   -destkeystore /etc/letsencrypt/live/$DOMAIN_NAME/keystore.jks \
   -srckeystore /etc/letsencrypt/live/$DOMAIN_NAME/pkcs.p12 \
