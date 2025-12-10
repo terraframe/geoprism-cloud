@@ -1,0 +1,104 @@
+##### Fresh Install for Ubuntu 24.04 ####
+
+# Stop Docker Service
+- name: Stop Docker service
+  service:
+    name: docker
+    state: stopped
+    enabled: yes
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
+# System update / upgrade
+- name: Apt update and dist-upgrade
+  apt:
+    update_cache: yes
+    upgrade: dist
+  become: yes
+  become_method: sudo
+
+# (epel-release is RHEL-only, so we just drop that task for Ubuntu)
+
+# Install time sync tool (ntpdate binary)
+- name: Install ntpdate
+  apt:
+    name: ntpdate
+    state: present
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
+# Install required packages
+- name: Install required packages
+  apt:
+    name:
+      - rsync
+      - docker.io
+      - python3-pip
+    state: present
+    update_cache: yes
+  become: yes
+  become_method: sudo
+
+# firewalld (optional, only if 'firewalld' var is defined)
+- name: Apt install firewalld
+  apt:
+    name: firewalld
+    state: present
+  become: yes
+  become_method: sudo
+  when: "firewalld is defined"
+
+- name: Boot firewalld
+  shell: systemctl enable firewalld && systemctl start firewalld
+  become: yes
+  become_method: sudo
+  when: "firewalld is defined"
+
+# AWS CLI tools (for pulling docker images from ECS)
+- name: Install AWS CLI tools
+  shell: pip3 install awscli
+
+- name: Install Boto (for pulling data from s3)
+  shell: pip3 install boto
+
+# Docker-py (Docker SDK for Python)
+- name: Uninstall docker-py
+  command: pip3 uninstall -y docker-py
+  ignore_errors: yes
+
+- name: Install docker SDK for Python
+  command: pip3 install docker
+
+# lxml
+- name: Uninstall lxml
+  command: pip3 uninstall -y lxml
+  ignore_errors: yes
+
+- name: Install lxml
+  command: pip3 install lxml
+  ignore_errors: yes
+
+# Ensure valid server time (ecs pull fails if time is wrong)
+- name: Update server time
+  shell: ntpdate -u ntp.ubuntu.com
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+
+# Start Docker Service
+- name: Start Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+  become_method: sudo
+
+# Without regular container cleanup, the server will run out of disk space
+- name: Docker System Prune (disk clean up)
+  shell: docker system prune -a -f
+  become: yes
+  become_method: sudo
+  ignore_errors: yes

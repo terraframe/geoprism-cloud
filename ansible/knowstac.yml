@@ -22,7 +22,7 @@
     apps: '["georegistry"]'
     
   roles:
-    - yum
+    - apt
     - install_postgres
     - install_orientdb
     - elasticsearch
