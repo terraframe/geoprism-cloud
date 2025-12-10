@@ -46,6 +46,7 @@
       - python3-boto
       - python3-docker
       - python3-lxml
+      - unzip
     state: present
     update_cache: yes
   become: yes
