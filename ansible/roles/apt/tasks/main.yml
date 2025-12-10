@@ -34,7 +34,6 @@
   apt:
     name:
       - rsync
-      - docker.io
       - python3-pip
     state: present
     update_cache: yes
