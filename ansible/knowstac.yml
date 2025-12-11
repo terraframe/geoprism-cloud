@@ -79,19 +79,19 @@
       #when: webserver_docker_image_tag == "latest"
       
     - name: Copy server.xml for knowstac-api
-	  copy:
-	    src: "server.xml"
-	    dest: "{{app_data}}/knowstac-api/ssl/server.xml"
-	  become: yes
-	  become_method: sudo
-	# 2. Change connector port from 8080 → 8081
-	- name: Change HTTP connector port to 8081
-	  ansible.builtin.replace:
-	    path: "{{app_data}}/knowstac-api/ssl/server.xml"
-	    regexp: 'port="8080"'
-	    replace: 'port="8081"'
-	  become: yes
-	  become_method: sudo
+      copy:
+        src: "server.xml"
+        dest: "{{app_data}}/knowstac-api/ssl/server.xml"
+      become: yes
+      become_method: sudo
+    # 2. Change connector port from 8080 → 8081
+    - name: Change HTTP connector port to 8081
+      ansible.builtin.replace:
+        path: "{{app_data}}/knowstac-api/ssl/server.xml"
+        regexp: 'port="8080"'
+        replace: 'port="8081"'
+      become: yes
+      become_method: sudo
     
     - name: Start Tomcat Webserver
       community.docker.docker_container:
@@ -106,12 +106,12 @@
         env: 'JAVA_OPTS="{{java_opts}}"'
         volumes:
           - "{{app_data}}/knowstac-api/geoprism:/data/geoprism:rw"
-		  - "{{app_data}}/knowstac-api/tomcat/logs:{{catalina_home}}/logs:rw"
-		  - "{{app_data}}/knowstac-api/tomcat/tmp:{{catalina_home}}/temp:rw"
-		  - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
-		  - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg:ro"
-		  - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
-		  - "{{app_data}}/knowstac-api/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
-		  - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
+          - "{{app_data}}/knowstac-api/tomcat/logs:{{catalina_home}}/logs:rw"
+          - "{{app_data}}/knowstac-api/tomcat/tmp:{{catalina_home}}/temp:rw"
+          - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
+          - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg:ro"
+          - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
+          - "{{app_data}}/knowstac-api/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+          - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
       become: yes
       become_method: sudo
