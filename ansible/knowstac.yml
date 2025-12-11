@@ -80,7 +80,7 @@
       
     - name: Copy server.xml for knowstac-api
       copy:
-        src: "server.xml"
+        src: "roles/webserver/files/server.xml"
         dest: "{{app_data}}/knowstac-api/ssl/server.xml"
       become: yes
       become_method: sudo
