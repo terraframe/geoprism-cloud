@@ -78,6 +78,15 @@
       become_method: sudo
       #when: webserver_docker_image_tag == "latest"
       
+    - name: Ensure knowstac-api SSL directory exists
+      file:
+        path: "{{ app_data }}/knowstac-api/ssl"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      become: yes
+      become_method: sudo
     - name: Copy server.xml for knowstac-api
       copy:
         src: "roles/webserver/files/server.xml"
