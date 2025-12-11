@@ -108,7 +108,7 @@
         image: "{{webserver_docker_image2}}:{{webserver_docker_image_tag2}}"
         state: started
         recreate: yes
-        network: host
+        network_mode: host
         force_kill: yes
         pull: "{{should_pull}}"
         restart_policy: always
