@@ -24,24 +24,34 @@ PRIV_KEY=$(find $INTERNAL_LE_PATH/archive/$DOMAIN_NAME -name "privkey*.pem" -pri
 KEY_NUM=$(echo -e "$CERT" | sed 's/cert//g' | sed 's/\.pem//g')
 
 # Convert the PEM key to a PKCS12 file containing full chain and private key
-docker run --rm --name openssl-pkcs --network host \
-            -v "$LETSENCRYPT_PATH/cert:/etc/letsencrypt" \
-            openjdk:8-jdk-buster openssl pkcs12 -export -in \
-            /etc/letsencrypt/archive/$DOMAIN_NAME/$FULL_CHAIN \
-            -inkey /etc/letsencrypt/archive/$DOMAIN_NAME/$PRIV_KEY \
-            -out /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
-            -name $KEY_ALIAS -password pass:$KEY_PASSWORD \
-            || /var/lib/geoprism-certbot/hooks/error-notify.sh "post-hook failed: openssl pkcs12 for $DOMAIN_NAME"
+docker run --rm --network host \
+  -v "$LETSENCRYPT_PATH/cert:/etc/letsencrypt" \
+  alpine:3.20 \
+  sh -c "apk add --no-cache openssl && \
+    openssl pkcs12 -export \
+      -in /etc/letsencrypt/archive/$DOMAIN_NAME/$FULL_CHAIN \
+      -inkey /etc/letsencrypt/archive/$DOMAIN_NAME/$PRIV_KEY \
+      -out /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
+      -name $KEY_ALIAS \
+      -password pass:$KEY_PASSWORD" \
+  || /var/lib/geoprism-certbot/hooks/error-notify.sh \
+     "post-hook failed: openssl pkcs12 for $DOMAIN_NAME"
 
 # Create a keystore from the PKCS12 file
-docker run --rm --name keytool-import --network host \
-			-v "$LETSENCRYPT_PATH/cert:/etc/letsencrypt" \
-			openjdk:8-jdk-buster \
-            keytool -importkeystore -deststorepass $KEY_PASSWORD -destkeypass $KEY_PASSWORD \
-            -destkeystore /etc/letsencrypt/archive/$DOMAIN_NAME/keystore$KEY_NUM.jks \
-            -srckeystore /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
-            -srcstoretype PKCS12 -srcstorepass $KEY_PASSWORD -alias $KEY_ALIAS -noprompt \
-            || /var/lib/geoprism-certbot/hooks/error-notify.sh "post-hook failed: keytool import for $DOMAIN_NAME"
+docker run --rm --network host \
+  -v "$LETSENCRYPT_PATH/cert:/etc/letsencrypt" \
+  eclipse-temurin:17-jdk \
+  keytool -importkeystore \
+    -deststorepass $KEY_PASSWORD \
+    -destkeypass $KEY_PASSWORD \
+    -destkeystore /etc/letsencrypt/archive/$DOMAIN_NAME/keystore$KEY_NUM.jks \
+    -srckeystore /etc/letsencrypt/archive/$DOMAIN_NAME/pkcs$KEY_NUM.p12 \
+    -srcstoretype PKCS12 \
+    -srcstorepass $KEY_PASSWORD \
+    -alias $KEY_ALIAS \
+    -noprompt \
+  || /var/lib/geoprism-certbot/hooks/error-notify.sh \
+     "post-hook failed: keytool import for $DOMAIN_NAME"
 
 [ -L $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks ] && unlink $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks
 [ -f $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks ] && rm $INTERNAL_LE_PATH/live/$DOMAIN_NAME/keystore.jks
