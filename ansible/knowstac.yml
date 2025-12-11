@@ -93,12 +93,18 @@
         dest: "{{app_data}}/knowstac-api/ssl/server.xml"
       become: yes
       become_method: sudo
-    # 2. Change connector port from 8080 → 8081
-    - name: Change HTTP connector port to 8081
+    - name: Change HTTP connector 8080 → 8081
       ansible.builtin.replace:
         path: "{{app_data}}/knowstac-api/ssl/server.xml"
-        regexp: 'port="8080"'
-        replace: 'port="8081"'
+        regexp: '(<Connector[^>]*port=")8080(")'
+        replace: '\18081\2'
+      become: yes
+      become_method: sudo
+    - name: Change HTTP connector 80 → 81
+      ansible.builtin.replace:
+        path: "{{app_data}}/knowstac-api/ssl/server.xml"
+        regexp: '(<Connector[^>]*port=")80(")'
+        replace: '\181\2'
       become: yes
       become_method: sudo
     
