@@ -10,3 +10,5 @@
       WORKERS_PER_CORE: "1"
     published_ports:
       - "8000:8000"
+  become: yes
+  become_method: sudo
