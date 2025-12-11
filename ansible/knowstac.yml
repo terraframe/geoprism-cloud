@@ -62,7 +62,7 @@
       #when: webserver_docker_image_tag == "latest"
     - name: Fetch and Load Docker Image (As Zip From Jenkins)
       ansible.builtin.copy:
-        src: "{{docker_image_path}}"
+        src: "{{docker_image_path2}}"
         dest: "{{app_data}}/dimg/geoprism.dimg.gz"
       become: yes
       become_method: sudo
