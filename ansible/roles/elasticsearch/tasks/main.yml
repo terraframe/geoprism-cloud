@@ -53,7 +53,7 @@
 - name: Start Docker Container
   community.general.docker_container:
     name: elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
+    image: "{{ elasticsearch_image | default('docker.elastic.co/elasticsearch/elasticsearch:8.3.2') }}"
     state: started
     recreate: "{{elasticsearch_clean}}"
     pull: yes
