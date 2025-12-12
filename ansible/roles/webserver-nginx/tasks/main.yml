@@ -1,0 +1,239 @@
+
+- name: Ensure the webserver can connect to the database
+  wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
+
+- name: Stop Geoprism Container
+  community.docker.docker_container:
+    name: geoprism
+    state: stopped
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+  
+## SSL ##
+- name: Stage SSL certificates
+  file:
+    path: "{{app_data}}/ssl"
+    state: directory
+    mode: 0755
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Delete server.xml
+  file:
+    path: "{{app_data}}/ssl/server.xml"
+    state: absent
+  become: yes
+  become_method: sudo
+- name: Copy server.xml
+  copy:
+    src: "server.xml"
+    dest: "{{app_data}}/ssl/server.xml"
+  become: yes
+  become_method: sudo
+- name: Copy web.xml
+  copy:
+    src: "web.xml"
+    dest: "{{app_data}}/ssl/web.xml"
+  become: yes
+  become_method: sudo
+
+## Start Nginx Bastion ##
+- name: Create nginx dir
+  file:
+    path: "{{app_data}}/nginx"
+    state: directory
+    mode: 0755
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Copy over maintenance html file
+  copy: src="index.html"
+        dest="{{app_data}}/nginx/index.html"
+  become: yes
+  become_method: sudo
+- name: Copy nginx config
+  ansible.builtin.copy:
+    src: nginx.conf
+    dest: "{{ app_data }}/nginx/nginx.conf"
+    mode: "0644"
+  become: yes
+- name: Run nginx container
+  community.docker.docker_container:
+    name: bastion
+    image: nginx:alpine
+    state: started
+    restart_policy: always
+    published_ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "{{ app_data }}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "{{ app_data }}/nginx/index.html:/usr/share/nginx/html/maintenance.html:ro"
+      - "{{ app_data }}/ssl/letsencrypt/cert/live/{{ssl_domain}}/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro"
+      - "{{ app_data }}/ssl/letsencrypt/cert/live/{{ssl_domain}}/privkey.pem:/etc/nginx/certs/privkey.pem:ro"
+      - "{{app_data}}/certbot:/var/www/certbot:ro"
+    etc_hosts:
+      host.docker.internal: "host-gateway"
+
+
+  
+# Clean existing data
+- name: If cleaning, delete geoprism app data
+  file:
+    state: absent
+    path: "{{app_data}}/geoprism"
+  become: yes
+  become_method: sudo
+  when: "clean_db | default(false) | bool"
+- name: If cleaning, delete tomcat logs
+  file:
+    state: absent
+    path: "{{app_data}}/tomcat/logs"
+  become: yes
+  become_method: sudo
+  when: "clean_db | default(false) | bool"
+- name: If cleaning, delete appcfg
+  file:
+    state: absent
+    path: "{{app_data}}/tomcat/appcfg"
+  become: yes
+  become_method: sudo
+  when: clean_db | default(false) | bool
+
+## Appcfg ##
+- name: Stage appcfg
+  copy: src="{{appcfg}}/"
+        dest="{{app_data}}/tomcat/appcfg/"
+  become: yes
+  become_method: sudo
+  when: appcfg is defined
+
+## Configure log4j2.xml ##
+- name: Stage log4j2.xml
+  copy: src="log4j2.xml"
+        dest="{{app_data}}/tomcat/log4j2.xml"
+  become: yes
+  become_method: sudo
+- name: Stage log4j2-dbbuilder.xml
+  copy: src="log4j2-dbbuilder.xml"
+        dest="{{app_data}}/tomcat/log4j2-dbbuilder.xml"
+  become: yes
+  become_method: sudo
+- name: Set log level based on ansible config
+  ansible.builtin.replace:
+    path: "{{app_data}}/tomcat/log4j2.xml"
+    regexp: '<Root level="{{log_level | default("error")}}">'
+    replace: '<Root level="error">'
+  become: yes
+  become_method: sudo
+
+# Fetch and Load Docker Image (As Zip From Jenkins) ##
+- name: Delete existing docker image since the load command won't overwrite it
+  community.docker.docker_image:
+    state: absent
+    name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    force_absent: true
+  become: yes
+  become_method: sudo
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  file:
+    path: "{{app_data}}/dimg"
+    state: directory
+    mode: 0755
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+  #when: webserver_docker_image_tag == "latest"
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  ansible.builtin.copy:
+    src: "{{docker_image_path}}"
+    dest: "{{app_data}}/dimg/geoprism.dimg.gz"
+  become: yes
+  become_method: sudo
+  #when: webserver_docker_image_tag == "latest"
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  community.docker.docker_image:
+    state: present
+    source: load
+    timeout: 1440
+    load_path: "{{app_data}}/dimg/geoprism.dimg.gz"
+    name: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+  become: yes
+  become_method: sudo
+  #when: webserver_docker_image_tag == "latest"
+
+## Delete temp files ##
+- name: Delete Tomcat Temp Files
+  shell: "rm -rf {{app_data}}/tomcat/tmp/*"
+  become: yes
+  become_method: sudo
+  
+- name: Figure out which JAVA_OPTS to use
+  ansible.builtin.set_fact:
+    java_opts: "{{java_opts_prod | trim}}"
+  when: "not (debug | default(false) | bool)"
+- name: Figure out which JAVA_OPTS to use
+  ansible.builtin.set_fact:
+    java_opts: "{{java_opts_debug | trim}}"
+  when: "debug | default(false) | bool"
+
+#- ansible.builtin.set_fact:
+#    should_pull: true
+#  when: webserver_docker_image_tag != "latest"
+- ansible.builtin.set_fact:
+    should_pull: false
+  #when: webserver_docker_image_tag == "latest"
+
+- name: Fetch and Load Docker Image (As Zip From Jenkins)
+  ansible.builtin.copy:
+    src: "{{geoprism_lib_extension}}"
+    dest: "{{app_data}}/tomcat/geoprism-extension.jar"
+  become: yes
+  become_method: sudo
+  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
+- ansible.builtin.set_fact:
+    geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/tomcat/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
+  when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
+
+## Build Database ##
+# export JAVA_OPTS="-Xms512M -Xmx8000M -Ddatabase.hostURL=127.0.0.1 -Dappcfg=/usr/local/tomcat/appcfg -Dproject.basedir=/usr/local/tomcat -Dtomcat.home=/usr/local/tomcat -Ddatabase.user=georegistry -Ddatabase.password=519xvLBDIG -Ddatabase.port=5432 -Dorientdb.root.password=e3SptZ38a6s -Dorientdb.admin.password=wo4oXM01a"
+# sudo -E docker run --rm --name geoprism-database-builder -e JAVA_OPTS="$JAVA_OPTS" --network=host -v "/data/tomcat/geoprism-extension.jar:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar" -v "/data/tomcat/logs:/usr/local/tomcat/logs" -v "/data/tomcat/appcfg:/usr/local/tomcat/appcfg:ro" -v "/data/tomcat/log4j2.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro" terraframe/geoprism-registry:latest java $JAVA_OPTS -cp /usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/metadata --rootUser=postgres --rootPass=yk6ID7jkh --templateDb=postgres --install=true --clean=true 2>&1
+- name: Build Database
+  block:
+    - name: Build Database
+      community.docker.docker_container:
+        name: geoprism-dbbuilder
+        image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+        state: started
+        pull: "{{should_pull}}"
+        restart_policy: 'no'
+        auto_remove: no
+        detach: no
+        env: 'JAVA_OPTS="{{java_opts}}"'
+        network_mode: host
+        command: "java {{java_opts}} -cp {{catalina_home}}/webapps/ROOT/WEB-INF/classes:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder {{catalina_home}}/webapps/ROOT/WEB-INF/classes/metadata --rootUser={{rootdb_user}} --rootPass={{rootdb_pass}} --templateDb=postgres --install={{clean_db}} --clean={{clean_db}} --patch={{not (clean_db | bool)}} 2>&1 | tee {{catalina_home}}/logs/database-builder.log"
+        volumes: "{{geoprism_dbbuilder_volumes}}"
+      when: build_database | default(true) | bool
+      become: yes
+      become_method: sudo
+
+## Start the Geoprism Docker container ##
+- name: Start Tomcat Webserver
+  community.docker.docker_container:
+    name: geoprism
+    image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    state: started
+    recreate: yes
+    force_kill: yes
+    pull: "{{should_pull}}"
+    restart_policy: always
+    env: 'JAVA_OPTS="{{java_opts}}"'
+    network_mode: host
+    volumes: "{{geoprism_app_volumes}}"
+  become: yes
+  become_method: sudo
+  

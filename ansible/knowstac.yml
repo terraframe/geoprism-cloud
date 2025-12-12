@@ -38,8 +38,8 @@
   
   roles:
     #- yum # Webserver and database are the same server so no need to do yum again
-    - docker-certbot-s3
-    - webserver
+    - docker-certbot-s3-nginx
+    - webserver-nginx
   
   # KnowStac has an additional "API" server which we need to boot
   tasks:
@@ -89,7 +89,7 @@
       become_method: sudo
     - name: Copy server.xml for knowstac-api
       copy:
-        src: "roles/webserver/files/server.xml"
+        src: "roles/webserver-nginx/files/server.xml"
         dest: "{{app_data}}/knowstac-api/ssl/server.xml"
       become: yes
       become_method: sudo
@@ -100,7 +100,6 @@
         replace: '\g<1>8081\g<2>'
       become: yes
       become_method: sudo
-    
     - name: Change HTTP connector 80 → 81
       ansible.builtin.replace:
         path: "{{ app_data }}/knowstac-api/ssl/server.xml"
