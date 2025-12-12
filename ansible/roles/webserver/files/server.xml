@@ -20,7 +20,7 @@
 
 -->
 
-<Server port="8205" shutdown="SHUTDOWN">
+<Server port="-1" shutdown="SHUTDOWN">
 
   <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
   <!-- Security listener. Documentation at /docs/config/listeners.html
