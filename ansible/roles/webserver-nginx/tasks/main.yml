@@ -60,6 +60,7 @@
     dest: "{{ app_data }}/nginx/nginx.conf"
     mode: "0644"
   become: yes
+  become_method: sudo
 - name: Run nginx container
   community.docker.docker_container:
     name: bastion
@@ -77,6 +78,8 @@
       - "{{app_data}}/certbot:/var/www/certbot:ro"
     etc_hosts:
       host.docker.internal: "host-gateway"
+  become: yes
+  become_method: sudo
 
 
   
