@@ -6,44 +6,6 @@
   ignore_errors: yes
 
 
-# Certbot won't work on a fresh install without a port forward
-# TODO : This iptables command doesn't work out of the box on AL2. 
-# You need to install firewalld:
-# sudo yum install -y firewalld
-# sudo systemctl enable firewalld
-# sudo systemctl start firewalld
-# verify with # sudo systemctl status firewalld
-- name: Forward port (iptables)
-  shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/iptables-save > /etc/sysconfig/iptables && systemctl restart iptables"
-  become: yes
-  become_method: sudo
-  when: "firewalld is not defined and nftables is not defined"
-- name: Forward port (firewallcmd)
-  shell: "firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443 && firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 && firewall-cmd --reload"
-  become: yes
-  become_method: sudo
-  when: "firewalld is defined"
-- name: Deploy nftables NAT rules
-  become: yes
-  copy:
-    dest: /etc/nftables.conf
-    content: |
-      table ip nat {
-          chain prerouting {
-              type nat hook prerouting priority -100;
-              tcp dport 80 redirect to :8080
-              tcp dport 443 redirect to :8443
-          }
-      }
-  when: "nftables is defined"
-- name: Reload nftables
-  become: yes
-  systemd:
-    name: nftables
-    state: restarted
-  when: "nftables is defined"
-
-
 
 - name: Create directory
   file:
@@ -120,7 +82,7 @@
     network_mode: host
     command: "/var/lib/geoprism-certbot/geoprism-certbot.sh {{ssl_domain}} {{ssl_admin_email}} {{ssl_keystore_password}} geoprism {{ssl_archive_s3_bucket}} {{ssl_archive_s3_key}} {{ssl_archive_s3_secret}} {{app_data}}/ssl/letsencrypt"
     volumes:
-        - "{{app_data}}/tomcat/webapps/.well-known:/data/tomcat/webapps/.well-known"
+        - "{{app_data}}/certbot:/var/www/certbot"
         - "{{app_data}}/ssl/letsencrypt/cert:/etc/letsencrypt"
         - "{{app_data}}/ssl/letsencrypt/lib:/var/lib/letsencrypt"
         - "{{app_data}}/ssl/letsencrypt/log:/var/log/letsencrypt"

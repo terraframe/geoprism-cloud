@@ -55,7 +55,7 @@
   become: yes
   become_method: sudo
 - name: Copy nginx config
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: nginx.conf
     dest: "{{ app_data }}/nginx/nginx.conf"
     mode: "0644"
@@ -73,8 +73,7 @@
     volumes:
       - "{{ app_data }}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
       - "{{ app_data }}/nginx/index.html:/usr/share/nginx/html/maintenance.html:ro"
-      - "{{ app_data }}/ssl/letsencrypt/cert/live/{{ssl_domain}}/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro"
-      - "{{ app_data }}/ssl/letsencrypt/cert/live/{{ssl_domain}}/privkey.pem:/etc/nginx/certs/privkey.pem:ro"
+      - "{{ app_data }}/ssl/letsencrypt/cert:/etc/letsencrypt:ro"
       - "{{app_data}}/certbot:/var/www/certbot:ro"
     etc_hosts:
       host.docker.internal: "host-gateway"

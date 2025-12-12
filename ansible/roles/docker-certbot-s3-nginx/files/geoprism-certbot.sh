@@ -40,7 +40,7 @@ SERVICE_NAME="${SERVICE_NAME:-geoprism}"
 NGINX_CONTAINER="${NGINX_CONTAINER:-bastion}"
 
 # Webroot on the *host* (mounted into nginx at /var/www/certbot:ro)
-WEBROOT_HOST="${LETSENCRYPT_PATH}/certbot"
+WEBROOT_HOST="/var/www/certbot"
 WEBROOT_CHALLENGE_DIR="${WEBROOT_HOST}/.well-known/acme-challenge"
 
 # --- Update packages. msmtp will allow email sending via SES ---
@@ -113,7 +113,7 @@ sleep 8
 # Download the SSL data from S3
 docker run --rm --network host --name s3sync \
   -e AWS_ACCESS_KEY_ID="$S3_KEY" -e AWS_SECRET_ACCESS_KEY="$S3_SECRET" \
-  -v "${LETSENCRYPT_PATH}/cert:/data" \
+  -v "/etc/letsencrypt:/data" \
   amazon/aws-cli s3 cp "s3://${S3_BUCKET}/${DOMAIN}" /data --recursive || true
 
 # Rebuild live/archive symlinks if needed
