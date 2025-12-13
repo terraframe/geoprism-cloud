@@ -113,7 +113,7 @@ sleep 8
 # Download the SSL data from S3
 docker run --rm --network host --name s3sync \
   -e AWS_ACCESS_KEY_ID="$S3_KEY" -e AWS_SECRET_ACCESS_KEY="$S3_SECRET" \
-  -v "/etc/letsencrypt:/data" \
+  -v "${LETSENCRYPT_PATH}/cert:/data" \
   amazon/aws-cli s3 cp "s3://${S3_BUCKET}/${DOMAIN}" /data --recursive || true
 
 # Rebuild live/archive symlinks if needed
