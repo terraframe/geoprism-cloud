@@ -81,10 +81,14 @@ yes | cp /etc/letsencrypt/cli.ini /etc/letsencrypt/../cli.ini && rm -rf /etc/let
 sleep 8
 
 # Download the SSL data from S3
-docker run --rm --network host --name s3sync \
-     -e AWS_ACCESS_KEY_ID=$6 -e AWS_SECRET_ACCESS_KEY=$7 \
+if ! OUT="$(docker run --rm --network host --name s3sync \
+     -e AWS_ACCESS_KEY_ID="$6" -e AWS_SECRET_ACCESS_KEY="$7" \
      -v "$8/cert:/data" \
-     amazon/aws-cli s3 cp s3://$5/$1 /data --recursive
+     amazon/aws-cli s3 cp "s3://$5/$1" /data --recursive 2>&1)"; then
+  notify "Failed to restore certs from S3 for $DOMAIN" "$OUT"
+  exit 1
+fi
+
 
 /var/lib/geoprism-certbot/rebuild_symlinks.sh "/etc/letsencrypt" "$1" || notify "Failure rebuilding symlinks on domain $DOMAIN" "Failure rebuilding symlinks on domain $DOMAIN"
 
@@ -102,26 +106,51 @@ sed -i -e "s~S3_BUCKET=.*~S3_BUCKET=$5~g" /var/lib/geoprism-certbot/hooks/post-d
 sed -i -e "s~S3_KEY=.*~S3_KEY=$6~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
 sed -i -e "s~S3_SECRET=.*~S3_SECRET=$7~g" /var/lib/geoprism-certbot/hooks/post-deploy.sh
 
-# --- First issuance (or forced renew) ---
-if ! eval "$CERTBOT_ISSUE_CMD" ; then
-  # Include last 200 lines of certbot log if available
-  LOG_SNIPPET=""
-  [ -f /var/log/letsencrypt/letsencrypt.log ] && LOG_SNIPPET="$(tail -n 200 /var/log/letsencrypt/letsencrypt.log)"
-  notify "Critical failure getting SSL certificate on domain $DOMAIN" "$LOG_SNIPPET"
-  echo "Critical failure getting SSL certificate! Sleeping so as to avoid fetching more certs and hitting a rate limit."
-  while true; do sleep 86400; done
+# --- First issuance ---
+if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+  if ! eval "$CERTBOT_ISSUE_CMD" ; then
+	  # Include last 200 lines of certbot log if available
+	  LOG_SNIPPET=""
+	  [ -f /var/log/letsencrypt/letsencrypt.log ] && LOG_SNIPPET="$(tail -n 200 /var/log/letsencrypt/letsencrypt.log)"
+	  notify "Critical failure getting SSL certificate on domain $DOMAIN" "$LOG_SNIPPET"
+	  echo "Critical failure getting SSL certificate! Sleeping so as to avoid fetching more certs and hitting a rate limit."
+	  while true; do sleep 86400; done
+  fi
+else
+  echo "Existing cert present for $DOMAIN; skipping initial certonly."
 fi
 
 # Try to bounce app container; notify if it fails but don't die
 (docker top geoprism && echo "Rebooting geoprism to update certificate" && docker restart geoprism) \
-  || echo "Did not restart geoprism" "Likely not running or missing."
+  || echo "Did not restart geoprism (likely not running or missing)."
+
+# Remove any existing cron entry
+CRON_FILE=/etc/crontabs/root
+CRON_TAG="geoprism-certbot-renew:${DOMAIN}"
+
+RENEW_WRAPPED_CMD="/bin/sh -lc '
+  set +e
+  OUT=\$($CERTBOT_RENEW_CMD 2>&1)
+  RC=\$?
+  if [ \$RC -ne 0 ]; then
+    echo \"certbot renew failed with exit \$RC\"
+    echo \"--- certbot command output ---\"
+    echo \"\$OUT\"
+    echo \"--- last 200 letsencrypt.log ---\"
+    tail -n 200 /var/log/letsencrypt/letsencrypt.log 2>/dev/null || true
+    echo \"--- end ---\"
+    printf \"%s\n\" \"\$OUT\" | /var/lib/geoprism-certbot/hooks/error-notify.sh \"Renewal failed for $DOMAIN\" || true
+  fi
+'"
+
+# Remove any existing entry for this domain/tag
+[ -f "$CRON_FILE" ] || touch "$CRON_FILE"
+grep -vF "$CRON_TAG" "$CRON_FILE" > /tmp/root.cron || true
+cat /tmp/root.cron > "$CRON_FILE"
+rm -f /tmp/root.cron
 
 # --- Cron renew (daily at 00:00) ---
-echo "0 0 * * * $CERTBOT_RENEW_CMD || ( rc=\$?; \
-  echo \"certbot renew failed with exit \$rc\"; \
-  tail -n 200 /var/log/letsencrypt/letsencrypt.log | sed 's/^/LOG: /' | logger; \
-  /bin/sh -c \"/var/lib/geoprism-certbot/hooks/error-notify.sh 'Renewal failed for $DOMAIN'\" )" \
-  >> /etc/crontabs/root
+echo "0 0 * * * $RENEW_WRAPPED_CMD # $CRON_TAG" >> "$CRON_FILE"
 
 
 crond -f || notify "crond exited unexpectedly for $DOMAIN" ""
