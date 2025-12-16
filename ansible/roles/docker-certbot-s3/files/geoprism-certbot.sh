@@ -143,14 +143,16 @@ RENEW_WRAPPED_CMD="/bin/sh -lc '
   fi
 '"
 
-# Remove any existing entry for this domain/tag
-[ -f "$CRON_FILE" ] || touch "$CRON_FILE"
-grep -vF "$CRON_TAG" "$CRON_FILE" > /tmp/root.cron || true
-cat /tmp/root.cron > "$CRON_FILE"
-rm -f /tmp/root.cron
-
 # --- Cron renew (daily at 00:00) ---
-echo "0 0 * * * $RENEW_WRAPPED_CMD # $CRON_TAG" >> "$CRON_FILE"
+cat > /etc/crontabs/root <<EOF
+*/15 * * * * run-parts /etc/periodic/15min
+0     * * * * run-parts /etc/periodic/hourly
+0     2 * * * run-parts /etc/periodic/daily
+0     3 * * 6 run-parts /etc/periodic/weekly
+0     5 1 * * run-parts /etc/periodic/monthly
+
+0 0 * * * $RENEW_WRAPPED_CMD # geoprism-certbot-renew:${DOMAIN}
+EOF
 
 
 crond -f || notify "crond exited unexpectedly for $DOMAIN" ""
