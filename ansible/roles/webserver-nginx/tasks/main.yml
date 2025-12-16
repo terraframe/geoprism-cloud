@@ -11,7 +11,7 @@
   ignore_errors: yes
   
 ## SSL ##
-- name: Stage SSL certificates
+- name: Create ssl data directory
   file:
     path: "{{app_data}}/ssl"
     state: directory
@@ -38,49 +38,6 @@
     dest: "{{app_data}}/ssl/web.xml"
   become: yes
   become_method: sudo
-
-## Start Nginx Bastion ##
-- name: Create nginx dir
-  file:
-    path: "{{app_data}}/nginx"
-    state: directory
-    mode: 0755
-    owner: "{{ansible_user}}"
-    recurse: yes
-  become: yes
-  become_method: sudo
-- name: Copy over maintenance html file
-  copy: src="index.html"
-        dest="{{app_data}}/nginx/index.html"
-  become: yes
-  become_method: sudo
-- name: Copy nginx config
-  ansible.builtin.template:
-    src: nginx.conf
-    dest: "{{ app_data }}/nginx/nginx.conf"
-    mode: "0644"
-  become: yes
-  become_method: sudo
-- name: Run nginx container
-  community.docker.docker_container:
-    name: bastion
-    image: nginx:alpine
-    state: started
-    restart_policy: always
-    published_ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - "{{ app_data }}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "{{ app_data }}/nginx/index.html:/usr/share/nginx/html/maintenance.html:ro"
-      - "{{ app_data }}/ssl/letsencrypt/cert:/etc/letsencrypt:ro"
-      - "{{app_data}}/certbot:/var/www/certbot:ro"
-    etc_hosts:
-      host.docker.internal: "host-gateway"
-  become: yes
-  become_method: sudo
-
-
   
 # Clean existing data
 - name: If cleaning, delete geoprism app data
