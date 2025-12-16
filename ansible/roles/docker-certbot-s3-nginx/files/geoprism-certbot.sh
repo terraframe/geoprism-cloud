@@ -110,11 +110,11 @@ ln -s /var/run/parent/docker.sock /var/run/docker.sock || notify "Failed to link
 # Ensure webroot exists for ACME challenges (NOT under /etc/letsencrypt, so wiping letsencrypt is safe)
 mkdir -p "${WEBROOT_HOST}/.well-known/acme-challenge" || true
 
-# Delete all existing SSL data. This is important because the ssl certs could be for a different server if we restored an image from another server.
-yes | cp /etc/letsencrypt/cli.ini /etc/letsencrypt/../cli.ini && rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt/../cli.ini /etc/letsencrypt/cli.ini
+# Move all existing SSL data somewhere else (we will delete it at the end if we're successful). This is important because the ssl certs could be for a different server if we restored an image from another server.
+mkdir -p /etc/letsencrypt-backup && cp /etc/letsencrypt/cli.ini /tmp/cli.ini && mv /etc/letsencrypt/* /etc/letsencrypt-backup/ 2>/dev/null || true && mv /tmp/cli.ini /etc/letsencrypt/cli.ini
 
 # Sleep for a little bit because our ansible script is waiting for the file to be deleted and we want to make sure they detect it here.
-sleep 8
+sleep 4
 
 # Download the SSL data from S3
 if [ -n "$S3_BUCKET" ] && [ -n "$S3_KEY" ] && [ -n "$S3_SECRET" ]; then
@@ -180,6 +180,7 @@ $ISSUE_OUTPUT
 $LOG_SNIPPET
 "
     echo "Critical failure getting SSL certificate! Sleeping to avoid rate limits."
+    rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt-backup/* /etc/letsencrypt/ 2>/dev/null || true # Rollback
     while true; do sleep 86400; done
   fi
 
@@ -240,5 +241,8 @@ chmod +x /var/lib/geoprism-certbot/hooks/renew-wrapper.sh
 CRONLINE="0 0 * * * DOMAIN=${DOMAIN} NGINX_CONTAINER=${NGINX_CONTAINER} CERTBOT_RENEW_CMD='${CERTBOT_RENEW_CMD}' /var/lib/geoprism-certbot/hooks/renew-wrapper.sh"
 grep -qxF "$CRONLINE" /etc/crontabs/root || echo "$CRONLINE" >> /etc/crontabs/root
 
-# Start cron in foreground
+# Wipe our cert backup (which we no longer need since this was successful)
+rm -rf /etc/letsencrypt-backup
+
+# Start cron in foreground (blocks forever)
 crond -f || notify "crond exited unexpectedly for $DOMAIN" ""
