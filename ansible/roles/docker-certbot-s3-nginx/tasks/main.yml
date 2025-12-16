@@ -80,7 +80,16 @@
     restart_policy: always
     entrypoint: /bin/sh
     network_mode: host
-    command: "/var/lib/geoprism-certbot/geoprism-certbot.sh {{ssl_domain}} {{ssl_admin_email}} {{ssl_keystore_password}} geoprism {{ssl_archive_s3_bucket}} {{ssl_archive_s3_key}} {{ssl_archive_s3_secret}} {{app_data}}/ssl/letsencrypt"
+    command: >-
+      /var/lib/geoprism-certbot/geoprism-certbot.sh
+      {{ ssl_domain }}
+      {{ ssl_admin_email }}
+      {{ ssl_keystore_password }}
+      geoprism
+      {{ app_data }}/ssl/letsencrypt
+      {{ ssl_archive_s3_bucket | default('') }}
+      {{ ssl_archive_s3_key | default('') }}
+      {{ ssl_archive_s3_secret | default('') }}
     volumes:
         - "{{app_data}}/certbot:/var/www/certbot"
         - "{{app_data}}/ssl/letsencrypt/cert:/etc/letsencrypt"

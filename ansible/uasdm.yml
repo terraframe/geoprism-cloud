@@ -34,9 +34,9 @@
     solr_server: /opt/solr/server
     
   roles:
-    - docker-certbot
+    - docker-certbot-s3-nginx
     - elasticsearch
-    - webserver
+    - webserver-nginx
     
   tasks:
     - name: Delete existing Potree temp directory

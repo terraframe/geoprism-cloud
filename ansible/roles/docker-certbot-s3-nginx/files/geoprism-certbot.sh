@@ -7,10 +7,10 @@
 #   $2 = EMAIL
 #   $3 = KEY_PASSWORD
 #   $4 = KEY_ALIAS (usually "geoprism")
-#   $5 = S3_BUCKET
-#   $6 = S3_KEY
-#   $7 = S3_SECRET
-#   $8 = LETSENCRYPT_PATH  (base path where `cert/` is mounted)
+#   $5 = LETSENCRYPT_PATH  (base path where `cert/` is mounted)
+#   $6 = S3_BUCKET
+#   $7 = S3_KEY
+#   $8 = S3_SECRET
 #
 # REQUIREMENT:
 # - nginx must serve:
@@ -27,14 +27,20 @@
 #
 set -eu
 
-DOMAIN="$1"
-EMAIL="$2"
-KEY_PASSWORD="$3"
-KEY_ALIAS="$4"
-S3_BUCKET="$5"
-S3_KEY="$6"
-S3_SECRET="$7"
-LETSENCRYPT_PATH="$8"
+DOMAIN="${1:-}"
+EMAIL="${2:-}"
+KEY_PASSWORD="${3:-}"
+KEY_ALIAS="${4:-}"
+LETSENCRYPT_PATH="${5:-}"
+S3_BUCKET="${6:-}"
+S3_KEY="${7:-}"
+S3_SECRET="${8:-}"
+
+# Basic required args check
+if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ] || [ -z "$KEY_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$LETSENCRYPT_PATH" ]; then
+  echo "Usage: $0 DOMAIN EMAIL KEY_PASSWORD KEY_ALIAS LETSENCRYPT_PATH [S3_BUCKET S3_KEY S3_SECRET]" >&2
+  exit 2
+fi
 
 SERVICE_NAME="${SERVICE_NAME:-geoprism}"
 NGINX_CONTAINER="${NGINX_CONTAINER:-bastion}"
@@ -111,10 +117,14 @@ yes | cp /etc/letsencrypt/cli.ini /etc/letsencrypt/../cli.ini && rm -rf /etc/let
 sleep 8
 
 # Download the SSL data from S3
-docker run --rm --network host --name s3sync \
-  -e AWS_ACCESS_KEY_ID="$S3_KEY" -e AWS_SECRET_ACCESS_KEY="$S3_SECRET" \
-  -v "${LETSENCRYPT_PATH}/cert:/data" \
-  amazon/aws-cli s3 cp "s3://${S3_BUCKET}/${DOMAIN}" /data --recursive || true
+if [ -n "$S3_BUCKET" ] && [ -n "$S3_KEY" ] && [ -n "$S3_SECRET" ]; then
+	docker run --rm --network host --name s3sync \
+	  -e AWS_ACCESS_KEY_ID="$S3_KEY" -e AWS_SECRET_ACCESS_KEY="$S3_SECRET" \
+	  -v "${LETSENCRYPT_PATH}/cert:/data" \
+	  amazon/aws-cli s3 cp "s3://${S3_BUCKET}/${DOMAIN}" /data --recursive || true
+else
+  echo "S3 params not provided; skipping S3 download."
+fi
 
 # Rebuild live/archive symlinks if needed
 if [ -x /var/lib/geoprism-certbot/rebuild_symlinks.sh ]; then
@@ -124,11 +134,12 @@ fi
 
 # --- Wire hooks with runtime params ---
 HOOK="/var/lib/geoprism-certbot/hooks/post-deploy.sh"
-sed -i -e "s~LETSENCRYPT_PATH=.*~LETSENCRYPT_PATH=$8~g" $HOOK
-sed -i -e "s~DOMAIN_NAME=.*~DOMAIN_NAME=$1~g" $HOOK
-sed -i -e "s~S3_BUCKET=.*~S3_BUCKET=$5~g" $HOOK
-sed -i -e "s~S3_KEY=.*~S3_KEY=$6~g" $HOOK
-sed -i -e "s~S3_SECRET=.*~S3_SECRET=$7~g" $HOOK
+sed -i -e "s~LETSENCRYPT_PATH=.*~LETSENCRYPT_PATH=${LETSENCRYPT_PATH}~g" "$HOOK"
+sed -i -e "s~DOMAIN_NAME=.*~DOMAIN_NAME=${DOMAIN}~g" "$HOOK"
+sed -i -e "s~S3_BUCKET=.*~S3_BUCKET=${S3_BUCKET}~g" "$HOOK"
+sed -i -e "s~S3_KEY=.*~S3_KEY=${S3_KEY}~g" "$HOOK"
+sed -i -e "s~S3_SECRET=.*~S3_SECRET=${S3_SECRET}~g" "$HOOK"
+
 
 # --- Certbot commands (WEBROOT / no nginx stop) ---
 CERTBOT_ISSUE_CMD="certbot certonly -n --agree-tos --email \"$EMAIL\" --webroot -w \"$WEBROOT_HOST\" -d \"$DOMAIN\""
