@@ -19,6 +19,12 @@
     state: directory
   become: yes
   become_method: sudo
+- name: Create certbot webroot dir
+  file:
+    path: "{{ app_data }}/certbot"
+    state: directory
+    mode: 0755
+  become: yes
 
 - name: Stage geoprism-certbot code
   copy:
@@ -69,8 +75,6 @@
     mode: a+x
   become: yes
   become_method: sudo
-  
-## Start Nginx Bastion ##
 - name: Create nginx dir
   file:
     path: "{{app_data}}/nginx"
@@ -85,6 +89,12 @@
         dest="{{app_data}}/nginx/index.html"
   become: yes
   become_method: sudo
+- name: Copy nginx bootstrap config
+  ansible.builtin.copy:
+    src: nginx-bootstrap.conf
+    dest: "{{ app_data }}/nginx/nginx-bootstrap.conf"
+    mode: "0644"
+  become: yes
 - name: Copy nginx config
   ansible.builtin.template:
     src: nginx.conf
@@ -92,34 +102,36 @@
     mode: "0644"
   become: yes
   become_method: sudo
-- name: Run nginx container
+
+- name: Run nginx container (bootstrap)
   community.docker.docker_container:
     name: bastion
     image: nginx:alpine
     state: started
-    restart_policy: always
+    recreate: yes
+    auto_remove: true
     network_mode: host
     volumes:
-      - "{{ app_data }}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "{{ app_data }}/nginx/index.html:/usr/share/nginx/html/maintenance.html:ro"
+      - "{{ app_data }}/nginx/nginx-bootstrap.conf:/etc/nginx/nginx.conf:ro"
       - "{{ app_data }}/ssl/letsencrypt/cert:/etc/letsencrypt:ro"
-      - "{{app_data}}/certbot:/var/www/certbot:ro"
+      - "{{ app_data }}/certbot:/var/www/certbot:ro"
   become: yes
-  become_method: sudo
 
-# Start Certbot
-- name: Start Geoprism Certbot Program
-  community.general.docker_container:
+# Bootstrap : Initial certificate issue
+- name: Geoprism Certbot Initial Issuance
+  community.docker.docker_container:
     name: geoprism-certbot
     image: docker:29
     state: started
+    auto_remove: true
+    detach: false
     recreate: yes
     pull: yes
-    restart_policy: always
     entrypoint: /bin/sh
     network_mode: host
     command: >-
       /var/lib/geoprism-certbot/geoprism-certbot.sh
+      oneshot
       {{ ssl_domain }}
       {{ ssl_admin_email }}
       {{ ssl_keystore_password }}
@@ -146,23 +158,64 @@
       SES_PASS: "{{email_pass}}"
   become: yes
   become_method: sudo
-  
-- name: Wait until our program has deleted the file
-  wait_for:
-    path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/cert.pem"
-    state: "absent"
+
+## Start Nginx SSL Bastion ##
+- name: Run nginx container
+  community.docker.docker_container:
+    name: bastion
+    image: nginx:alpine
+    state: started
+    restart_policy: always
+    recreate: yes
+    network_mode: host
+    volumes:
+      - "{{ app_data }}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "{{ app_data }}/nginx/index.html:/usr/share/nginx/html/maintenance.html:ro"
+      - "{{ app_data }}/ssl/letsencrypt/cert:/etc/letsencrypt:ro"
+      - "{{app_data}}/certbot:/var/www/certbot:ro"
   become: yes
   become_method: sudo
-- name: Wait until the certificate is present before continuing (otherwise docker will create this file as a directory when the webserver spins up)
-  wait_for:
-    path: "{{app_data}}/ssl/letsencrypt/cert/live/{{ssl_domain}}/cert.pem"
+  
+# Run certbot for ongoing renewal
+- name: Geoprism Certbot Ongoing Renewal
+  community.docker.docker_container:
+    name: geoprism-certbot
+    image: docker:29
+    state: started
+    recreate: yes
+    pull: yes
+    restart_policy: always
+    entrypoint: /bin/sh
+    network_mode: host
+    command: >-
+      /var/lib/geoprism-certbot/geoprism-certbot.sh
+      daemon
+      {{ ssl_domain }}
+      {{ ssl_admin_email }}
+      {{ ssl_keystore_password }}
+      geoprism
+      {{ app_data }}/ssl/letsencrypt
+      {{ ssl_archive_s3_bucket | default('') }}
+      {{ ssl_archive_s3_key | default('') }}
+      {{ ssl_archive_s3_secret | default('') }}
+    volumes:
+        - "{{app_data}}/certbot:/var/www/certbot"
+        - "{{app_data}}/ssl/letsencrypt/cert:/etc/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/lib:/var/lib/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/log:/var/log/letsencrypt"
+        - "{{app_data}}/ssl/letsencrypt/hooks:/var/lib/geoprism-certbot/hooks"
+        - "{{app_data}}/ssl/letsencrypt/geoprism-certbot.sh:/var/lib/geoprism-certbot/geoprism-certbot.sh"
+        - "{{app_data}}/ssl/letsencrypt/rebuild_symlinks.sh:/var/lib/geoprism-certbot/rebuild_symlinks.sh"
+        - "/var/run:/var/run/parent"
+    env:
+      SERVICE_NAME: "geoprism-certbot"
+      ALERT_TO: "devops@terraframe.com"
+      ALERT_FROM: "noreply@geoprism.net"
+      SES_REGION: "us-west-2"
+      SES_USER: "{{email_user}}"
+      SES_PASS: "{{email_pass}}"
   become: yes
   become_method: sudo
-  
-- name: Sleep for 10 seconds because our program will start tomcat (and it breaks stuff in later stages if we don't)
-  ansible.builtin.wait_for:
-    timeout: 10
-  delegate_to: localhost
   
 - name: Start Tomcat
   shell: docker start geoprism

@@ -27,18 +27,19 @@
 #
 set -eu
 
-DOMAIN="${1:-}"
-EMAIL="${2:-}"
-KEY_PASSWORD="${3:-}"
-KEY_ALIAS="${4:-}"
-LETSENCRYPT_PATH="${5:-}"
-S3_BUCKET="${6:-}"
-S3_KEY="${7:-}"
-S3_SECRET="${8:-}"
+MODE="${1:-daemon}"
+DOMAIN="${2:-}"
+EMAIL="${3:-}"
+KEY_PASSWORD="${4:-}"
+KEY_ALIAS="${5:-}"
+LETSENCRYPT_PATH="${6:-}"
+S3_BUCKET="${7:-}"
+S3_KEY="${8:-}"
+S3_SECRET="${9:-}"
 
 # Basic required args check
 if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ] || [ -z "$KEY_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$LETSENCRYPT_PATH" ]; then
-  echo "Usage: $0 DOMAIN EMAIL KEY_PASSWORD KEY_ALIAS LETSENCRYPT_PATH [S3_BUCKET S3_KEY S3_SECRET]" >&2
+  echo "Usage: $0 MODE DOMAIN EMAIL KEY_PASSWORD KEY_ALIAS LETSENCRYPT_PATH [S3_BUCKET S3_KEY S3_SECRET]" >&2
   exit 2
 fi
 
@@ -180,7 +181,7 @@ $ISSUE_OUTPUT
 $LOG_SNIPPET
 "
     echo "Critical failure getting SSL certificate! Sleeping to avoid rate limits."
-    rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt-backup/* /etc/letsencrypt/ 2>/dev/null || true # Rollback
+    cp /etc/letsencrypt/cli.ini /etc/letsencrypt-backup/cli.ini && rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt-backup/* /etc/letsencrypt/ 2>/dev/null || true # Rollback
     while true; do sleep 86400; done
   fi
 
@@ -243,6 +244,11 @@ grep -qxF "$CRONLINE" /etc/crontabs/root || echo "$CRONLINE" >> /etc/crontabs/ro
 
 # Wipe our cert backup (which we no longer need since this was successful)
 rm -rf /etc/letsencrypt-backup
+
+if [ "$MODE" = "oneshot" ]; then
+  echo "MODE=oneshot: skipping crond -f and exiting successfully."
+  exit 0
+fi
 
 # Start cron in foreground (blocks forever)
 crond -f || notify "crond exited unexpectedly for $DOMAIN" ""
