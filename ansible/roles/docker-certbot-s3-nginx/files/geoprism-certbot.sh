@@ -154,86 +154,88 @@ restart_nginx() {
 }
 
 # --- First issuance (only if needed) ---
-# If a cert already exists for this domain, skip certonly and rely on renew.
-LIVE_CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
-if [ -f "$LIVE_CERT" ]; then
-  echo "Existing cert found at $LIVE_CERT; skipping initial certonly."
-else
-  echo "No existing cert found; attempting initial issuance via webroot."
-  set +e
-  ISSUE_OUTPUT="$(sh -c "$CERTBOT_ISSUE_CMD" 2>&1)"
-  ISSUE_RC=$?
-  set -e
-
-  if [ "$ISSUE_RC" -ne 0 ]; then
-    LOG_SNIPPET=""
-    [ -f /var/log/letsencrypt/letsencrypt.log ] && LOG_SNIPPET="$(tail -n 200 /var/log/letsencrypt/letsencrypt.log)"
-    notify "Critical failure getting SSL certificate on domain $DOMAIN" \
-"Command:
-$CERTBOT_ISSUE_CMD
-
-Exit code: $ISSUE_RC
-
-=== certbot output (stdout+stderr) ===
-$ISSUE_OUTPUT
-
-=== /var/log/letsencrypt/letsencrypt.log (tail) ===
-$LOG_SNIPPET
-"
-    echo "Critical failure getting SSL certificate! Sleeping to avoid rate limits."
-    cp /etc/letsencrypt/cli.ini /etc/letsencrypt-backup/cli.ini && rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt-backup/* /etc/letsencrypt/ 2>/dev/null || true # Rollback
-    while true; do sleep 86400; done
-  fi
-
-  if [ -x "$HOOK" ]; then
-    sh "$HOOK" || notify "post-deploy failed for $DOMAIN" "post-deploy.sh returned non-zero."
-  fi
-
-  restart_nginx
+if [ "$MODE" = "oneshot" ]; then
+	# If a cert already exists for this domain, skip certonly and rely on renew.
+	LIVE_CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
+	if [ -f "$LIVE_CERT" ]; then
+	  echo "Existing cert found at $LIVE_CERT; skipping initial certonly."
+	else
+	  echo "No existing cert found; attempting initial issuance via webroot."
+	  set +e
+	  ISSUE_OUTPUT="$(sh -c "$CERTBOT_ISSUE_CMD" 2>&1)"
+	  ISSUE_RC=$?
+	  set -e
+	
+	  if [ "$ISSUE_RC" -ne 0 ]; then
+	    LOG_SNIPPET=""
+	    [ -f /var/log/letsencrypt/letsencrypt.log ] && LOG_SNIPPET="$(tail -n 200 /var/log/letsencrypt/letsencrypt.log)"
+	    notify "Critical failure getting SSL certificate on domain $DOMAIN" \
+			"Command:
+			$CERTBOT_ISSUE_CMD
+			
+			Exit code: $ISSUE_RC
+			
+			=== certbot output (stdout+stderr) ===
+			$ISSUE_OUTPUT
+			
+			=== /var/log/letsencrypt/letsencrypt.log (tail) ===
+			$LOG_SNIPPET
+		"
+	    echo "Critical failure getting SSL certificate! Sleeping to avoid rate limits."
+	    cp /etc/letsencrypt/cli.ini /etc/letsencrypt-backup/cli.ini && rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt-backup/* /etc/letsencrypt/ 2>/dev/null || true # Rollback
+	    while true; do sleep 86400; done
+	  fi
+	
+	  if [ -x "$HOOK" ]; then
+	    sh "$HOOK" || notify "post-deploy failed for $DOMAIN" "post-deploy.sh returned non-zero."
+	  fi
+	
+	  restart_nginx
+	fi
 fi
 
 # --- Renew wrapper (single point of renew) ---
 cat >/var/lib/geoprism-certbot/hooks/renew-wrapper.sh <<'EOF'
-#!/bin/sh
-set -eu
-
-DOMAIN="${DOMAIN:-}"
-NGINX_CONTAINER="${NGINX_CONTAINER:-bastion}"
-HOOK="/var/lib/geoprism-certbot/hooks/post-deploy.sh"
-
-CERTBOT_RENEW_CMD="${CERTBOT_RENEW_CMD:-}"
-
-notify_fail() {
-  # error-notify.sh should exist in your image; it should read stdin
-  TITLE="$1"
-  if [ -x /var/lib/geoprism-certbot/hooks/error-notify.sh ]; then
-    /bin/sh /var/lib/geoprism-certbot/hooks/error-notify.sh "$TITLE"
-  fi
-}
-
-restart_nginx() {
-  (docker ps -a --format '{{.Names}}' | grep -qx "$NGINX_CONTAINER" && docker restart "$NGINX_CONTAINER") || true
-}
-
-# Run renew once, capture output
-set +e
-OUTPUT="$(sh -c "$CERTBOT_RENEW_CMD" 2>&1)"
-RC=$?
-set -e
-
-if [ "$RC" -ne 0 ]; then
-  printf '%s\n' "$OUTPUT" | notify_fail "Renewal failed for ${DOMAIN} (exit ${RC})"
-  exit "$RC"
-fi
-
-# If certbot reports no renewal needed, OUTPUT contains that; still harmless to restart.
-# Run post-deploy hook if present (keystore/s3 sync/etc.)
-if [ -x "$HOOK" ]; then
-  sh "$HOOK" >/dev/null 2>&1 || true
-fi
-
-restart_nginx
-exit 0
+	#!/bin/sh
+	set -eu
+	
+	DOMAIN="${DOMAIN:-}"
+	NGINX_CONTAINER="${NGINX_CONTAINER:-bastion}"
+	HOOK="/var/lib/geoprism-certbot/hooks/post-deploy.sh"
+	
+	CERTBOT_RENEW_CMD="${CERTBOT_RENEW_CMD:-}"
+	
+	notify_fail() {
+	  # error-notify.sh should exist in your image; it should read stdin
+	  TITLE="$1"
+	  if [ -x /var/lib/geoprism-certbot/hooks/error-notify.sh ]; then
+	    /bin/sh /var/lib/geoprism-certbot/hooks/error-notify.sh "$TITLE"
+	  fi
+	}
+	
+	restart_nginx() {
+	  (docker ps -a --format '{{.Names}}' | grep -qx "$NGINX_CONTAINER" && docker restart "$NGINX_CONTAINER") || true
+	}
+	
+	# Run renew once, capture output
+	set +e
+	OUTPUT="$(sh -c "$CERTBOT_RENEW_CMD" 2>&1)"
+	RC=$?
+	set -e
+	
+	if [ "$RC" -ne 0 ]; then
+	  printf '%s\n' "$OUTPUT" | notify_fail "Renewal failed for ${DOMAIN} (exit ${RC})"
+	  exit "$RC"
+	fi
+	
+	# If certbot reports no renewal needed, OUTPUT contains that; still harmless to restart.
+	# Run post-deploy hook if present (keystore/s3 sync/etc.)
+	if [ -x "$HOOK" ]; then
+	  sh "$HOOK" >/dev/null 2>&1 || true
+	fi
+	
+	restart_nginx
+	exit 0
 EOF
 
 chmod +x /var/lib/geoprism-certbot/hooks/renew-wrapper.sh

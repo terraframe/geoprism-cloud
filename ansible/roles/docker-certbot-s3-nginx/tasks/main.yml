@@ -6,6 +6,47 @@
   ignore_errors: yes
 
 
+## If this server was run with the other "webserver" role and the older certbot setup, then it has port forwards that we need to get rid of.
+- name: Remove legacy forward-port 80 -> 8080
+  command: firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=8080
+  when: firewalld
+  register: rm_fwd_80
+  changed_when: "'success' in rm_fwd_80.stdout"
+  failed_when: false
+  become: yes
+  become_method: sudo
+- name: Remove legacy forward-port 443 -> 8443
+  command: firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=8443
+  when: firewalld
+  register: rm_fwd_443
+  changed_when: "'success' in rm_fwd_443.stdout"
+  failed_when: false
+  become: yes
+  become_method: sudo
+- name: Allow HTTP and HTTPS services
+  command: "firewall-cmd --permanent --add-service={{ item }}"
+  loop:
+    - http
+    - https
+  when: firewalld
+  register: add_services
+  changed_when: "'success' in add_services.stdout"
+  failed_when: false
+  become: yes
+  become_method: sudo
+- name: Reload firewalld
+  command: firewall-cmd --reload
+  when: firewalld and (
+          (rm_fwd_80 is defined and rm_fwd_80 is changed) or
+          (rm_fwd_443 is defined and rm_fwd_443 is changed) or
+          (add_services is defined and add_services is changed)
+        )
+  failed_when: false
+  become: yes
+  become_method: sudo
+
+
+
 
 - name: Create directory
   file:
@@ -121,11 +162,12 @@
 - name: Geoprism Certbot Initial Issuance
   community.docker.docker_container:
     name: geoprism-certbot
-    image: docker:29
+    image: docker:19
     state: started
     auto_remove: true
     detach: false
     recreate: yes
+    restart_policy: "no"
     pull: yes
     entrypoint: /bin/sh
     network_mode: host
@@ -180,7 +222,7 @@
 - name: Geoprism Certbot Ongoing Renewal
   community.docker.docker_container:
     name: geoprism-certbot
-    image: docker:29
+    image: docker:19
     state: started
     recreate: yes
     pull: yes
