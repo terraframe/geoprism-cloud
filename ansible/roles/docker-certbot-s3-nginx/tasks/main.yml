@@ -177,7 +177,7 @@
 - name: Geoprism Certbot Initial Issuance
   community.docker.docker_container:
     name: geoprism-certbot
-    image: docker:19
+    image: "{{ certbot_image | default('docker:29') }}"
     state: started
     auto_remove: true
     detach: false
@@ -237,7 +237,7 @@
 - name: Geoprism Certbot Ongoing Renewal
   community.docker.docker_container:
     name: geoprism-certbot
-    image: docker:19
+    image: "{{ certbot_image | default('docker:29') }}"
     state: started
     recreate: yes
     pull: yes
