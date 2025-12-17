@@ -8,7 +8,6 @@ geoprism_volumes_base:
   - "{{app_data}}/tomcat/tmp:{{catalina_home}}/temp:rw"
   - "{{app_data}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
   - "{{app_data}}/tomcat/appcfg:{{catalina_home}}/appcfg:ro"
-  - "{{app_data}}/ssl/keystore.jks:{{catalina_home}}/conf/geoprism.ks:ro"
   - "{{app_data}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
   - "{{app_data}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
 
@@ -23,8 +22,6 @@ java_opts_base: >-
         -Dappcfg={{catalina_home}}/appcfg
         -Dproject.basedir={{catalina_home}}
         -Dtomcat.home={{catalina_home}}
-        -Djavax.net.ssl.keyStore={{catalina_home}}/conf/geoprism.ks
-        -Djavax.net.ssl.keyStorePassword={{ssl_keystore_password}}
         -Dbirt-server=true
         -DFile.encoding=UTF-8      
         -Ddatabase.user={{db_user}}
