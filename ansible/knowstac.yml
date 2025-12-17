@@ -93,18 +93,11 @@
         dest: "{{app_data}}/knowstac-api/ssl/server.xml"
       become: yes
       become_method: sudo
-    - name: Change HTTP connector 8080 → 8081
+    - name: Change HTTP connector 8080 → knowstac_api_port
       ansible.builtin.replace:
         path: "{{ app_data }}/knowstac-api/ssl/server.xml"
         regexp: '(<Connector[^>]*port=")8080(")'
-        replace: '\g<1>8081\g<2>'
-      become: yes
-      become_method: sudo
-    - name: Change HTTP connector 80 → 81
-      ansible.builtin.replace:
-        path: "{{ app_data }}/knowstac-api/ssl/server.xml"
-        regexp: '(<Connector[^>]*port=")80(")'
-        replace: '\g<1>81\g<2>'
+        replace: '\g<1>{{ knowstac_api_port }}\g<2>'
       become: yes
       become_method: sudo
     
@@ -125,7 +118,7 @@
       become_method: sudo
     - name: Start Tomcat Webserver
       community.docker.docker_container:
-        name: knowstac-api
+        name: "{{ knowstac_api_container_name | default('knowstac-api') }}"
         image: "{{webserver_docker_image2}}:{{webserver_docker_image_tag2}}"
         state: started
         recreate: yes

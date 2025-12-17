@@ -1,10 +1,15 @@
 
 - name: Ensure the webserver can connect to the database
-  wait_for: host="{{webserver_database}}" port=5432 delay=0 timeout=10 state=started
+  ansible.builtin.wait_for:
+    host: "{{ webserver_database }}"
+    port: 5432
+    delay: 0
+    timeout: 10
+    state: started
 
 - name: Stop Geoprism Container
   community.docker.docker_container:
-    name: geoprism
+    name: "{{ webserver_container_name | default('geoprism') }}"
     state: stopped
   become: yes
   become_method: sudo
@@ -83,9 +88,19 @@
   become_method: sudo
 - name: Set log level based on ansible config
   ansible.builtin.replace:
-    path: "{{app_data}}/tomcat/log4j2.xml"
-    regexp: '<Root level="{{log_level | default("error")}}">'
-    replace: '<Root level="error">'
+    path: "{{ app_data }}/tomcat/log4j2.xml"
+    regexp: '<Root level="[^"]+">'
+    replace: '<Root level="{{ log_level | default("error") }}">'
+  become: yes
+  become_method: sudo
+  
+## Run Tomcat on a different port? ##
+- name: Change HTTP connector 8080 → webserver_port
+  ansible.builtin.replace:
+    path: "{{ app_data }}/ssl/server.xml"
+    regexp: '(<Connector[^>]*port=")8080(")'
+    replace: '\g<1>{{ webserver_port }}\g<2>'
+  when: webserver_port is defined and (webserver_port | string | length > 0)
   become: yes
   become_method: sudo
 
@@ -183,16 +198,18 @@
 ## Start the Geoprism Docker container ##
 - name: Start Tomcat Webserver
   community.docker.docker_container:
-    name: geoprism
-    image: "{{webserver_docker_image}}:{{webserver_docker_image_tag}}"
+    name: "{{ webserver_container_name | default('geoprism') }}"
+    image: "{{ webserver_docker_image }}:{{ webserver_docker_image_tag }}"
     state: started
     recreate: yes
     force_kill: yes
-    pull: "{{should_pull}}"
+    pull: "{{ should_pull }}"
     restart_policy: always
-    env: 'JAVA_OPTS="{{java_opts}}"'
+    env:
+      JAVA_OPTS: "{{ java_opts }}"
     network_mode: host
-    volumes: "{{geoprism_app_volumes}}"
+    volumes: "{{ geoprism_app_volumes }}"
   become: yes
   become_method: sudo
+
   

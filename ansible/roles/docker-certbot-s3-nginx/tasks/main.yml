@@ -1,6 +1,15 @@
 
-- name: Stop Tomcat
-  shell: docker stop geoprism
+- name: Stop Nginx Container
+  community.docker.docker_container:
+    name: "bastion"
+    state: stopped
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: Stop Nginx Container
+  community.docker.docker_container:
+    name: "geoprism-certbot"
+    state: stopped
   become: yes
   become_method: sudo
   ignore_errors: yes
@@ -136,11 +145,17 @@
     dest: "{{ app_data }}/nginx/nginx-bootstrap.conf"
     mode: "0644"
   become: yes
-- name: Copy nginx config
-  ansible.builtin.template:
-    src: nginx.conf
+- name: Copy nginx config (external template if provided, else default)
+  ansible.builtin.copy:
     dest: "{{ app_data }}/nginx/nginx.conf"
     mode: "0644"
+    content: >-
+      {{
+        lookup(
+          'template',
+          (nginx_conf_template | default('roles/docker-certbot-s3-nginx/templates/nginx.conf'))
+        )
+      }}
   become: yes
   become_method: sudo
 
@@ -258,10 +273,4 @@
       SES_PASS: "{{email_pass}}"
   become: yes
   become_method: sudo
-  
-- name: Start Tomcat
-  shell: docker start geoprism
-  become: yes
-  become_method: sudo
-  ignore_errors: yes
   
