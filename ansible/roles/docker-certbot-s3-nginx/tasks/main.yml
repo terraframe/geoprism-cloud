@@ -18,7 +18,7 @@
 ## If this server was run with the other "webserver" role and the older certbot setup, then it has port forwards that we need to get rid of.
 - name: Remove legacy forward-port 80 -> 8080
   command: firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=8080
-  when: firewalld
+  when: "firewalld is defined"
   register: rm_fwd_80
   changed_when: "'success' in rm_fwd_80.stdout"
   failed_when: false
@@ -26,7 +26,7 @@
   become_method: sudo
 - name: Remove legacy forward-port 443 -> 8443
   command: firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=8443
-  when: firewalld
+  when: "firewalld is defined"
   register: rm_fwd_443
   changed_when: "'success' in rm_fwd_443.stdout"
   failed_when: false
@@ -37,7 +37,7 @@
   loop:
     - http
     - https
-  when: firewalld
+  when: "firewalld is defined"
   register: add_services
   changed_when: "'success' in add_services.stdout"
   failed_when: false
@@ -45,7 +45,7 @@
   become_method: sudo
 - name: Reload firewalld
   command: firewall-cmd --reload
-  when: firewalld and (
+  when: firewalld is defined and (
           (rm_fwd_80 is defined and rm_fwd_80 is changed) or
           (rm_fwd_443 is defined and rm_fwd_443 is changed) or
           (add_services is defined and add_services is changed)
