@@ -1,19 +1,20 @@
 ---
 
 catalina_home: /usr/local/tomcat
-webapp_name: {{ webserver_container_name | default('') }}/
+webapp_name: "{{ webserver_container_name | default('') }}"
+webapp_prefix: "{{ (webapp_name | length > 0) | ternary(webapp_name ~ '/', '') }}"
 
 geoprism_volumes_base:
-  - "{{app_data}}/{{webapp_name}}/geoprism:/data/geoprism:rw"
-  - "{{app_data}}/{{webapp_name}}/tomcat/logs:{{catalina_home}}/logs:rw"
-  - "{{app_data}}/{{webapp_name}}/tomcat/tmp:{{catalina_home}}/temp:rw"
-  - "{{app_data}}/{{webapp_name}}/tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
-  - "{{app_data}}/{{webapp_name}}/tomcat/appcfg:{{catalina_home}}/appcfg:ro"
-  - "{{app_data}}/{{webapp_name}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
-  - "{{app_data}}/{{webapp_name}}/ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
+  - "{{app_data}}/{{webapp_prefix}}geoprism:/data/geoprism:rw"
+  - "{{app_data}}/{{webapp_prefix}}tomcat/logs:{{catalina_home}}/logs:rw"
+  - "{{app_data}}/{{webapp_prefix}}tomcat/tmp:{{catalina_home}}/temp:rw"
+  - "{{app_data}}/{{webapp_prefix}}tomcat/webapps/.well-known:{{catalina_home}}/webapps/.well-known:rw"
+  - "{{app_data}}/{{webapp_prefix}}tomcat/appcfg:{{catalina_home}}/appcfg:ro"
+  - "{{app_data}}/{{webapp_prefix}}ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+  - "{{app_data}}/{{webapp_prefix}}ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
 
-geoprism_app_volumes: "{{ geoprism_volumes_base + [app_data + '/tomcat/log4j2.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
-geoprism_dbbuilder_volumes: "{{ geoprism_volumes_base + [app_data + '/' + webapp_name + '/tomcat/log4j2-dbbuilder.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
+geoprism_app_volumes: "{{ geoprism_volumes_base + [app_data + '/' + webapp_prefix + 'tomcat/log4j2.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
+geoprism_dbbuilder_volumes: "{{ geoprism_volumes_base + [app_data + '/' + webapp_prefix + 'tomcat/log4j2-dbbuilder.xml:' + catalina_home + '/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro'] }}"
 
 java_opts_base: >-
         -Xms512M
@@ -24,7 +25,7 @@ java_opts_base: >-
         -Dproject.basedir={{catalina_home}}
         -Dtomcat.home={{catalina_home}}
         -Dbirt-server=true
-        -DFile.encoding=UTF-8      
+        -Dfile.encoding=UTF-8      
         -Ddatabase.user={{db_user}}
         -Ddatabase.password={{db_pass}}
         -Ddatabase.port=5432
@@ -34,7 +35,7 @@ java_opts_base: >-
         -Dsolr.enabled={{solr_enabled | default('false')}}
         -Dsearch.enabled={{elasticsearch_enabled | default('false')}}
         -Delasticsearch.password={{elasticsearch_password | default('false')}}
-        -Dgeoprism.volume=/data/{{webapp_name}}/geoprism/misc
+        -Dgeoprism.volume=/data/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
 

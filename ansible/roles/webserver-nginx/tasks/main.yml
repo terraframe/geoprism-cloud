@@ -18,7 +18,7 @@
 ## SSL ##
 - name: Create ssl data directory
   file:
-    path: "{{app_data}}/{{webapp_name}}ssl"
+    path: "{{app_data}}/{{webapp_prefix}}ssl"
     state: directory
     mode: 0755
     owner: "{{ansible_user}}"
@@ -27,20 +27,20 @@
   become_method: sudo
 - name: Delete server.xml
   file:
-    path: "{{app_data}}/{{webapp_name}}ssl/server.xml"
+    path: "{{app_data}}/{{webapp_prefix}}ssl/server.xml"
     state: absent
   become: yes
   become_method: sudo
 - name: Copy server.xml
   copy:
     src: "server.xml"
-    dest: "{{app_data}}/{{webapp_name}}ssl/server.xml"
+    dest: "{{app_data}}/{{webapp_prefix}}ssl/server.xml"
   become: yes
   become_method: sudo
 - name: Copy web.xml
   copy:
     src: "web.xml"
-    dest: "{{app_data}}/{{webapp_name}}ssl/web.xml"
+    dest: "{{app_data}}/{{webapp_prefix}}ssl/web.xml"
   become: yes
   become_method: sudo
   
@@ -48,47 +48,50 @@
 - name: If cleaning, delete geoprism app data
   file:
     state: absent
-    path: "{{app_data}}/{{webapp_name}}geoprism"
+    path: "{{app_data}}/{{webapp_prefix}}geoprism"
   become: yes
   become_method: sudo
   when: "clean_db | default(false) | bool"
 - name: If cleaning, delete tomcat logs
   file:
     state: absent
-    path: "{{app_data}}/{{webapp_name}}tomcat/logs"
+    path: "{{app_data}}/{{webapp_prefix}}tomcat/logs"
   become: yes
   become_method: sudo
   when: "clean_db | default(false) | bool"
 - name: If cleaning, delete appcfg
   file:
     state: absent
-    path: "{{app_data}}/{{webapp_name}}tomcat/appcfg"
+    path: "{{app_data}}/{{webapp_prefix}}tomcat/appcfg"
   become: yes
   become_method: sudo
   when: clean_db | default(false) | bool
 
 ## Appcfg ##
 - name: Stage appcfg
-  copy: src="{{appcfg}}/"
-        dest="{{app_data}}/{{webapp_name}}tomcat/appcfg/"
+  ansible.builtin.copy:
+    src: "{{ appcfg }}/"
+    dest: "{{ app_data }}/{{ webapp_prefix }}tomcat/appcfg/"
   become: yes
   become_method: sudo
   when: appcfg is defined
 
 ## Configure log4j2.xml ##
 - name: Stage log4j2.xml
-  copy: src="log4j2.xml"
-        dest="{{app_data}}/{{webapp_name}}tomcat/log4j2.xml"
+  ansible.builtin.copy:
+    src: "log4j2.xml"
+    dest: "{{ app_data }}/{{ webapp_prefix }}tomcat/log4j2.xml"
   become: yes
   become_method: sudo
 - name: Stage log4j2-dbbuilder.xml
-  copy: src="log4j2-dbbuilder.xml"
-        dest="{{app_data}}/{{webapp_name}}tomcat/log4j2-dbbuilder.xml"
+  ansible.builtin.copy:
+    src: "log4j2-dbbuilder.xml"
+    dest: "{{ app_data }}/{{ webapp_prefix }}tomcat/log4j2-dbbuilder.xml"
   become: yes
   become_method: sudo
 - name: Set log level based on ansible config
   ansible.builtin.replace:
-    path: "{{ app_data }}/{{webapp_name}}tomcat/log4j2.xml"
+    path: "{{ app_data }}/{{webapp_prefix}}tomcat/log4j2.xml"
     regexp: '<Root level="[^"]+">'
     replace: '<Root level="{{ log_level | default("error") }}">'
   become: yes
@@ -97,7 +100,7 @@
 ## Run Tomcat on a different port? ##
 - name: Change HTTP connector 8080 → webserver_port
   ansible.builtin.replace:
-    path: "{{ app_data }}/{{webapp_name}}ssl/server.xml"
+    path: "{{ app_data }}/{{webapp_prefix}}ssl/server.xml"
     regexp: '(<Connector[^>]*port=")8080(")'
     replace: '\g<1>{{ webserver_port }}\g<2>'
   when: webserver_port is defined and (webserver_port | string | length > 0)
@@ -142,7 +145,7 @@
 
 ## Delete temp files ##
 - name: Delete Tomcat Temp Files
-  shell: "rm -rf {{app_data}}/{{webapp_name}}tomcat/tmp/*"
+  shell: "rm -rf {{app_data}}/{{webapp_prefix}}tomcat/tmp/*"
   become: yes
   become_method: sudo
   
@@ -165,17 +168,17 @@
 - name: Fetch and Load Docker Image (As Zip From Jenkins)
   ansible.builtin.copy:
     src: "{{geoprism_lib_extension}}"
-    dest: "{{app_data}}/{{webapp_name}}tomcat/geoprism-extension.jar"
+    dest: "{{app_data}}/{{webapp_prefix}}tomcat/geoprism-extension.jar"
   become: yes
   become_method: sudo
   when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 - ansible.builtin.set_fact:
-    geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/{{webapp_name}}tomcat/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
+    geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/{{webapp_prefix}}tomcat/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
   when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 
 ## Build Database ##
 # export JAVA_OPTS="-Xms512M -Xmx8000M -Ddatabase.hostURL=127.0.0.1 -Dappcfg=/usr/local/tomcat/appcfg -Dproject.basedir=/usr/local/tomcat -Dtomcat.home=/usr/local/tomcat -Ddatabase.user=georegistry -Ddatabase.password=519xvLBDIG -Ddatabase.port=5432 -Dorientdb.root.password=e3SptZ38a6s -Dorientdb.admin.password=wo4oXM01a"
-# sudo -E docker run --rm --name geoprism-database-builder -e JAVA_OPTS="$JAVA_OPTS" --network=host -v "/data/tomcat/{{webapp_name}}geoprism-extension.jar:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar" -v "/data/tomcat/logs:/usr/local/tomcat/logs" -v "/data/tomcat/appcfg:/usr/local/tomcat/appcfg:ro" -v "/data/tomcat/log4j2.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro" terraframe/geoprism-registry:latest java $JAVA_OPTS -cp /usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/metadata --rootUser=postgres --rootPass=yk6ID7jkh --templateDb=postgres --install=true --clean=true 2>&1
+# sudo -E docker run --rm --name geoprism-database-builder -e JAVA_OPTS="$JAVA_OPTS" --network=host -v "/data/tomcat/{{webapp_prefix}}geoprism-extension.jar:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar" -v "/data/tomcat/logs:/usr/local/tomcat/logs" -v "/data/tomcat/appcfg:/usr/local/tomcat/appcfg:ro" -v "/data/tomcat/log4j2.xml:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml:ro" terraframe/geoprism-registry:latest java $JAVA_OPTS -cp /usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/* net.geoprism.build.GeoprismDatabaseBuilder /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/metadata --rootUser=postgres --rootPass=yk6ID7jkh --templateDb=postgres --install=true --clean=true 2>&1
 - name: Build Database
   block:
     - name: Build Database
