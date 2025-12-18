@@ -49,7 +49,7 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+  when: elasticsearch_enabled | default(false) and elasticsearch_clean | default(false)
 - name: Start Docker Container
   community.general.docker_container:
     name: elasticsearch
@@ -71,12 +71,13 @@
       - "{{app_data}}/elasticsearch/logs:/usr/share/elasticsearch/logs:rw"
   become: yes
   become_method: sudo
-  
-- pause:
-    seconds: 90
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
-  
-- name: Wait for ElasticSearch to be up
-  wait_for: host="127.0.0.1" port=9200 delay=5 timeout=60 state=started
-  when: "{{elasticsearch_enabled | default(false)}}"
+
+- name: Wait for TCP 9200
+  wait_for:
+    host: "127.0.0.1"
+    port: 9200
+    delay: 5
+    timeout: 300
+    state: started
+  when: elasticsearch_enabled | default(false)
   
