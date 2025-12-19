@@ -216,6 +216,26 @@
   become: yes
   become_method: sudo
 
+# Wait for the SSL cert to exist
+- name: Wait for fullchain.pem to exist
+  ansible.builtin.stat:
+    path: "{{ app_data }}/ssl/letsencrypt/cert/live/{{ ssl_domain }}/fullchain.pem"
+  register: fullchain
+  retries: 30
+  delay: 2
+  until: fullchain.stat.exists and fullchain.stat.size|int > 0
+  become: yes
+  become_method: sudo
+- name: Wait for privkey.pem to exist
+  ansible.builtin.stat:
+    path: "{{ app_data }}/ssl/letsencrypt/cert/live/{{ ssl_domain }}/privkey.pem"
+  register: privkey
+  retries: 30
+  delay: 2
+  until: privkey.stat.exists and privkey.stat.size|int > 0
+  become: yes
+  become_method: sudo
+
 ## Start Nginx SSL Bastion ##
 - name: Run nginx container
   community.docker.docker_container:
