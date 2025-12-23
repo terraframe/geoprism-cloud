@@ -19,7 +19,7 @@
 ## TODO : This flush is dangerous if we have any containers not running with network: host. So once we patch GPR, we might want to get rid of it.
 - name: Remove all legacy NAT PREROUTING rules
   become: yes
-  command: iptables -t nat -F PREROUTING && iptables-save
+  shell: iptables -t nat -F PREROUTING && iptables-save > /etc/sysconfig/iptables
   when:
     - firewalld is not defined
     - nftables is not defined
