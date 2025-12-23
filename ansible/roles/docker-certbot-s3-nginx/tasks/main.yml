@@ -185,7 +185,7 @@
     image: nginx:alpine
     state: started
     recreate: yes
-    auto_remove: true
+    auto_remove: false
     network_mode: host
     volumes:
       - "{{ app_data }}/nginx/nginx-bootstrap.conf:/etc/nginx/nginx.conf:ro"
@@ -199,7 +199,7 @@
     name: geoprism-certbot
     image: "{{ certbot_image | default('docker:29') }}"
     state: started
-    auto_remove: true
+    auto_remove: false
     detach: false
     recreate: yes
     restart_policy: "no"
@@ -261,6 +261,7 @@
   community.docker.docker_container:
     name: bastion
     image: nginx:alpine
+    auto_remove: false
     state: started
     restart_policy: always
     recreate: yes
@@ -279,6 +280,7 @@
     name: geoprism-certbot
     image: "{{ certbot_image | default('docker:29') }}"
     state: started
+    auto_remove: false
     recreate: yes
     pull: yes
     restart_policy: always
