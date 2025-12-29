@@ -13,16 +13,23 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
+- name: Stop any currently running geoprism
+  community.docker.docker_container:
+    name: "geoprism"
+    state: stopped
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
 
 
 ## If this server was run with the other "webserver" role and the older certbot setup, then it has port forwards that we need to get rid of.
 ## TODO : This flush is dangerous if we have any containers not running with network: host. So once we patch GPR, we might want to get rid of it.
-#- name: Remove all legacy NAT PREROUTING rules
-#  become: yes
-#  shell: iptables -t nat -F PREROUTING && iptables-save > /etc/sysconfig/iptables
-#  when:
-#    - firewalld is not defined
-#    - nftables is not defined
+- name: Remove all legacy NAT PREROUTING rules
+  become: yes
+  shell: iptables -t nat -F PREROUTING && iptables-save > /etc/sysconfig/iptables
+  when:
+    - firewalld is not defined
+    - nftables is not defined
 - name: Remove legacy forward-port 80 -> 8080
   command: firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=8080
   when: "firewalld is defined"
