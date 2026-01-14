@@ -80,7 +80,7 @@
       
     - name: Ensure knowstac-api SSL directory exists
       file:
-        path: "{{ app_data }}/knowstac-api/ssl"
+        path: "{{ app_data }}/{{knowstac_api_container_name}}/ssl"
         state: directory
         owner: root
         group: root
@@ -90,12 +90,12 @@
     - name: Copy server.xml for knowstac-api
       copy:
         src: "roles/webserver-nginx/files/server.xml"
-        dest: "{{app_data}}/knowstac-api/ssl/server.xml"
+        dest: "{{app_data}}/{{knowstac_api_container_name}}/ssl/server.xml"
       become: yes
       become_method: sudo
     - name: Change HTTP connector 8080 → knowstac_api_port
       ansible.builtin.replace:
-        path: "{{ app_data }}/knowstac-api/ssl/server.xml"
+        path: "{{ app_data }}/{{knowstac_api_container_name}}/ssl/server.xml"
         regexp: '(<Connector[^>]*port=")8080(")'
         replace: '\g<1>{{ knowstac_api_port }}\g<2>'
       become: yes
@@ -128,11 +128,11 @@
         restart_policy: always
         env: 'JAVA_OPTS="{{java_opts}}"'
         volumes:
-          - "{{app_data}}/knowstac-api/geoprism:/data/geoprism:rw"
-          - "{{app_data}}/knowstac-api/tomcat/logs:{{catalina_home}}/logs:rw"
-          - "{{app_data}}/knowstac-api/tomcat/tmp:{{catalina_home}}/temp:rw"
+          - "{{app_data}}/{{knowstac_api_container_name}}/geoprism:/data/geoprism:rw"
+          - "{{app_data}}/{{knowstac_api_container_name}}/tomcat/logs:{{catalina_home}}/logs:rw"
+          - "{{app_data}}/{{knowstac_api_container_name}}/tomcat/tmp:{{catalina_home}}/temp:rw"
           - "{{app_data}}/{{webapp_prefix}}tomcat/appcfg:{{catalina_home}}/appcfg:ro"
-          - "{{app_data}}/knowstac-api/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
+          - "{{app_data}}/{{knowstac_api_container_name}}/ssl/server.xml:{{catalina_home}}/conf/server.xml:ro"
           - "{{app_data}}/{{webapp_prefix}}ssl/web.xml:{{catalina_home}}/conf/web.xml:ro"
       become: yes
       become_method: sudo
