@@ -37,6 +37,7 @@ java_opts_base: >-
         -Delasticsearch.password={{elasticsearch_password | default('false')}}
         -Dgeoprism.volume=/data/geoprism/misc
         -Dorientdb.root.password={{orientdb_root_pass | default('x')}}
+        -Dorientdb.admin.username={{orientdb_app_user | default('admin')}}
         -Dorientdb.admin.password={{orientdb_app_pass | default('x')}}
 
 java_opts_prod: >-
