@@ -19,7 +19,6 @@
 #     $LETSENCRYPT_PATH/certbot
 #
 # This script:
-# - DOES NOT stop nginx
 # - Uses certbot --webroot (HTTP-01) and requires port 80 reachable externally
 # - Avoids duplicate cron entries across restarts
 # - Avoids “certbot invoked twice” behavior from duplicate cron lines
@@ -192,6 +191,9 @@ if [ "$MODE" = "oneshot" ]; then
 	
 	  restart_nginx
 	fi
+else
+  # We always need to reboot nginx here. This is because we may have downloaded new certs from s3 and nginx may have already booted with the old ones
+  restart_nginx
 fi
 
 # --- Cron renew (daily at 00:00) - IDempotent ---
