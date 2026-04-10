@@ -6,7 +6,7 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-- name: Stop Nginx Container
+- name: Stop Certbot Container
   community.docker.docker_container:
     name: "geoprism-certbot"
     state: stopped
@@ -155,9 +155,27 @@
     recurse: yes
   become: yes
   become_method: sudo
+- name: Create maintenance dir
+  file:
+    path: "{{app_data}}/nginx/maintenance"
+    state: directory
+    mode: 0755
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
+- name: Create maintenance dir
+  file:
+    path: "{{app_data}}/nginx/flags"
+    state: directory
+    mode: 0755
+    owner: "{{ansible_user}}"
+    recurse: yes
+  become: yes
+  become_method: sudo
 - name: Copy over maintenance html file
   copy: src="index.html"
-        dest="{{app_data}}/nginx/index.html"
+        dest="{{app_data}}/nginx/maintenance/index.html"
   become: yes
   become_method: sudo
 - name: Copy nginx bootstrap config
@@ -269,7 +287,8 @@
     network_mode: host
     volumes:
       - "{{ app_data }}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "{{ app_data }}/nginx/index.html:/usr/share/nginx/html/maintenance.html:ro"
+      - "{{ app_data }}/nginx/flags:/etc/nginx/flags:ro"
+      - "{{ app_data }}/nginx/maintenance/index.html:/usr/share/nginx/html/maintenance.html:ro"
       - "{{ app_data }}/ssl/letsencrypt/cert:/etc/letsencrypt:ro"
       - "{{app_data}}/certbot:/var/www/certbot:ro"
   become: yes

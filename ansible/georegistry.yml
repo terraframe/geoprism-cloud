@@ -15,6 +15,26 @@
 # The inventory file says what server you want to make into a demo server. This example here deploys to dev.
 # ansible-playbook dsedp.yml -i inventory/dsedp/dev.ini
 
+- name: Enable maintenance mode
+  hosts: webservers
+  tasks:
+    - name: Ensure maintenance flag directory exists
+      file:
+        path: "{{ app_data }}/nginx/flags"
+        state: directory
+        mode: "0755"
+      become: yes
+      become_method: sudo
+
+    - name: Enable maintenance mode flag
+      file:
+        path: "{{ app_data }}/nginx/flags/maintenance.enable"
+        state: touch
+        mode: "0644"
+      become: yes
+      become_method: sudo
+
+
 - name: Set Up Database
   hosts: databases
   vars:
@@ -48,3 +68,16 @@
 #    emailToAddr: rrowlands@terraframe.com
 #  roles:
 #    - send-email
+
+
+- name: Disable maintenance mode
+  hosts: webservers
+  tasks:
+    - name: Disable maintenance mode flag
+      file:
+        path: "{{ app_data }}/nginx/flags/maintenance.enable"
+        state: absent
+      become: yes
+      become_method: sudo
+
+
