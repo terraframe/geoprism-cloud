@@ -116,6 +116,7 @@ if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
 	  echo "Critical failure getting SSL certificate! Sleeping so as to avoid fetching more certs and hitting a rate limit."
 	  while true; do sleep 86400; done
   fi
+  /bin/sh /var/lib/geoprism-certbot/hooks/post-deploy.sh
 else
   echo "Existing cert present for $DOMAIN; skipping initial certonly."
 fi
@@ -128,22 +129,34 @@ fi
 CRON_FILE=/etc/crontabs/root
 CRON_TAG="geoprism-certbot-renew:${DOMAIN}"
 
-RENEW_WRAPPED_CMD="/bin/sh -lc '
-  set +e
-  OUT=\$($CERTBOT_RENEW_CMD 2>&1)
-  RC=\$?
-  if [ \$RC -ne 0 ]; then
-    echo \"certbot renew failed with exit \$RC\"
-    echo \"--- certbot command output ---\"
-    echo \"\$OUT\"
-    echo \"--- last 200 letsencrypt.log ---\"
-    tail -n 200 /var/log/letsencrypt/letsencrypt.log 2>/dev/null || true
-    echo \"--- end ---\"
-    printf \"%s\n\" \"\$OUT\" | /var/lib/geoprism-certbot/hooks/error-notify.sh \"Renewal failed for $DOMAIN\" || true
-  fi
-'"
+RENEW_SCRIPT="/var/lib/geoprism-certbot/run-renewal.sh"
 
-# --- Cron renew (daily at 00:00) ---
+cat > "$RENEW_SCRIPT" <<EOF
+#!/bin/sh
+
+set +e
+
+OUT=\$(certbot renew -n --standalone --http-01-port 8080 2>&1)
+RC=\$?
+
+if [ "\$RC" -ne 0 ]; then
+  echo "certbot renew failed with exit \$RC"
+  echo "--- certbot command output ---"
+  printf '%s\n' "\$OUT"
+  echo "--- last 200 letsencrypt.log ---"
+  tail -n 200 /var/log/letsencrypt/letsencrypt.log 2>/dev/null || true
+  echo "--- end ---"
+
+  printf '%s\n' "\$OUT" |
+    /var/lib/geoprism-certbot/hooks/error-notify.sh \
+      "Renewal failed for $DOMAIN" || true
+fi
+
+exit "\$RC"
+EOF
+
+chmod 700 "$RENEW_SCRIPT"
+
 cat > /etc/crontabs/root <<EOF
 */15 * * * * run-parts /etc/periodic/15min
 0     * * * * run-parts /etc/periodic/hourly
@@ -151,7 +164,7 @@ cat > /etc/crontabs/root <<EOF
 0     3 * * 6 run-parts /etc/periodic/weekly
 0     5 1 * * run-parts /etc/periodic/monthly
 
-0 0 * * * $RENEW_WRAPPED_CMD # geoprism-certbot-renew:${DOMAIN}
+0 0 * * * $RENEW_SCRIPT # geoprism-certbot-renew:${DOMAIN}
 EOF
 
 
