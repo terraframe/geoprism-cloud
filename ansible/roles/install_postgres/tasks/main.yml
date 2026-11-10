@@ -67,6 +67,11 @@
     pull: true
     env:
       POSTGRES_PASSWORD: "{{rootdb_pass}}"
+      # Pin the pre-18 data layout. Postgres 18+ images default PGDATA to
+      # /var/lib/postgresql/<major>/docker and refuse to start when something is
+      # mounted at /var/lib/postgresql/data, which is where our volume lives.
+      # Older images already use this path, so this is a no-op for them.
+      PGDATA: /var/lib/postgresql/data
     exposed_ports:
       - 5432
     ports:
