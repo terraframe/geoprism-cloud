@@ -25,8 +25,15 @@
   ignore_errors: yes
 
 # Install software. I tried to make this into a list (for readability) but because ordering is important I don't think we can do that.
+# Amazon Linux 2023 locks each server to the release it was launched with, so a plain
+# "dnf update" only installs what was in that release's (frozen) repos, and never moves
+# to newer releases. releasever=latest upgrades to the newest AL2023 release instead.
+# (AL2023-specific: only use this role on AL2023 hosts.)
 - name: Yum update
-  ansible.builtin.dnf: name="*" state=latest
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    releasever: latest
   become: yes
   become_method: sudo
 - name: Install required packages
@@ -35,6 +42,7 @@
       - docker
       - python-pip
       - iptables-services
+      - dnf-utils   # provides "dnf needs-restarting" (reboot check below)
     state: latest
   become: yes
   become_method: sudo
@@ -83,6 +91,23 @@
   service: name=docker state=started enabled=yes
   become: yes
   become_method: sudo
+
+# Updated kernels/core libraries only take effect after a reboot. Deploys don't reboot
+# servers, so just report it. "dnf needs-restarting -r" exits 1 when a reboot is needed.
+- name: Check whether a reboot is needed to apply updates
+  command: dnf needs-restarting -r
+  register: needs_reboot
+  changed_when: false
+  failed_when: needs_reboot.rc not in [0, 1]
+  become: yes
+  become_method: sudo
+- name: Report pending reboot
+  ansible.builtin.debug:
+    msg: >-
+      REBOOT REQUIRED on {{ inventory_hostname }} to apply OS updates (new kernel or core
+      libraries). Schedule a reboot; containers restart automatically.
+      {{ needs_reboot.stdout_lines | join(' ') }}
+  when: needs_reboot.rc == 1
   
   
   

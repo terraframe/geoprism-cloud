@@ -51,7 +51,7 @@ WEBROOT_CHALLENGE_DIR="${WEBROOT_HOST}/.well-known/acme-challenge"
 
 # --- Update packages. msmtp will allow email sending via SES ---
 /sbin/apk update
-/sbin/apk add --no-cache certbot findutils msmtp ca-certificates
+/sbin/apk add --no-cache certbot findutils msmtp ca-certificates openssl
 
 # --- msmtp config from env (SES) ---
 cat >/etc/msmtprc <<EOF
@@ -154,12 +154,18 @@ restart_nginx() {
 
 # --- First issuance (only if needed) ---
 if [ "$MODE" = "oneshot" ]; then
-	# If a cert already exists for this domain, skip certonly and rely on renew.
+	# Skip issuance only if the existing cert (local or restored from S3) is still good for
+	# more than 30 days, the same window "certbot renew" uses. Otherwise an expired cert in
+	# S3 would be restored and served on every deploy, with nothing ever replacing it.
 	LIVE_CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
-	if [ -f "$LIVE_CERT" ]; then
-	  echo "Existing cert found at $LIVE_CERT; skipping initial certonly."
+	if [ -f "$LIVE_CERT" ] && openssl x509 -checkend 2592000 -noout -in "$LIVE_CERT" >/dev/null 2>&1; then
+	  echo "Existing cert at $LIVE_CERT is valid for 30+ more days; skipping issuance."
 	else
-	  echo "No existing cert found; attempting initial issuance via webroot."
+	  if [ -f "$LIVE_CERT" ]; then
+	    echo "Existing cert at $LIVE_CERT is expired or expires within 30 days; reissuing via webroot."
+	  else
+	    echo "No existing cert found; attempting initial issuance via webroot."
+	  fi
 	  set +e
 	  ISSUE_OUTPUT="$(sh -c "$CERTBOT_ISSUE_CMD" 2>&1)"
 	  ISSUE_RC=$?
@@ -180,16 +186,24 @@ if [ "$MODE" = "oneshot" ]; then
 			=== /var/log/letsencrypt/letsencrypt.log (tail) ===
 			$LOG_SNIPPET
 		"
-	    echo "Critical failure getting SSL certificate! Sleeping to avoid rate limits."
+	    echo "Certificate issuance failed (exit $ISSUE_RC):"
+	    echo "$ISSUE_OUTPUT"
 	    cp /etc/letsencrypt/cli.ini /etc/letsencrypt-backup/cli.ini && rm -rf /etc/letsencrypt/* && mv /etc/letsencrypt-backup/* /etc/letsencrypt/ 2>/dev/null || true # Rollback
-	    while true; do sleep 86400; done
+	    # This runs as a blocking Ansible task (detach: false), so never hang here: keep going
+	    # if the old cert still works, otherwise exit non-zero so the deploy fails visibly.
+	    if [ -f "$LIVE_CERT" ] && openssl x509 -checkend 0 -noout -in "$LIVE_CERT" >/dev/null 2>&1; then
+	      echo "Existing cert has not expired yet; continuing with it. The daily renewal will retry."
+	    else
+	      echo "Critical failure getting SSL certificate, and no unexpired cert is available."
+	      exit 1
+	    fi
+	  else
+	    if [ -x "$HOOK" ]; then
+	      sh "$HOOK" || notify "post-deploy failed for $DOMAIN" "post-deploy.sh returned non-zero."
+	    fi
+
+	    restart_nginx
 	  fi
-	
-	  if [ -x "$HOOK" ]; then
-	    sh "$HOOK" || notify "post-deploy failed for $DOMAIN" "post-deploy.sh returned non-zero."
-	  fi
-	
-	  restart_nginx
 	fi
 else
   # We always need to reboot nginx here. This is because we may have downloaded new certs from s3 and nginx may have already booted with the old ones
