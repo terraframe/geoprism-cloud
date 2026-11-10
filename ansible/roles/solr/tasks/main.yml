@@ -6,13 +6,13 @@
     path: "{{app_data}}/solr/configsets"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+  when: (solr_enabled | default(false) | bool) and (clean_solr | default(false) | bool)
 - name: Stage Solr Config
   copy: src="{{solr_core_path}}/"
         dest="{{app_data}}/solr/configsets"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+  when: (solr_enabled | default(false) | bool) and (clean_solr | default(false) | bool)
   
 # Clean Solr Data
 - name: Delete Solr Data
@@ -21,7 +21,7 @@
     path: "{{app_data}}/solr/mycores"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+  when: (solr_enabled | default(false) | bool) and (clean_solr | default(false) | bool)
 
 # Solr Docker container
 - name: Kill Solr
@@ -29,7 +29,7 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+  when: (solr_enabled | default(false) | bool) and (clean_solr | default(false) | bool)
 - name: Start Solr
   community.general.docker_container:
     name: solr
@@ -45,26 +45,26 @@
       - "{{app_data}}/solr/mycores/{{solr_core_name}}/data:/data"
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+  when: (solr_enabled | default(false) | bool) and (clean_solr | default(false) | bool)
   
 - pause:
     seconds: 30
-  when: "{{solr_enabled | default(false)}} and ({{clean_solr | default(false)}} or {{solr_volume_patch | default(false)}})"
+  when: (solr_enabled | default(false) | bool) and ((clean_solr | default(false) | bool) or (solr_volume_patch | default(false) | bool))
   
 - name: Mount Solr Data
   shell: docker exec --user root solr bash -c 'mv /opt/solr/server/solr/mycores/uasdm/data/* /data/ && rm -rf /opt/solr/server/solr/mycores/uasdm/data && ln -s /data /opt/solr/server/solr/mycores/uasdm/data && chown -R solr:solr /opt/solr/server/solr/mycores/uasdm/data && chown -R solr:solr /data'
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}} and ({{clean_solr | default(false)}} or {{solr_volume_patch | default(false)}})"
+  when: (solr_enabled | default(false) | bool) and ((clean_solr | default(false) | bool) or (solr_volume_patch | default(false) | bool))
 
 # Third party libs
 - name: Install libgdal
   shell: docker exec geoprism bash -c 'apt-get update && apt-get -y install libgdal-java'
   become: yes
   become_method: sudo
-  when: "{{solr_enabled | default(false)}} and {{clean_solr | default(false)}}"
+  when: (solr_enabled | default(false) | bool) and (clean_solr | default(false) | bool)
   
 - name: Wait for Solr to be up
   wait_for: host="127.0.0.1" port=8983 delay=5 timeout=60 state=started
-  when: "{{solr_enabled | default(false)}}"
+  when: solr_enabled | default(false) | bool
   

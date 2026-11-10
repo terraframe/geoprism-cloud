@@ -5,21 +5,21 @@
     state: absent
   become: yes
   become_method: sudo
-  when: "{{clean_ssl | default(false)}}"
+  when: clean_ssl | default(false) | bool
 - name: Clean SSL
   file:
     path: "/data/ssl/letsencrypt"
     state: absent
   become: yes
   become_method: sudo
-  when: "{{clean_ssl | default(false)}}"
+  when: clean_ssl | default(false) | bool
 - name: Clean SSL
   file:
     path: "/data/ssl/geoprism.ks"
     state: absent
   become: yes
   become_method: sudo
-  when: "{{clean_ssl | default(false)}}"
+  when: clean_ssl | default(false) | bool
 
 - name: Create directory
   file:
@@ -40,12 +40,12 @@
   shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
   become: yes
   become_method: sudo
-  when: "firewalld is not defined"
+  when: not (firewalld | default(false) | bool)
 - name: Forward port (firewallcmd)
   shell: "firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443 && firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 && firewall-cmd --reload"
   become: yes
   become_method: sudo
-  when: "firewalld is defined"
+  when: firewalld | default(false) | bool
 
 
 - name: Remove geoprism-certbot container if it exists

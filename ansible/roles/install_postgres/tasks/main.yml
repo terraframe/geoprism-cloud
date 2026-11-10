@@ -11,7 +11,7 @@
     state: stopped
   become: yes
   become_method: sudo
-  when: "{{clean_db | default(false)}}"
+  when: clean_db | default(false) | bool
   ignore_errors: yes # This command may fail on new installs when postgres doesn't exist
 - name: Delete Data
   file:
@@ -19,7 +19,7 @@
     path: "{{app_data}}/postgres/data"
   become: yes
   become_method: sudo
-  when: "{{clean_db | default(false)}}"
+  when: clean_db | default(false) | bool
 
 # Move existing data over to {app_data}
 - name: Does the new docker volume exist already?
@@ -83,7 +83,7 @@
   shell: "docker volume rm $(docker volume ls -qf dangling=true)"
   become: yes
   become_method: sudo
-  when: "{{clean_db}}"
+  when: clean_db | bool
   ignore_errors: yes
 
 

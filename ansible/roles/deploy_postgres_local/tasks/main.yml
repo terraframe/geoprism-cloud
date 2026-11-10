@@ -29,7 +29,7 @@
     login_password: "{{rootdb_pass}}"
   with_items: 
     - "{{ apps | default([]) }}"
-  when: "{{clean_db}}"
+  when: clean_db | bool
   
 - name: Make DB
   local_action:
@@ -55,7 +55,7 @@
     login_password: "{{rootdb_pass}}"
   with_items: 
     - "{{apps}}"
-  when: "{{clean_db}}"
+  when: clean_db | bool
   
 - name: Make User
   local_action:
@@ -71,7 +71,7 @@
     role_attr_flags: LOGIN,NOSUPERUSER
   with_items: 
     - "{{apps}}"
-  when: "{{clean_db}}"
+  when: clean_db | bool
   
 - name: DB Owner to new User
   local_action:

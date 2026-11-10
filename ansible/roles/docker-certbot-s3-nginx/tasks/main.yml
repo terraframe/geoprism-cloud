@@ -28,11 +28,11 @@
   become: yes
   shell: iptables -t nat -F PREROUTING && iptables-save > /etc/sysconfig/iptables
   when:
-    - firewalld is not defined
-    - nftables is not defined
+    - not (firewalld | default(false) | bool)
+    - not (nftables | default(false) | bool)
 - name: Remove legacy forward-port 80 -> 8080
   command: firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=8080
-  when: "firewalld is defined"
+  when: firewalld | default(false) | bool
   register: rm_fwd_80
   changed_when: "'success' in rm_fwd_80.stdout"
   failed_when: false
@@ -40,7 +40,7 @@
   become_method: sudo
 - name: Remove legacy forward-port 443 -> 8443
   command: firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=8443
-  when: "firewalld is defined"
+  when: firewalld | default(false) | bool
   register: rm_fwd_443
   changed_when: "'success' in rm_fwd_443.stdout"
   failed_when: false
@@ -51,7 +51,7 @@
   loop:
     - http
     - https
-  when: "firewalld is defined"
+  when: firewalld | default(false) | bool
   register: add_services
   changed_when: "'success' in add_services.stdout"
   failed_when: false
@@ -59,7 +59,7 @@
   become_method: sudo
 - name: Reload firewalld
   command: firewall-cmd --reload
-  when: firewalld is defined and (
+  when: (firewalld | default(false) | bool) and (
           (rm_fwd_80 is defined and rm_fwd_80 is changed) or
           (rm_fwd_443 is defined and rm_fwd_443 is changed) or
           (add_services is defined and add_services is changed)

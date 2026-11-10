@@ -6,7 +6,7 @@
     state: stopped
   become: yes
   become_method: sudo
-  when: "not {{clean_orientdb}}"
+  when: not (clean_orientdb | bool)
 # If we're cleaning, just kill it and wipe the data.
 - name: Kill OrientDB
   community.general.docker_container:
@@ -16,7 +16,7 @@
     keep_volumes: no
   become: yes
   become_method: sudo
-  when: "{{clean_orientdb}}"
+  when: clean_orientdb | bool
   ignore_errors: yes # This command may fail on new installs when orientdb doesn't exist
 - name: Delete Data
   file:
@@ -24,7 +24,7 @@
     path: "{{app_data}}/orientdb"
   become: yes
   become_method: sudo
-  when: "{{clean_orientdb}}"
+  when: clean_orientdb | bool
   
 # Move existing data over to {app_data}
 - name: Does the new docker volume exist already?
@@ -87,7 +87,7 @@
   shell: "docker volume rm $(docker volume ls -qf dangling=true)"
   become: yes
   become_method: sudo
-  when: "{{clean_orientdb}}"
+  when: clean_orientdb | bool
   ignore_errors: yes
 
 

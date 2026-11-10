@@ -84,21 +84,21 @@
     path: "{{app_data}}/geoprism"
   become: yes
   become_method: sudo
-  when: "{{clean_db | default(false)}}"
+  when: clean_db | default(false) | bool
 - name: If cleaning, delete tomcat logs
   file:
     state: absent
     path: "{{app_data}}/tomcat/logs"
   become: yes
   become_method: sudo
-  when: "{{clean_db | default(false)}}"
+  when: clean_db | default(false) | bool
 - name: If cleaning, delete appcfg
   file:
     state: absent
     path: "{{app_data}}/tomcat/appcfg"
   become: yes
   become_method: sudo
-  when: "{{clean_db | default(false)}}"
+  when: clean_db | default(false) | bool
 
 ## Appcfg ##
 - name: Stage appcfg
@@ -174,21 +174,21 @@
   shell: "/sbin/iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443 && /sbin/iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 && /sbin/service iptables save"
   become: yes
   become_method: sudo
-  when: "firewalld is not defined and nftables is not defined"
+  when: not (firewalld | default(false) | bool) and not (nftables | default(false) | bool)
 - name: Forward port (firewallcmd)
   shell: "firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443 && firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 && firewall-cmd --reload"
   become: yes
   become_method: sudo
-  when: "firewalld is defined"
+  when: firewalld | default(false) | bool
   
 - name: Figure out which JAVA_OPTS to use
   ansible.builtin.set_fact:
     java_opts: "{{java_opts_prod | trim}}"
-  when: "not {{debug | default('false')}}"
+  when: not (debug | default('false') | bool)
 - name: Figure out which JAVA_OPTS to use
   ansible.builtin.set_fact:
     java_opts: "{{java_opts_debug | trim}}"
-  when: "{{debug | default('false')}}"
+  when: debug | default('false') | bool
 
 #- ansible.builtin.set_fact:
 #    should_pull: true
@@ -205,7 +205,7 @@
   become_method: sudo
   when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 - ansible.builtin.set_fact:
-    geoprism_app_volumes: "{{ geoprism_app_volumes + ['{{app_data}}/tomcat/geoprism-extension.jar:{{catalina_home}}/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
+    geoprism_app_volumes: "{{ geoprism_app_volumes + [app_data ~ '/tomcat/geoprism-extension.jar:' ~ catalina_home ~ '/webapps/ROOT/WEB-INF/lib/geoprism-extension.jar'] }}"
   when: geoprism_lib_extension is defined and geoprism_lib_extension|length > 0
 
 ## Build Database ##

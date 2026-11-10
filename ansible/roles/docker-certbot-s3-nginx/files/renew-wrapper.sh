@@ -6,35 +6,39 @@ NGINX_CONTAINER="${NGINX_CONTAINER:-bastion}"
 HOOK="/var/lib/geoprism-certbot/hooks/post-deploy.sh"
 
 notify_fail() {
-  # error-notify.sh should exist in your image; it should read stdin
   TITLE="$1"
+
   if [ -x /var/lib/geoprism-certbot/hooks/error-notify.sh ]; then
     /bin/sh /var/lib/geoprism-certbot/hooks/error-notify.sh "$TITLE"
   fi
 }
 
-restart_nginx() {
-  (docker ps -a --format '{{.Names}}' | grep -qx "$NGINX_CONTAINER" && docker restart "$NGINX_CONTAINER") || true
-}
+# Certbot runs this only when a certificate was actually renewed.
+DEPLOY_HOOK="docker kill --signal=HUP '$NGINX_CONTAINER'"
 
-# Run renew once, capture output
+if [ -x "$HOOK" ]; then
+  DEPLOY_HOOK="sh '$HOOK' && $DEPLOY_HOOK"
+fi
+
 set +e
-OUTPUT="$(certbot renew -n --webroot -w /var/www/certbot 2>&1)"
+OUTPUT="$(
+  certbot renew \
+    -n \
+    --webroot \
+    -w /var/www/certbot \
+    --deploy-hook "$DEPLOY_HOOK" \
+    2>&1
+)"
 RC=$?
 set -e
 
 echo "$OUTPUT"
 
 if [ "$RC" -ne 0 ]; then
-  printf '%s\n' "$OUTPUT" | notify_fail "Renewal failed for ${DOMAIN} (exit ${RC})"
+  printf '%s\n' "$OUTPUT" |
+    notify_fail "Renewal failed for ${DOMAIN} (exit ${RC})"
+
   exit "$RC"
 fi
 
-# If certbot reports no renewal needed, OUTPUT contains that; still harmless to restart.
-# Run post-deploy hook if present (keystore/s3 sync/etc.)
-if [ -x "$HOOK" ]; then
-  sh "$HOOK" >/dev/null 2>&1 || true
-fi
-
-restart_nginx
 exit 0

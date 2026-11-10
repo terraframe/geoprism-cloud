@@ -6,7 +6,7 @@
     path: "{{app_data}}/elasticsearch"
   become: yes
   become_method: sudo
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+  when: (elasticsearch_enabled | default(false) | bool) and (elasticsearch_clean | default(false) | bool)
 - name: Create Data Directory
   file:
     state: directory
@@ -16,7 +16,7 @@
     mode: g+rwx
   become: yes
   become_method: sudo
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+  when: (elasticsearch_enabled | default(false) | bool) and (elasticsearch_clean | default(false) | bool)
 - name: Create Log Directory
   file:
     state: directory
@@ -26,7 +26,7 @@
     mode: g+rwx
   become: yes
   become_method: sudo
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+  when: (elasticsearch_enabled | default(false) | bool) and (elasticsearch_clean | default(false) | bool)
 
 # Configure vm.max_map_count in sysctl
 - name: vm.max_map_count
@@ -36,12 +36,12 @@
     state: present
   become: yes
   become_method: sudo
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+  when: (elasticsearch_enabled | default(false) | bool) and (elasticsearch_clean | default(false) | bool)
 - name: vm.max_map_count
   shell: "sysctl -w vm.max_map_count=262144"
   become: yes
   become_method: sudo
-  when: "{{elasticsearch_enabled | default(false)}} and {{elasticsearch_clean | default(false)}}"
+  when: (elasticsearch_enabled | default(false) | bool) and (elasticsearch_clean | default(false) | bool)
 
 # Docker container
 - name: Kill Existing Docker Container
@@ -49,7 +49,7 @@
   become: yes
   become_method: sudo
   ignore_errors: yes
-  when: elasticsearch_enabled | default(false) and elasticsearch_clean | default(false)
+  when: (elasticsearch_enabled | default(false) | bool) and (elasticsearch_clean | default(false) | bool)
 - name: Start Docker Container
   community.general.docker_container:
     name: elasticsearch
@@ -79,5 +79,5 @@
     delay: 5
     timeout: 300
     state: started
-  when: elasticsearch_enabled | default(false)
+  when: elasticsearch_enabled | default(false) | bool
   
